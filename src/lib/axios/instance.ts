@@ -10,6 +10,10 @@ declare module "axios" {
   }
 }
 
+const axiosBase = axios.create({
+  baseURL: env.VITE_API_URL
+});
+
 const axiosInstance = axios.create({
   baseURL: env.VITE_API_URL,
   withCredentials: true
@@ -94,4 +98,4 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-export default axiosInstance;
+export { axiosBase, axiosInstance };
