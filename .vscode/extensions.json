@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "formulahendry.auto-rename-tag",
+    "usernamehw.errorlens",
+    "GitHub.github-vscode-theme",
+    "dsznajder.es7-react-js-snippets",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "YoavBls.pretty-ts-errors",
+    "ms-vscode.vscode-typescript-next"
+  ]
+}
