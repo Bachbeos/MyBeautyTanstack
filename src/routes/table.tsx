@@ -118,7 +118,7 @@ function AdminOrders() {
         </div>
       </div>
 
-      {/* <DataTable table={table} filterable={false} /> */}
+      <DataTable table={table} filterable={false} />
 
       <Select
         value={statusFilter}

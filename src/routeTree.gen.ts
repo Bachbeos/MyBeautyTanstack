@@ -11,8 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TableRouteImport } from './routes/table'
 import { Route as FormRouteImport } from './routes/form'
+import { Route as UnitUnitRouteImport } from './routes/_unit/unit'
+import { Route as ServiceServiceRouteImport } from './routes/_service/service'
+import { Route as RolesPermissionsRolesPermissionsRouteImport } from './routes/_roles-permissions/roles-permissions'
 import { Route as ResourceResourceRouteImport } from './routes/_resource/resource'
-import { Route as ResourceModalResourceRouteImport } from './routes/_resource/modalResource'
+import { Route as ProfileSettingsProfileSettingsRouteImport } from './routes/_profile-settings/profile-settings'
+import { Route as ProductProductRouteImport } from './routes/_product/product'
+import { Route as ManagerUsersManagerUsersRouteImport } from './routes/_manager-users/manager-users'
+import { Route as CustomerCustomerRouteImport } from './routes/_customer/customer'
+import { Route as CustomerSourceCustomerSourceRouteImport } from './routes/_customer-source/customer-source'
+import { Route as CategoryCategoryRouteImport } from './routes/_category/category'
+import { Route as BranchBranchRouteImport } from './routes/_branch/branch'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
@@ -27,14 +36,63 @@ const FormRoute = FormRouteImport.update({
   path: '/form',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UnitUnitRoute = UnitUnitRouteImport.update({
+  id: '/_unit/unit',
+  path: '/unit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServiceServiceRoute = ServiceServiceRouteImport.update({
+  id: '/_service/service',
+  path: '/service',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RolesPermissionsRolesPermissionsRoute =
+  RolesPermissionsRolesPermissionsRouteImport.update({
+    id: '/_roles-permissions/roles-permissions',
+    path: '/roles-permissions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ResourceResourceRoute = ResourceResourceRouteImport.update({
   id: '/_resource/resource',
   path: '/resource',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResourceModalResourceRoute = ResourceModalResourceRouteImport.update({
-  id: '/_resource/modalResource',
-  path: '/modalResource',
+const ProfileSettingsProfileSettingsRoute =
+  ProfileSettingsProfileSettingsRouteImport.update({
+    id: '/_profile-settings/profile-settings',
+    path: '/profile-settings',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ProductProductRoute = ProductProductRouteImport.update({
+  id: '/_product/product',
+  path: '/product',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagerUsersManagerUsersRoute =
+  ManagerUsersManagerUsersRouteImport.update({
+    id: '/_manager-users/manager-users',
+    path: '/manager-users',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CustomerCustomerRoute = CustomerCustomerRouteImport.update({
+  id: '/_customer/customer',
+  path: '/customer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerSourceCustomerSourceRoute =
+  CustomerSourceCustomerSourceRouteImport.update({
+    id: '/_customer-source/customer-source',
+    path: '/customer-source',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CategoryCategoryRoute = CategoryCategoryRouteImport.update({
+  id: '/_category/category',
+  path: '/category',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BranchBranchRoute = BranchBranchRouteImport.update({
+  id: '/_branch/branch',
+  path: '/branch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -59,8 +117,17 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
-  '/modalResource': typeof ResourceModalResourceRoute
+  '/branch': typeof BranchBranchRoute
+  '/category': typeof CategoryCategoryRoute
+  '/customer-source': typeof CustomerSourceCustomerSourceRoute
+  '/customer': typeof CustomerCustomerRoute
+  '/manager-users': typeof ManagerUsersManagerUsersRoute
+  '/product': typeof ProductProductRoute
+  '/profile-settings': typeof ProfileSettingsProfileSettingsRoute
   '/resource': typeof ResourceResourceRoute
+  '/roles-permissions': typeof RolesPermissionsRolesPermissionsRoute
+  '/service': typeof ServiceServiceRoute
+  '/unit': typeof UnitUnitRoute
 }
 export interface FileRoutesByTo {
   '/form': typeof FormRoute
@@ -68,8 +135,17 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
-  '/modalResource': typeof ResourceModalResourceRoute
+  '/branch': typeof BranchBranchRoute
+  '/category': typeof CategoryCategoryRoute
+  '/customer-source': typeof CustomerSourceCustomerSourceRoute
+  '/customer': typeof CustomerCustomerRoute
+  '/manager-users': typeof ManagerUsersManagerUsersRoute
+  '/product': typeof ProductProductRoute
+  '/profile-settings': typeof ProfileSettingsProfileSettingsRoute
   '/resource': typeof ResourceResourceRoute
+  '/roles-permissions': typeof RolesPermissionsRolesPermissionsRoute
+  '/service': typeof ServiceServiceRoute
+  '/unit': typeof UnitUnitRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,8 +154,17 @@ export interface FileRoutesById {
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
-  '/_resource/modalResource': typeof ResourceModalResourceRoute
+  '/_branch/branch': typeof BranchBranchRoute
+  '/_category/category': typeof CategoryCategoryRoute
+  '/_customer-source/customer-source': typeof CustomerSourceCustomerSourceRoute
+  '/_customer/customer': typeof CustomerCustomerRoute
+  '/_manager-users/manager-users': typeof ManagerUsersManagerUsersRoute
+  '/_product/product': typeof ProductProductRoute
+  '/_profile-settings/profile-settings': typeof ProfileSettingsProfileSettingsRoute
   '/_resource/resource': typeof ResourceResourceRoute
+  '/_roles-permissions/roles-permissions': typeof RolesPermissionsRolesPermissionsRoute
+  '/_service/service': typeof ServiceServiceRoute
+  '/_unit/unit': typeof UnitUnitRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -89,8 +174,17 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/modalResource'
+    | '/branch'
+    | '/category'
+    | '/customer-source'
+    | '/customer'
+    | '/manager-users'
+    | '/product'
+    | '/profile-settings'
     | '/resource'
+    | '/roles-permissions'
+    | '/service'
+    | '/unit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/form'
@@ -98,8 +192,17 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/modalResource'
+    | '/branch'
+    | '/category'
+    | '/customer-source'
+    | '/customer'
+    | '/manager-users'
+    | '/product'
+    | '/profile-settings'
     | '/resource'
+    | '/roles-permissions'
+    | '/service'
+    | '/unit'
   id:
     | '__root__'
     | '/form'
@@ -107,8 +210,17 @@ export interface FileRouteTypes {
     | '/_auth/forgot-password'
     | '/_auth/login'
     | '/_auth/register'
-    | '/_resource/modalResource'
+    | '/_branch/branch'
+    | '/_category/category'
+    | '/_customer-source/customer-source'
+    | '/_customer/customer'
+    | '/_manager-users/manager-users'
+    | '/_product/product'
+    | '/_profile-settings/profile-settings'
     | '/_resource/resource'
+    | '/_roles-permissions/roles-permissions'
+    | '/_service/service'
+    | '/_unit/unit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -117,8 +229,17 @@ export interface RootRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
-  ResourceModalResourceRoute: typeof ResourceModalResourceRoute
+  BranchBranchRoute: typeof BranchBranchRoute
+  CategoryCategoryRoute: typeof CategoryCategoryRoute
+  CustomerSourceCustomerSourceRoute: typeof CustomerSourceCustomerSourceRoute
+  CustomerCustomerRoute: typeof CustomerCustomerRoute
+  ManagerUsersManagerUsersRoute: typeof ManagerUsersManagerUsersRoute
+  ProductProductRoute: typeof ProductProductRoute
+  ProfileSettingsProfileSettingsRoute: typeof ProfileSettingsProfileSettingsRoute
   ResourceResourceRoute: typeof ResourceResourceRoute
+  RolesPermissionsRolesPermissionsRoute: typeof RolesPermissionsRolesPermissionsRoute
+  ServiceServiceRoute: typeof ServiceServiceRoute
+  UnitUnitRoute: typeof UnitUnitRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -137,6 +258,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FormRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_unit/unit': {
+      id: '/_unit/unit'
+      path: '/unit'
+      fullPath: '/unit'
+      preLoaderRoute: typeof UnitUnitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_service/service': {
+      id: '/_service/service'
+      path: '/service'
+      fullPath: '/service'
+      preLoaderRoute: typeof ServiceServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_roles-permissions/roles-permissions': {
+      id: '/_roles-permissions/roles-permissions'
+      path: '/roles-permissions'
+      fullPath: '/roles-permissions'
+      preLoaderRoute: typeof RolesPermissionsRolesPermissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_resource/resource': {
       id: '/_resource/resource'
       path: '/resource'
@@ -144,11 +286,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResourceResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_resource/modalResource': {
-      id: '/_resource/modalResource'
-      path: '/modalResource'
-      fullPath: '/modalResource'
-      preLoaderRoute: typeof ResourceModalResourceRouteImport
+    '/_profile-settings/profile-settings': {
+      id: '/_profile-settings/profile-settings'
+      path: '/profile-settings'
+      fullPath: '/profile-settings'
+      preLoaderRoute: typeof ProfileSettingsProfileSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_product/product': {
+      id: '/_product/product'
+      path: '/product'
+      fullPath: '/product'
+      preLoaderRoute: typeof ProductProductRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_manager-users/manager-users': {
+      id: '/_manager-users/manager-users'
+      path: '/manager-users'
+      fullPath: '/manager-users'
+      preLoaderRoute: typeof ManagerUsersManagerUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_customer/customer': {
+      id: '/_customer/customer'
+      path: '/customer'
+      fullPath: '/customer'
+      preLoaderRoute: typeof CustomerCustomerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_customer-source/customer-source': {
+      id: '/_customer-source/customer-source'
+      path: '/customer-source'
+      fullPath: '/customer-source'
+      preLoaderRoute: typeof CustomerSourceCustomerSourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_category/category': {
+      id: '/_category/category'
+      path: '/category'
+      fullPath: '/category'
+      preLoaderRoute: typeof CategoryCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_branch/branch': {
+      id: '/_branch/branch'
+      path: '/branch'
+      fullPath: '/branch'
+      preLoaderRoute: typeof BranchBranchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/register': {
@@ -181,8 +365,17 @@ const rootRouteChildren: RootRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
-  ResourceModalResourceRoute: ResourceModalResourceRoute,
+  BranchBranchRoute: BranchBranchRoute,
+  CategoryCategoryRoute: CategoryCategoryRoute,
+  CustomerSourceCustomerSourceRoute: CustomerSourceCustomerSourceRoute,
+  CustomerCustomerRoute: CustomerCustomerRoute,
+  ManagerUsersManagerUsersRoute: ManagerUsersManagerUsersRoute,
+  ProductProductRoute: ProductProductRoute,
+  ProfileSettingsProfileSettingsRoute: ProfileSettingsProfileSettingsRoute,
   ResourceResourceRoute: ResourceResourceRoute,
+  RolesPermissionsRolesPermissionsRoute: RolesPermissionsRolesPermissionsRoute,
+  ServiceServiceRoute: ServiceServiceRoute,
+  UnitUnitRoute: UnitUnitRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

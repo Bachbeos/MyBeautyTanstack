@@ -1,0 +1,19 @@
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  left: auto !important;
+  right: 0 !important;
+  top: 100% !important;
+  transform: none !important;
+}
+
+.dropdown-menu-end {
+  right: 0 !important;
+  left: auto !important;
+}
+
+.p-0 {
+  padding: 0 !important;
+}

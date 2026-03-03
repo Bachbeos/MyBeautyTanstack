@@ -20,9 +20,12 @@
     "bootstrap": "^5.3.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.34.4",
     "lodash.debounce": "^4.0.8",
     "react": "^19.2.0",
+    "react-bootstrap": "^2.10.10",
     "react-dom": "^19.2.0",
+    "simplebar-react": "^3.3.2",
     "sonner": "^2.0.7",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
@@ -41,6 +44,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "sass-embedded": "^1.97.3",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"
