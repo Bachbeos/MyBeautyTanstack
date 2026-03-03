@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import logo from "../assets/img/logo.svg";
-import appleLogo from "../assets/img/icons/apple-logo.svg";
-import googleLogo from "../assets/img/icons/google-logo.svg";
-import facebookLogo from "../assets/img/icons/facebook-logo.svg";
+import logo from "@assets/img/logo.svg";
+import appleLogo from "@assets/img/icons/apple-logo.svg";
+import googleLogo from "@assets/img/icons/google-logo.svg";
+import facebookLogo from "@assets/img/icons/facebook-logo.svg";
 
 export const Route = createFileRoute("/_auth/forgot-password")({
   component: RouteComponent
