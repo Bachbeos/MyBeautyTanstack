@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { email, z } from "zod";
+import { z } from "zod";
 
 import logo from "@assets/img/logo.svg";
 import appleLogo from "@assets/img/icons/apple-logo.svg";
@@ -8,8 +8,7 @@ import facebookLogo from "@assets/img/icons/facebook-logo.svg";
 import { useAppForm } from "@/components/form/hooks";
 import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
-import { loginMutationOptions } from "@/lib/tanstack/options/auth";
-import { useAuthStore } from "@/lib/stores/auth";
+import { authMutations } from "@/lib/tanstack/options/auth";
 
 export const Route = createFileRoute("/_auth/login")({
   component: RouteComponent
@@ -27,14 +26,7 @@ const loginSchema = z.object({
 type LoginInput = z.infer<typeof loginSchema>;
 
 function RouteComponent() {
-  const setAuth = useAuthStore((state) => state.set);
-  const login = useMutation({
-    ...loginMutationOptions(),
-    onSuccess: (data) => {
-      console.log(data.result?.token);
-      setAuth({ accessToken: data.result?.token });
-    }
-  });
+  const login = useMutation(authMutations.login());
   const form = useAppForm({
     defaultValues: {
       phone: "",

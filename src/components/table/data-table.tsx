@@ -1,5 +1,4 @@
 import { flexRender, type Table as TanStackTable } from "@tanstack/react-table";
-import { Pagination } from "../pagination/pagination";
 import {
   Table,
   TableBody,
@@ -8,6 +7,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { Pagination } from "@/components/table/pagination";
 
 interface DataTableProps<TData> {
   table: TanStackTable<TData>;
