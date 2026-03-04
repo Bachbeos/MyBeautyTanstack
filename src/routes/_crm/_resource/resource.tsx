@@ -11,6 +11,7 @@ import type { ResourceDto } from "@/lib/types/resource";
 import { useQuery } from "@tanstack/react-query";
 import { resourceQueries } from "@/lib/tanstack/options/resource";
 import { AsyncBoundary } from "@/components/async-boundary";
+import ModalResource from "@/components/modal/ModalResource";
 
 const columnHelper = createColumnHelper<ResourceDto>();
 
@@ -23,6 +24,24 @@ function RouteComponent() {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(5);
 
+  const [modal, setModal] = useState<{
+    type: "add" | "edit" | "delete" | "detail" | null;
+    item?: ResourceDto;
+    shown: boolean;
+  }>({
+    type: null,
+    item: undefined,
+    shown: false
+  });
+
+  const openModal = (type: "add" | "edit" | "delete" | "detail", item?: ResourceDto) => {
+    setModal({ type, item, shown: true });
+  };
+
+  const closeModal = () => {
+    setModal((prev) => ({ ...prev, shown: false }));
+  };
+
   const params = useMemo(
     () => ({
       page: pageIndex + 1,
@@ -32,10 +51,8 @@ function RouteComponent() {
   );
 
   const query = useQuery(resourceQueries.list(params));
-
   const resources = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
-  const pageCount = Math.ceil(total / pageSize);
 
   const columns = useMemo(
     () => [
@@ -46,34 +63,25 @@ function RouteComponent() {
       columnHelper.accessor("name", {
         header: "Tên tài nguyên"
       }),
-      columnHelper.accessor("description", {
-        header: "Mô tả"
-      }),
-      columnHelper.accessor("uri", {
-        header: "URI"
-      }),
-      columnHelper.accessor("actions", {
-        header: "Actions",
-        cell: (info) => {
-          const raw = info.getValue();
-          let parsed: string[] = [];
-
-          try {
-            parsed = JSON.parse(raw);
-          } catch {
-            parsed = [];
-          }
-
-          return (
-            <div className="d-flex flex-wrap gap-1">
-              {parsed.map((a) => (
-                <span key={a} className="badge bg-primary-subtle text-primary">
-                  {a}
-                </span>
-              ))}
-            </div>
-          );
-        }
+      columnHelper.display({
+        id: "actions",
+        header: "Thao tác",
+        cell: (info) => (
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm btn-light border"
+              onClick={() => openModal("edit", info.row.original)}
+            >
+              <i className="ti ti-edit"></i>
+            </button>
+            <button
+              className="btn btn-sm btn-light border text-danger"
+              onClick={() => openModal("delete", info.row.original)}
+            >
+              <i className="ti ti-trash"></i>
+            </button>
+          </div>
+        )
       })
     ],
     []
@@ -82,22 +90,16 @@ function RouteComponent() {
   const table = useReactTable({
     data: resources,
     columns,
-    pageCount,
-    state: {
-      globalFilter,
-      pagination: {
-        pageIndex,
-        pageSize
+    state: { globalFilter, pagination: { pageIndex, pageSize } },
+    onPaginationChange: (updater) => {
+      if (typeof updater === "function") {
+        const newState = updater({ pageIndex, pageSize });
+        setPageIndex(newState.pageIndex);
+        setPageSize(newState.pageSize);
       }
     },
-    onGlobalFilterChange: setGlobalFilter,
-    onPaginationChange: (updater) => {
-      const next = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
-
-      setPageIndex(next.pageIndex);
-      setPageSize(next.pageSize);
-    },
     manualPagination: true,
+    pageCount: Math.ceil(total / pageSize),
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel()
   });
@@ -112,6 +114,12 @@ function RouteComponent() {
               <span className="badge bg-primary-subtle text-primary ms-2">{total}</span>
             </h4>
           </div>
+          <button
+            className="btn btn-primary d-flex align-items-center"
+            onClick={() => openModal("add")}
+          >
+            <i className="ti ti-plus me-1"></i> Thêm tài nguyên
+          </button>
         </div>
 
         <div className="card border-0 shadow-sm">
@@ -122,26 +130,36 @@ function RouteComponent() {
               error={query.error}
               onRetry={() => query.refetch()}
             >
-              {(_data) => (
-                <>
-                  <div className="mb-2 text-muted small">Tổng số bản ghi: {total}</div>
-
-                  <DataTable
-                    table={table}
-                    filterable
-                    filterKeyPlaceholder="Tìm nhanh tài nguyên..."
-                    toolbarLeft={
-                      <div className="text-muted small">
-                        Dữ liệu được cập nhật từ hệ thống quản trị
-                      </div>
-                    }
-                  />
-                </>
+              {() => (
+                <DataTable
+                  table={table}
+                  filterable
+                  filterKeyPlaceholder="Tìm nhanh tài nguyên..."
+                  toolbarLeft={
+                    <div className="text-muted small">
+                      Dữ liệu được cập nhật từ hệ thống quản trị
+                    </div>
+                  }
+                />
               )}
             </AsyncBoundary>
           </div>
         </div>
       </div>
+
+      <ModalResource
+        type={modal.type}
+        shown={modal.shown}
+        item={modal.item}
+        onClose={closeModal}
+        onSubmit={(e) => {
+          e.preventDefault();
+          closeModal();
+        }}
+        onDelete={() => {
+          closeModal();
+        }}
+      />
     </div>
   );
 }
