@@ -3,15 +3,17 @@ import {
   createColumnHelper,
   getCoreRowModel,
   useReactTable,
-  getFilteredRowModel
+  getFilteredRowModel,
+  type ColumnFiltersState
 } from "@tanstack/react-table";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DataTable } from "@/components/table/data-table";
-import type { ResourceDto } from "@/lib/types/resource";
-import { useQuery } from "@tanstack/react-query";
-import { resourceQueries } from "@/lib/tanstack/options/resource";
+import type { ResourceDto, ResourceId } from "@/lib/types/resource";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { resourceQueries, resourceMutations } from "@/lib/tanstack/options/resource";
 import { AsyncBoundary } from "@/components/async-boundary";
-import ModalResource from "@/components/modal/ModalResource";
+import ModalResource from "@/components/features/resource/modal";
+import { useDebounceValue } from "@/hooks/use-debounce-value";
 
 const columnHelper = createColumnHelper<ResourceDto>();
 
@@ -20,9 +22,16 @@ export const Route = createFileRoute("/_crm/_resource/resource")({
 });
 
 function RouteComponent() {
-  const [globalFilter, setGlobalFilter] = useState("");
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(5);
+
+  const rawNameFilter = useMemo(() => {
+    const filter = columnFilters.find((f) => f.id === "name");
+    return (filter?.value as string) || "";
+  }, [columnFilters]);
+
+  const [nameFilter] = useDebounceValue(rawNameFilter, 300);
 
   const [modal, setModal] = useState<{
     type: "add" | "edit" | "delete" | "detail" | null;
@@ -45,14 +54,23 @@ function RouteComponent() {
   const params = useMemo(
     () => ({
       page: pageIndex + 1,
-      limit: pageSize
+      limit: pageSize,
+      keyword: nameFilter || undefined
     }),
-    [pageIndex, pageSize]
+    [pageIndex, pageSize, nameFilter]
   );
+
+  useEffect(() => {
+    setPageIndex(0);
+  }, [nameFilter]);
 
   const query = useQuery(resourceQueries.list(params));
   const resources = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
+
+  const createMutation = useMutation(resourceMutations.create());
+  const updateMutation = useMutation(resourceMutations.update());
+  const deleteMutation = useMutation(resourceMutations.delete());
 
   const columns = useMemo(
     () => [
@@ -90,7 +108,10 @@ function RouteComponent() {
   const table = useReactTable({
     data: resources,
     columns,
-    state: { globalFilter, pagination: { pageIndex, pageSize } },
+    state: {
+      columnFilters,
+      pagination: { pageIndex, pageSize }
+    },
     onPaginationChange: (updater) => {
       if (typeof updater === "function") {
         const newState = updater({ pageIndex, pageSize });
@@ -98,11 +119,48 @@ function RouteComponent() {
         setPageSize(newState.pageSize);
       }
     },
+    onColumnFiltersChange: setColumnFilters,
     manualPagination: true,
+    manualFiltering: true,
     pageCount: Math.ceil(total / pageSize),
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel()
+    getCoreRowModel: getCoreRowModel()
   });
+
+  const handleSubmit = async (values: {
+    id?: ResourceId;
+    name: string;
+    code: string;
+    description?: string;
+  }) => {
+    if (modal.type === "add") {
+      await createMutation.mutateAsync({
+        name: values.name,
+        code: values.code,
+        description: values.description
+      });
+    }
+
+    if (modal.type === "edit") {
+      if (!values.id) return;
+
+      await updateMutation.mutateAsync({
+        id: values.id,
+        name: values.name,
+        code: values.code,
+        description: values.description
+      });
+    }
+
+    closeModal();
+  };
+
+  const handleDelete = async () => {
+    if (!modal.item?.id) return;
+
+    await deleteMutation.mutateAsync(modal.item.id);
+
+    closeModal();
+  };
 
   return (
     <div className="page-wrapper p-4">
@@ -152,13 +210,8 @@ function RouteComponent() {
         shown={modal.shown}
         item={modal.item}
         onClose={closeModal}
-        onSubmit={(e) => {
-          e.preventDefault();
-          closeModal();
-        }}
-        onDelete={() => {
-          closeModal();
-        }}
+        onSubmit={handleSubmit}
+        onDelete={handleDelete}
       />
     </div>
   );

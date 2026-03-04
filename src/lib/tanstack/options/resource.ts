@@ -1,9 +1,8 @@
-// @/lib/queries/resource.ts
 import { queryOptions, mutationOptions } from "@tanstack/react-query";
 import {
   getResources,
   getResourceDetail,
-  updateResource,
+  upsertResource,
   deleteResource
 } from "@/lib/api/resource";
 
@@ -12,7 +11,8 @@ import type {
   ResourceDto,
   ResourceListRequest,
   ResourceUpdateRequest,
-  ResourceListResponse
+  ResourceListResponse,
+  ResourceCreateRequest
 } from "@/lib/types/resource";
 import type { ApiResponse } from "@/lib/types/common";
 import { createKeys } from "@/lib/tanstack/query-key";
@@ -23,6 +23,7 @@ import { createKeys } from "@/lib/tanstack/query-key";
 export const resourceKeys = createKeys("resource", {
   list: (params: ResourceListRequest) => ["list", params] as const,
   detail: (id: ResourceId) => ["detail", id] as const,
+  create: () => ["create"] as const,
   update: () => ["update"] as const,
   delete: () => ["delete"] as const
 });
@@ -49,13 +50,25 @@ export const resourceQueries = {
  * 3. Mutation Options
  */
 export const resourceMutations = {
+  create: () =>
+    mutationOptions<ApiResponse<ResourceDto>, Error, ResourceCreateRequest>({
+      // Using factory for mutationKey
+      mutationKey: resourceKeys.create(),
+      mutationFn: (body) => upsertResource(body),
+      meta: {
+        successMessage: "Tạo tài nguyên thành công",
+        invalidatesQuery: [resourceKeys.list({})]
+      }
+    }),
+
   update: () =>
     mutationOptions<ApiResponse<ResourceDto>, Error, ResourceUpdateRequest>({
       // Using factory for mutationKey
       mutationKey: resourceKeys.update(),
-      mutationFn: (body) => updateResource(body),
+      mutationFn: (body) => upsertResource(body),
       meta: {
-        successMessage: "Cập nhật tài nguyên thành công"
+        successMessage: "Cập nhật tài nguyên thành công",
+        invalidatesQuery: [resourceKeys.list({})]
       }
     }),
 
@@ -65,7 +78,8 @@ export const resourceMutations = {
       mutationKey: resourceKeys.delete(),
       mutationFn: (id) => deleteResource(id),
       meta: {
-        successMessage: "Xóa tài nguyên thành công"
+        successMessage: "Xóa tài nguyên thành công",
+        invalidatesQuery: [resourceKeys.list({})]
       }
     })
 };
