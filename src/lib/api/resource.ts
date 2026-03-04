@@ -6,7 +6,8 @@ import type {
   ResourceDto,
   ResourceListRequest,
   ResourceUpdateRequest,
-  ResourceListResponse
+  ResourceListResponse,
+  ResourceCreateRequest
 } from "@/lib/types/resource";
 
 export const getResources = async (
@@ -31,8 +32,8 @@ export const getResourceDetail = async (
   return res.data;
 };
 
-export const updateResource = async (
-  body: ResourceUpdateRequest
+export const upsertResource = async (
+  body: ResourceUpdateRequest | ResourceCreateRequest
 ): Promise<ApiResponse<ResourceDto>> => {
   const res = await axiosInstance.post<ApiResponse<ResourceDto>>(ENDPOINTS.resource.update, body);
   return res.data;

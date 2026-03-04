@@ -2,29 +2,29 @@ import { FormBase, type FormControlProps } from "@/components/form/form-base";
 import { useFieldContext, useFieldInvalid } from "@/components/form/hooks";
 import { cn } from "@/lib/utils";
 
-type FormInputControlProps = FormControlProps & {
+type FormTextareaProps = FormControlProps & {
   placeholder?: string;
-  type?: string;
+  rows?: number;
   className?: string;
   disabled?: boolean;
 };
 
-export function FormInput({
+export function FormTextarea({
   placeholder,
-  type = "text",
+  rows = 3,
   className,
   disabled,
   ...baseProps
-}: FormInputControlProps) {
+}: FormTextareaProps) {
   const field = useFieldContext<string>();
   const isInvalid = useFieldInvalid();
 
   return (
     <FormBase {...baseProps}>
-      <input
+      <textarea
         id={field.name}
         name={field.name}
-        type={type}
+        rows={rows}
         value={field.state.value ?? ""}
         onBlur={field.handleBlur}
         onChange={(e) => field.handleChange(e.target.value)}
