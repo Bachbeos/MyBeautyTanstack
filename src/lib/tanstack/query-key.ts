@@ -6,7 +6,7 @@ type WithRoot<TRoot extends string, T> = {
   [K in keyof T]: T[K] extends (...args: infer A) => any ? (...args: A) => QueryKey : never;
 };
 
-export function createQueryKeys<
+export function createKeys<
   TRoot extends string,
   T extends Record<string, (...args: any[]) => readonly unknown[]>
 >(root: TRoot, factory: T): WithRoot<TRoot, T> {

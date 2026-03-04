@@ -1,5 +1,4 @@
 import { flexRender, type Table as TanStackTable } from "@tanstack/react-table";
-// import { DataTablePagination } from "@/components/table/pagination";
 import {
   Table,
   TableBody,
@@ -8,6 +7,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { Pagination } from "@/components/table/pagination";
 
 interface DataTableProps<TData> {
   table: TanStackTable<TData>;
@@ -92,9 +92,9 @@ export function DataTable<TData>({
       </div>
 
       {/* Pagination */}
-      {/* <div className="border-top pt-3">
-        <DataTablePagination table={table} />
-      </div> */}
+      <div className="border-top pt-3">
+        <Pagination table={table} />
+      </div>
     </div>
   );
 }

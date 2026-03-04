@@ -9,7 +9,7 @@ import facebookLogo from "@assets/img/icons/facebook-logo.svg";
 import { useAppForm } from "@/components/form/hooks";
 import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
-import { registerMutationOptions } from "@/lib/tanstack/options/auth";
+import { authMutations } from "@/lib/tanstack/options/auth";
 
 export const Route = createFileRoute("/_auth/register")({
   component: RouteComponent
@@ -36,7 +36,7 @@ const registerSchema = z
 type RegisterInput = z.infer<typeof registerSchema>;
 
 function RouteComponent() {
-  const register = useMutation(registerMutationOptions());
+  const register = useMutation(authMutations.register());
   const form = useAppForm({
     defaultValues: {
       fullName: "",

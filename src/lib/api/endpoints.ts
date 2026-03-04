@@ -1,3 +1,5 @@
+import type { ResourceId } from "@/lib/types/resource";
+
 export const ENDPOINTS = {
   auth: {
     login: "/user/authenticate",
@@ -13,5 +15,11 @@ export const ENDPOINTS = {
   products: {
     list: "/products",
     byId: (id: string) => `/products/${id}`
+  },
+  resource: {
+    list: "/resource/list",
+    update: "/resource/update",
+    delete: (id: ResourceId) => `/resource/delete/${id}`,
+    detail: `/resource/getById`
   }
 } as const;
