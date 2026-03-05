@@ -1,6 +1,6 @@
+import Select from "react-select";
 import { FormBase, type FormControlProps } from "@/components/form/form-base";
 import { useFieldContext, useFieldInvalid } from "@/components/form/hooks";
-import { cn } from "@/lib/utils";
 
 type SelectOption = {
   label: string;
@@ -20,67 +20,80 @@ type FormSelectProps = Omit<FormControlProps, "label"> & {
   className?: string;
   disabled?: boolean;
   onLoadMore?: () => void;
+  isClearable?: boolean;
 };
 
 export function FormSelect({
   label,
   options,
   groups,
-  placeholder = "Select",
-  className,
+  placeholder = "Chọn",
   disabled,
   onLoadMore,
+  isClearable = true,
   ...baseProps
 }: FormSelectProps) {
   const field = useFieldContext<string | number>();
   const isInvalid = useFieldInvalid();
 
-  const handleScroll = (e: React.UIEvent<HTMLSelectElement>) => {
-    if (!onLoadMore) return;
+  const selectOptions = groups
+    ? groups.map((g) => ({ label: g.label, options: g.options }))
+    : options;
 
-    const target = e.currentTarget;
-    const isBottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 1;
-
-    if (isBottom) {
-      onLoadMore();
+  const getValue = () => {
+    if (groups) {
+      for (const group of groups) {
+        const found = group.options.find((opt) => opt.value === field.state.value);
+        if (found) return found;
+      }
     }
+    return options?.find((opt) => opt.value === field.state.value) || null;
   };
 
   return (
     <FormBase {...baseProps} label={label}>
-      <select
-        className={cn("form-control", isInvalid && "is-invalid", className)}
-        value={field.state.value ?? ""}
-        disabled={disabled}
+      <Select
+        instanceId={field.name}
+        value={getValue()}
+        onChange={(option: any) => field.handleChange(option ? option.value : "")}
+        options={selectOptions}
         onBlur={field.handleBlur}
-        onChange={(e) => field.handleChange(e.target.value)}
-        onScroll={handleScroll}
-        style={{ cursor: disabled ? "default" : "pointer" }}
-      >
-        <option value="" disabled>
-          {placeholder}
-        </option>
-
-        {options?.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-
-        {groups?.map((group) => (
-          <optgroup key={group.label} label={group.label}>
-            {group.options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
-
-      {isInvalid && (
-        <div className="invalid-feedback d-block mt-1">{field.state.meta.errors?.[0]}</div>
-      )}
+        placeholder={placeholder}
+        isDisabled={disabled}
+        isClearable={isClearable}
+        onMenuScrollToBottom={onLoadMore}
+        menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+        menuPosition="fixed"
+        theme={(theme) => ({
+          ...theme,
+          colors: {
+            ...theme.colors,
+            primary: "#dc3545"
+          }
+        })}
+        styles={{
+          menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+          control: (base, state) => ({
+            ...base,
+            border: isInvalid
+              ? "1.2px solid #dc3545"
+              : state.isFocused
+                ? "1.6px solid #dc3545"
+                : "1.2px solid #e8e8e8",
+            boxShadow: "none",
+            "&:hover": {
+              border: "1.2px solid #dc3545"
+            },
+            minHeight: "38px"
+          }),
+          placeholder: (base) => ({ ...base, fontSize: 14 }),
+          option: (base) => ({ ...base, fontSize: 14 }),
+          singleValue: (base) => ({ ...base, fontSize: 14, color: "#707070" })
+        }}
+        noOptionsMessage={({ inputValue }) =>
+          inputValue ? `Không tìm thấy "${inputValue}"` : "Không có lựa chọn"
+        }
+      />
     </FormBase>
   );
 }
