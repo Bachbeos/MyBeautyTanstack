@@ -45,9 +45,9 @@ export const ENDPOINTS = {
     detail: "/unit/get"
   },
   category: {
-    list: "/category/list",
-    update: "/category/update",
-    delete: (id: CategoryId) => `/category/delete/${id}`,
-    detail: "/category/get"
+    list: "/categoryItem/list",
+    update: "/categoryItem/update",
+    delete: (id: CategoryId) => `/categoryItem/delete/${id}`,
+    detail: "/categoryItem/get"
   }
 } as const;

@@ -14,6 +14,7 @@ import { Route as CrmRouteImport } from './routes/_crm'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
+import { Route as CrmUserUserRouteImport } from './routes/_crm/_user/user'
 import { Route as CrmUnitUnitRouteImport } from './routes/_crm/_unit/unit'
 import { Route as CrmServiceServiceRouteImport } from './routes/_crm/_service/service'
 import { Route as CrmRolesPermissionsRoleRouteImport } from './routes/_crm/_roles-permissions/role'
@@ -50,6 +51,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/_auth/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CrmUserUserRoute = CrmUserUserRouteImport.update({
+  id: '/_user/user',
+  path: '/user',
+  getParentRoute: () => CrmRoute,
 } as any)
 const CrmUnitUnitRoute = CrmUnitUnitRouteImport.update({
   id: '/_unit/unit',
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/role': typeof CrmRolesPermissionsRoleRoute
   '/service': typeof CrmServiceServiceRoute
   '/unit': typeof CrmUnitUnitRoute
+  '/user': typeof CrmUserUserRoute
 }
 export interface FileRoutesByTo {
   '/': typeof CrmRouteWithChildren
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/role': typeof CrmRolesPermissionsRoleRoute
   '/service': typeof CrmServiceServiceRoute
   '/unit': typeof CrmUnitUnitRoute
+  '/user': typeof CrmUserUserRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/_crm/_roles-permissions/role': typeof CrmRolesPermissionsRoleRoute
   '/_crm/_service/service': typeof CrmServiceServiceRoute
   '/_crm/_unit/unit': typeof CrmUnitUnitRoute
+  '/_crm/_user/user': typeof CrmUserUserRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -194,6 +203,7 @@ export interface FileRouteTypes {
     | '/role'
     | '/service'
     | '/unit'
+    | '/user'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/role'
     | '/service'
     | '/unit'
+    | '/user'
   id:
     | '__root__'
     | '/_crm'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/_crm/_roles-permissions/role'
     | '/_crm/_service/service'
     | '/_crm/_unit/unit'
+    | '/_crm/_user/user'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -278,6 +290,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/forgot-password'
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_crm/_user/user': {
+      id: '/_crm/_user/user'
+      path: '/user'
+      fullPath: '/user'
+      preLoaderRoute: typeof CrmUserUserRouteImport
+      parentRoute: typeof CrmRoute
     }
     '/_crm/_unit/unit': {
       id: '/_crm/_unit/unit'
@@ -379,6 +398,7 @@ interface CrmRouteChildren {
   CrmRolesPermissionsRoleRoute: typeof CrmRolesPermissionsRoleRoute
   CrmServiceServiceRoute: typeof CrmServiceServiceRoute
   CrmUnitUnitRoute: typeof CrmUnitUnitRoute
+  CrmUserUserRoute: typeof CrmUserUserRoute
 }
 
 const CrmRouteChildren: CrmRouteChildren = {
@@ -395,6 +415,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmRolesPermissionsRoleRoute: CrmRolesPermissionsRoleRoute,
   CrmServiceServiceRoute: CrmServiceServiceRoute,
   CrmUnitUnitRoute: CrmUnitUnitRoute,
+  CrmUserUserRoute: CrmUserUserRoute,
 }
 
 const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)
