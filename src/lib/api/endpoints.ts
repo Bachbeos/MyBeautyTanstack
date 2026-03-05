@@ -1,4 +1,5 @@
 import type { ResourceId } from "@/lib/types/resource";
+import type { RoleId } from "@/lib/types/role";
 
 export const ENDPOINTS = {
   auth: {
@@ -21,5 +22,16 @@ export const ENDPOINTS = {
     update: "/resource/update",
     delete: (id: ResourceId) => `/resource/delete/${id}`,
     detail: `/resource/getById`
+  },
+  role: {
+    list: `/role/list`,
+    upsert: `/role/update`,
+    delete: (id: RoleId) => `/role/delete/${id}`
+  },
+  permission: {
+    upsert: `/permission/add`,
+    delete: `/permission/remove`,
+    detail: `/permission/info`,
+    checkPermission: `/permission/resource`
   }
 } as const;

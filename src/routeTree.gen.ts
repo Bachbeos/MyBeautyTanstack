@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ApiTestRouteImport } from './routes/api-test'
 import { Route as CrmRouteImport } from './routes/_crm'
+import { Route as TestTestRoleApiRouteImport } from './routes/_test/test-role-api'
+import { Route as TestTestResourceApiRouteImport } from './routes/_test/test-resource-api'
+import { Route as TestTestPermissionApiRouteImport } from './routes/_test/test-permission-api'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
@@ -26,13 +28,23 @@ import { Route as CrmCustomerSourceCustomerSourceRouteImport } from './routes/_c
 import { Route as CrmCategoryCategoryRouteImport } from './routes/_crm/_category/category'
 import { Route as CrmBranchBranchRouteImport } from './routes/_crm/_branch/branch'
 
-const ApiTestRoute = ApiTestRouteImport.update({
-  id: '/api-test',
-  path: '/api-test',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CrmRoute = CrmRouteImport.update({
   id: '/_crm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestTestRoleApiRoute = TestTestRoleApiRouteImport.update({
+  id: '/_test/test-role-api',
+  path: '/test-role-api',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestTestResourceApiRoute = TestTestResourceApiRouteImport.update({
+  id: '/_test/test-resource-api',
+  path: '/test-resource-api',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestTestPermissionApiRoute = TestTestPermissionApiRouteImport.update({
+  id: '/_test/test-permission-api',
+  path: '/test-permission-api',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -112,10 +124,12 @@ const CrmBranchBranchRoute = CrmBranchBranchRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof CrmRouteWithChildren
-  '/api-test': typeof ApiTestRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
+  '/test-permission-api': typeof TestTestPermissionApiRoute
+  '/test-resource-api': typeof TestTestResourceApiRoute
+  '/test-role-api': typeof TestTestRoleApiRoute
   '/branch': typeof CrmBranchBranchRoute
   '/category': typeof CrmCategoryCategoryRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
@@ -130,10 +144,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof CrmRouteWithChildren
-  '/api-test': typeof ApiTestRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
+  '/test-permission-api': typeof TestTestPermissionApiRoute
+  '/test-resource-api': typeof TestTestResourceApiRoute
+  '/test-role-api': typeof TestTestRoleApiRoute
   '/branch': typeof CrmBranchBranchRoute
   '/category': typeof CrmCategoryCategoryRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
@@ -149,10 +165,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_crm': typeof CrmRouteWithChildren
-  '/api-test': typeof ApiTestRoute
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
+  '/_test/test-permission-api': typeof TestTestPermissionApiRoute
+  '/_test/test-resource-api': typeof TestTestResourceApiRoute
+  '/_test/test-role-api': typeof TestTestRoleApiRoute
   '/_crm/_branch/branch': typeof CrmBranchBranchRoute
   '/_crm/_category/category': typeof CrmCategoryCategoryRoute
   '/_crm/_customer-source/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
@@ -169,10 +187,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/api-test'
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/test-permission-api'
+    | '/test-resource-api'
+    | '/test-role-api'
     | '/branch'
     | '/category'
     | '/customer-source'
@@ -187,10 +207,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/api-test'
     | '/forgot-password'
     | '/login'
     | '/register'
+    | '/test-permission-api'
+    | '/test-resource-api'
+    | '/test-role-api'
     | '/branch'
     | '/category'
     | '/customer-source'
@@ -205,10 +227,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_crm'
-    | '/api-test'
     | '/_auth/forgot-password'
     | '/_auth/login'
     | '/_auth/register'
+    | '/_test/test-permission-api'
+    | '/_test/test-resource-api'
+    | '/_test/test-role-api'
     | '/_crm/_branch/branch'
     | '/_crm/_category/category'
     | '/_crm/_customer-source/customer-source'
@@ -224,26 +248,42 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   CrmRoute: typeof CrmRouteWithChildren
-  ApiTestRoute: typeof ApiTestRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
+  TestTestPermissionApiRoute: typeof TestTestPermissionApiRoute
+  TestTestResourceApiRoute: typeof TestTestResourceApiRoute
+  TestTestRoleApiRoute: typeof TestTestRoleApiRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/api-test': {
-      id: '/api-test'
-      path: '/api-test'
-      fullPath: '/api-test'
-      preLoaderRoute: typeof ApiTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_crm': {
       id: '/_crm'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof CrmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_test/test-role-api': {
+      id: '/_test/test-role-api'
+      path: '/test-role-api'
+      fullPath: '/test-role-api'
+      preLoaderRoute: typeof TestTestRoleApiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_test/test-resource-api': {
+      id: '/_test/test-resource-api'
+      path: '/test-resource-api'
+      fullPath: '/test-resource-api'
+      preLoaderRoute: typeof TestTestResourceApiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_test/test-permission-api': {
+      id: '/_test/test-permission-api'
+      path: '/test-permission-api'
+      fullPath: '/test-permission-api'
+      preLoaderRoute: typeof TestTestPermissionApiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/register': {
@@ -381,10 +421,12 @@ const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   CrmRoute: CrmRouteWithChildren,
-  ApiTestRoute: ApiTestRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
+  TestTestPermissionApiRoute: TestTestPermissionApiRoute,
+  TestTestResourceApiRoute: TestTestResourceApiRoute,
+  TestTestRoleApiRoute: TestTestRoleApiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
