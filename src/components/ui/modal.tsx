@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { type ReactNode, Fragment } from "react";
 
 type BaseModalProps = {
@@ -7,6 +8,7 @@ type BaseModalProps = {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  contentClassName?: string;
 };
 
 export function BaseModal({
@@ -15,7 +17,8 @@ export function BaseModal({
   size = "md",
   onClose,
   children,
-  footer
+  footer,
+  contentClassName
 }: BaseModalProps) {
   if (!shown) return null;
 
@@ -25,7 +28,7 @@ export function BaseModal({
     <Fragment>
       <div className="modal fade show d-block" style={{ zIndex: 1051 }}>
         <div className={`modal-dialog modal-dialog-centered ${sizeClass}`}>
-          <div className="modal-content">
+          <div className={cn("modal-content", contentClassName)}>
             <div className="modal-header">
               <h5 className="modal-title">{title}</h5>
               <button type="button" className="btn-close" onClick={onClose} />

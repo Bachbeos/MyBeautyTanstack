@@ -6,7 +6,7 @@ import {
   getFilteredRowModel,
   type ColumnFiltersState
 } from "@tanstack/react-table";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Fragment } from "react";
 import { DataTable } from "@/components/table/data-table";
 import type { ResourceDto, ResourceId } from "@/lib/types/resource";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -14,6 +14,10 @@ import { resourceQueries, resourceMutations } from "@/lib/tanstack/options/resou
 import { AsyncBoundary } from "@/components/async-boundary";
 import ModalResource from "@/components/features/resource/modal";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
+import ActionsTable from "@/components/table/actions-table";
+import AddButton from "@/components/ui/add-button";
+import ExportButton from "@/components/export/export";
+import RefreshButton from "@/components/refresh/refresh";
 
 const columnHelper = createColumnHelper<ResourceDto>();
 
@@ -24,14 +28,14 @@ export const Route = createFileRoute("/_crm/_resource/resource")({
 function RouteComponent() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
 
   const rawNameFilter = useMemo(() => {
     const filter = columnFilters.find((f) => f.id === "name");
     return (filter?.value as string) || "";
   }, [columnFilters]);
 
-  const [nameFilter] = useDebounceValue(rawNameFilter, 300);
+  const [nameFilter] = useDebounceValue(rawNameFilter, 500);
 
   const [modal, setModal] = useState<{
     type: "add" | "edit" | "delete" | "detail" | null;
@@ -74,35 +78,39 @@ function RouteComponent() {
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor("code", {
-        header: "Mã tài nguyên",
-        cell: (info) => <span className="fw-medium text-primary">{info.getValue()}</span>
+      columnHelper.display({
+        id: "stt",
+        header: "STT",
+        cell: (info) => pageIndex * pageSize + info.row.index + 1,
+        meta: { className: "w-1 text-center" }
       }),
       columnHelper.accessor("name", {
         header: "Tên tài nguyên"
       }),
+      columnHelper.accessor("description", {
+        header: "Mô tả"
+      }),
+      columnHelper.accessor("code", {
+        header: "Code"
+      }),
+      columnHelper.accessor("uri", {
+        header: "URI"
+      }),
       columnHelper.display({
         id: "actions",
         header: "Thao tác",
+        meta: { className: "text-center w-1" },
         cell: (info) => (
-          <div className="d-flex gap-2">
-            <button
-              className="btn btn-sm btn-light border"
-              onClick={() => openModal("edit", info.row.original)}
-            >
-              <i className="ti ti-edit"></i>
-            </button>
-            <button
-              className="btn btn-sm btn-light border text-danger"
-              onClick={() => openModal("delete", info.row.original)}
-            >
-              <i className="ti ti-trash"></i>
-            </button>
-          </div>
+          <ActionsTable
+            row={info.row}
+            onView={(data) => openModal("detail", data)}
+            onEdit={(data) => openModal("edit", data)}
+            onDelete={(data) => openModal("delete", data)}
+          />
         )
       })
     ],
-    []
+    [pageIndex, pageSize]
   );
 
   const table = useReactTable({
@@ -126,61 +134,41 @@ function RouteComponent() {
     getCoreRowModel: getCoreRowModel()
   });
 
-  const handleSubmit = async (values: {
-    id?: ResourceId;
-    name: string;
-    code: string;
-    description?: string;
-  }) => {
-    if (modal.type === "add") {
-      await createMutation.mutateAsync({
-        name: values.name,
-        code: values.code,
-        description: values.description
-      });
-    }
-
-    if (modal.type === "edit") {
-      if (!values.id) return;
-
-      await updateMutation.mutateAsync({
-        id: values.id,
-        name: values.name,
-        code: values.code,
-        description: values.description
-      });
-    }
-
+  const handleSubmit = async (values: any) => {
+    if (modal.type === "add") await createMutation.mutateAsync(values);
+    if (modal.type === "edit") await updateMutation.mutateAsync(values);
     closeModal();
+    query.refetch();
   };
 
   const handleDelete = async () => {
     if (!modal.item?.id) return;
-
     await deleteMutation.mutateAsync(modal.item.id);
-
     closeModal();
+    query.refetch();
   };
 
   return (
-    <div className="page-wrapper p-4">
-      <div className="container-fluid">
-        <div className="d-flex justify-content-between align-items-center mb-4">
+    <div className="page-wrapper">
+      <div className="content pb-0">
+        {/* Header & Breadcrumb */}
+        <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
           <div>
-            <h4 className="fw-bold mb-0">
+            <h4 className="mb-1 fw-bold">
               Danh sách tài nguyên
-              <span className="badge bg-primary-subtle text-primary ms-2">{total}</span>
+              <span className="badge badge-soft-primary ms-2">{total}</span>
             </h4>
+            {/* Breadcrumb component ở đây */}
+            <div className="text-muted small">Tài nguyên / Danh sách</div>
           </div>
-          <button
-            className="btn btn-primary d-flex align-items-center"
-            onClick={() => openModal("add")}
-          >
-            <i className="ti ti-plus me-1"></i> Thêm tài nguyên
-          </button>
+          <div className="gap-2 d-flex align-items-center flex-wrap">
+            <ExportButton onExport={() => {}} />
+            <RefreshButton onRefresh={() => query.refetch()} />
+          </div>
         </div>
 
-        <div className="card border-0 shadow-sm">
+        <div className="card border-0 rounded-0 shadow-sm">
+          {/* <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap bg-white py-3"></div> */}
           <div className="card-body p-3">
             <AsyncBoundary
               status={query.status}
@@ -191,13 +179,13 @@ function RouteComponent() {
               {() => (
                 <DataTable
                   table={table}
-                  filterable
+                  filterable={true}
+                  filterKey="name"
                   filterKeyPlaceholder="Tìm nhanh tài nguyên..."
-                  toolbarLeft={
-                    <div className="text-muted small">
-                      Dữ liệu được cập nhật từ hệ thống quản trị
-                    </div>
+                  toolbarRight={
+                    <AddButton label="Thêm tài nguyên" onClick={() => openModal("add")} />
                   }
+                  toolbarLeft={<div className="text-muted small d-none d-md-block"></div>}
                 />
               )}
             </AsyncBoundary>

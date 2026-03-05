@@ -45,12 +45,13 @@ export default function ModalResource({
         shown={shown}
         size="sm"
         onClose={onClose}
+        contentClassName="rounded-0 border-radius"
         footer={
-          <div className="d-flex justify-content-center gap-2 w-100">
-            <button type="button" className="btn btn-light w-100" onClick={onClose}>
+          <div className="d-flex justify-content-center w-100 gap-2">
+            <button type="button" className="btn btn-sm btn-light w-100" onClick={onClose}>
               Hủy
             </button>
-            <button type="button" className="btn btn-danger w-100" onClick={onDelete}>
+            <button type="button" className="btn btn-sm btn-danger w-100" onClick={onDelete}>
               Xác nhận xóa
             </button>
           </div>
@@ -95,10 +96,8 @@ export default function ModalResource({
         )
       }
     >
-      <div className="row">
-        <div className="col-md-12">
-          <ResourceForm mode={type} resource={item} onSubmit={onSubmit} />
-        </div>
+      <div className="">
+        <ResourceForm mode={type} resource={item} onSubmit={onSubmit} />
       </div>
     </BaseModal>
   );

@@ -35,6 +35,7 @@
     "@tanstack/eslint-plugin-query": "^5.91.4",
     "@tanstack/react-router-devtools": "^1.163.3",
     "@tanstack/router-plugin": "^1.158.1",
+    "@types/bootstrap": "^5.2.10",
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
