@@ -3,6 +3,7 @@ import { FormPassword } from "@/components/form/form-password";
 import { FormPhone } from "@/components/form/form-phone";
 import { FormTextarea } from "@/components/form/form-textarea";
 import { createFormHook, createFormHookContexts } from "@tanstack/react-form";
+import { FormCheckbox } from "@/components/form/form-checkbox";
 
 const { fieldContext, formContext, useFieldContext, useFormContext } = createFormHookContexts();
 
@@ -11,7 +12,8 @@ const { useAppForm } = createFormHook({
     Input: FormInput,
     Password: FormPassword,
     Phone: FormPhone,
-    Textarea: FormTextarea
+    Textarea: FormTextarea,
+    Checkbox: FormCheckbox
   },
   formComponents: {},
   fieldContext,
