@@ -2,6 +2,7 @@ import type { ResourceId } from "@/lib/types/resource";
 import type { RoleId } from "../types/role";
 import type { UnitId } from "../types/unit";
 import type { CategoryId } from "../types/category";
+import type { UserId } from "../types/user";
 
 export const ENDPOINTS = {
   auth: {
@@ -12,7 +13,13 @@ export const ENDPOINTS = {
     me: "/auth/me"
   },
   user: {
-    info: "/users/info"
+    info: "/users/info",
+    list: "/user/list",
+    update: "/user/update",
+    delete: (id: UserId) => `/user/delete/${id}`,
+    detail: "/user/getById",
+    updatePassword: "/user/update-password",
+    updateStatus: "/user/update-status"
   },
   products: {
     list: "/products",
@@ -22,7 +29,7 @@ export const ENDPOINTS = {
     list: "/resource/list",
     update: "/resource/update",
     delete: (id: ResourceId) => `/resource/delete/${id}`,
-    detail: `/resource/getById`
+    detail: "/resource/getById"
   },
   role: {
     list: "/role/list",

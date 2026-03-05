@@ -216,7 +216,7 @@ export default function Sidebar() {
               <ul>
                 <li>
                   <Link
-                    to="/manager-users"
+                    to="/user"
                     className={activeTab === "manager-users" ? "active" : ""}
                     onClick={() => handleTabClick("manager-users")}
                   >
