@@ -10,8 +10,6 @@ import logoWhite from "@assets/img/logo-white.svg";
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<string>("");
-  const [isMini, setIsMini] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
 
   const [openSubmenus, setOpenSubmenus] = useState<{ [key: string]: boolean }>({
     dashboard: true,
@@ -229,7 +227,7 @@ export default function Sidebar() {
 
                 <li>
                   <Link
-                    to="/roles-permissions"
+                    to="/role"
                     className={activeTab === "roles-permissions" ? "active" : ""}
                     onClick={() => handleTabClick("roles-permissions")}
                   >

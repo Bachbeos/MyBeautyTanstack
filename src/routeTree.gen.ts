@@ -16,7 +16,8 @@ import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
 import { Route as CrmUnitUnitRouteImport } from './routes/_crm/_unit/unit'
 import { Route as CrmServiceServiceRouteImport } from './routes/_crm/_service/service'
-import { Route as CrmRolesPermissionsRolesPermissionsRouteImport } from './routes/_crm/_roles-permissions/roles-permissions'
+import { Route as CrmRolesPermissionsRoleRouteImport } from './routes/_crm/_roles-permissions/role'
+import { Route as CrmRolesPermissionsPermissionRouteImport } from './routes/_crm/_roles-permissions/permission'
 import { Route as CrmResourceResourceRouteImport } from './routes/_crm/_resource/resource'
 import { Route as CrmProfileSettingsProfileSettingsRouteImport } from './routes/_crm/_profile-settings/profile-settings'
 import { Route as CrmProductProductRouteImport } from './routes/_crm/_product/product'
@@ -60,10 +61,15 @@ const CrmServiceServiceRoute = CrmServiceServiceRouteImport.update({
   path: '/service',
   getParentRoute: () => CrmRoute,
 } as any)
-const CrmRolesPermissionsRolesPermissionsRoute =
-  CrmRolesPermissionsRolesPermissionsRouteImport.update({
-    id: '/_roles-permissions/roles-permissions',
-    path: '/roles-permissions',
+const CrmRolesPermissionsRoleRoute = CrmRolesPermissionsRoleRouteImport.update({
+  id: '/_roles-permissions/role',
+  path: '/role',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmRolesPermissionsPermissionRoute =
+  CrmRolesPermissionsPermissionRouteImport.update({
+    id: '/_roles-permissions/permission',
+    path: '/permission',
     getParentRoute: () => CrmRoute,
   } as any)
 const CrmResourceResourceRoute = CrmResourceResourceRouteImport.update({
@@ -124,7 +130,8 @@ export interface FileRoutesByFullPath {
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/resource': typeof CrmResourceResourceRoute
-  '/roles-permissions': typeof CrmRolesPermissionsRolesPermissionsRoute
+  '/permission': typeof CrmRolesPermissionsPermissionRoute
+  '/role': typeof CrmRolesPermissionsRoleRoute
   '/service': typeof CrmServiceServiceRoute
   '/unit': typeof CrmUnitUnitRoute
 }
@@ -142,7 +149,8 @@ export interface FileRoutesByTo {
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/resource': typeof CrmResourceResourceRoute
-  '/roles-permissions': typeof CrmRolesPermissionsRolesPermissionsRoute
+  '/permission': typeof CrmRolesPermissionsPermissionRoute
+  '/role': typeof CrmRolesPermissionsRoleRoute
   '/service': typeof CrmServiceServiceRoute
   '/unit': typeof CrmUnitUnitRoute
 }
@@ -161,7 +169,8 @@ export interface FileRoutesById {
   '/_crm/_product/product': typeof CrmProductProductRoute
   '/_crm/_profile-settings/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/_crm/_resource/resource': typeof CrmResourceResourceRoute
-  '/_crm/_roles-permissions/roles-permissions': typeof CrmRolesPermissionsRolesPermissionsRoute
+  '/_crm/_roles-permissions/permission': typeof CrmRolesPermissionsPermissionRoute
+  '/_crm/_roles-permissions/role': typeof CrmRolesPermissionsRoleRoute
   '/_crm/_service/service': typeof CrmServiceServiceRoute
   '/_crm/_unit/unit': typeof CrmUnitUnitRoute
 }
@@ -181,7 +190,8 @@ export interface FileRouteTypes {
     | '/product'
     | '/profile-settings'
     | '/resource'
-    | '/roles-permissions'
+    | '/permission'
+    | '/role'
     | '/service'
     | '/unit'
   fileRoutesByTo: FileRoutesByTo
@@ -199,7 +209,8 @@ export interface FileRouteTypes {
     | '/product'
     | '/profile-settings'
     | '/resource'
-    | '/roles-permissions'
+    | '/permission'
+    | '/role'
     | '/service'
     | '/unit'
   id:
@@ -217,7 +228,8 @@ export interface FileRouteTypes {
     | '/_crm/_product/product'
     | '/_crm/_profile-settings/profile-settings'
     | '/_crm/_resource/resource'
-    | '/_crm/_roles-permissions/roles-permissions'
+    | '/_crm/_roles-permissions/permission'
+    | '/_crm/_roles-permissions/role'
     | '/_crm/_service/service'
     | '/_crm/_unit/unit'
   fileRoutesById: FileRoutesById
@@ -281,11 +293,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmServiceServiceRouteImport
       parentRoute: typeof CrmRoute
     }
-    '/_crm/_roles-permissions/roles-permissions': {
-      id: '/_crm/_roles-permissions/roles-permissions'
-      path: '/roles-permissions'
-      fullPath: '/roles-permissions'
-      preLoaderRoute: typeof CrmRolesPermissionsRolesPermissionsRouteImport
+    '/_crm/_roles-permissions/role': {
+      id: '/_crm/_roles-permissions/role'
+      path: '/role'
+      fullPath: '/role'
+      preLoaderRoute: typeof CrmRolesPermissionsRoleRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_roles-permissions/permission': {
+      id: '/_crm/_roles-permissions/permission'
+      path: '/permission'
+      fullPath: '/permission'
+      preLoaderRoute: typeof CrmRolesPermissionsPermissionRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/_resource/resource': {
@@ -356,7 +375,8 @@ interface CrmRouteChildren {
   CrmProductProductRoute: typeof CrmProductProductRoute
   CrmProfileSettingsProfileSettingsRoute: typeof CrmProfileSettingsProfileSettingsRoute
   CrmResourceResourceRoute: typeof CrmResourceResourceRoute
-  CrmRolesPermissionsRolesPermissionsRoute: typeof CrmRolesPermissionsRolesPermissionsRoute
+  CrmRolesPermissionsPermissionRoute: typeof CrmRolesPermissionsPermissionRoute
+  CrmRolesPermissionsRoleRoute: typeof CrmRolesPermissionsRoleRoute
   CrmServiceServiceRoute: typeof CrmServiceServiceRoute
   CrmUnitUnitRoute: typeof CrmUnitUnitRoute
 }
@@ -371,8 +391,8 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmProfileSettingsProfileSettingsRoute:
     CrmProfileSettingsProfileSettingsRoute,
   CrmResourceResourceRoute: CrmResourceResourceRoute,
-  CrmRolesPermissionsRolesPermissionsRoute:
-    CrmRolesPermissionsRolesPermissionsRoute,
+  CrmRolesPermissionsPermissionRoute: CrmRolesPermissionsPermissionRoute,
+  CrmRolesPermissionsRoleRoute: CrmRolesPermissionsRoleRoute,
   CrmServiceServiceRoute: CrmServiceServiceRoute,
   CrmUnitUnitRoute: CrmUnitUnitRoute,
 }

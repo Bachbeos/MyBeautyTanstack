@@ -4,6 +4,7 @@ import "./form.scss";
 
 import { type ResourceDto } from "@/lib/types/resource";
 import { useAppForm } from "@/components/form/hooks";
+import { FormCheckboxGroup } from "@/components/form/form-checkbox-group";
 
 const resourceSchema = z.object({
   id: z.number().optional(),
@@ -55,7 +56,12 @@ export function ResourceForm({ mode, resource, onSubmit }: ResourceFormProps) {
       onSubmit: resourceSchema
     },
     onSubmit: async ({ value }) => {
-      await onSubmit(value);
+      const payload = {
+        ...value,
+        actions: JSON.stringify(value.actions)
+      };
+
+      await onSubmit(payload as any);
     }
   });
 
@@ -104,38 +110,16 @@ export function ResourceForm({ mode, resource, onSubmit }: ResourceFormProps) {
             )}
           </form.AppField>
         </div>
-        <div className="col-12 mb-2">
-          <label className="form-label">Lựa chọn hành động</label>
-          <div className="action-checkboxes d-flex gap-3 flex-wrap mt-2">
-            <form.AppField name="actions">
-              {(field) => (
-                <>
-                  {action_options.map((opt) => (
-                    <div className="form-check" key={opt.value}>
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id={`action-${opt.value}`}
-                        disabled={isReadOnly}
-                        checked={field.state.value?.includes(opt.value)}
-                        onChange={(e) => {
-                          const val = field.state.value || [];
-                          if (e.target.checked) {
-                            field.handleChange([...val, opt.value]);
-                          } else {
-                            field.handleChange(val.filter((v: string) => v !== opt.value));
-                          }
-                        }}
-                      />
-                      <label className="form-check-label" htmlFor={`action-${opt.value}`}>
-                        {opt.label}
-                      </label>
-                    </div>
-                  ))}
-                </>
-              )}
-            </form.AppField>
-          </div>
+        <div className="col-12">
+          <form.AppField name="actions">
+            {() => (
+              <FormCheckboxGroup
+                label="Lựa chọn hành động"
+                options={action_options}
+                disabled={isReadOnly}
+              />
+            )}
+          </form.AppField>
         </div>
         <div className="col-12 mb-2">
           <label className="form-label">Mô tả</label>
