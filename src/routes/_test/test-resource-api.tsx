@@ -7,7 +7,7 @@ import type { ResourceListRequest, ResourceUpdateRequest } from "@/lib/types/res
 import type { ResourceId } from "@/lib/types/resource";
 import { resourceMutations, resourceQueries } from "@/lib/tanstack/options/resource";
 
-export const Route = createFileRoute("/api-test")({
+export const Route = createFileRoute("/_test/test-resource-api")({
   component: RouteComponent
 });
 

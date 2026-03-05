@@ -26,7 +26,7 @@ export type ResourceCreateRequest = {
   name: string;
   code: string;
   uri?: string;
-  actions?: string;
+  actions?: string[];
   description?: string;
 };
 
@@ -35,6 +35,6 @@ export type ResourceUpdateRequest = {
   name: string;
   code: string;
   uri?: string;
-  actions?: string;
+  actions?: string[];
   description?: string;
 };

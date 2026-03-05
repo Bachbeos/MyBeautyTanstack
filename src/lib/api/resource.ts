@@ -35,7 +35,10 @@ export const getResourceDetail = async (
 export const upsertResource = async (
   body: ResourceUpdateRequest | ResourceCreateRequest
 ): Promise<ApiResponse<ResourceDto>> => {
-  const res = await axiosInstance.post<ApiResponse<ResourceDto>>(ENDPOINTS.resource.update, body);
+  const res = await axiosInstance.post<ApiResponse<ResourceDto>>(ENDPOINTS.resource.update, {
+    ...body,
+    actions: Array.isArray(body.actions) ? JSON.stringify(body.actions) : body.actions
+  });
   return res.data;
 };
 
