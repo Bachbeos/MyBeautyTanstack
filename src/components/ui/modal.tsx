@@ -4,7 +4,7 @@ import { type ReactNode, Fragment } from "react";
 type BaseModalProps = {
   title: string;
   shown: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
@@ -22,7 +22,8 @@ export function BaseModal({
 }: BaseModalProps) {
   if (!shown) return null;
 
-  const sizeClass = size === "sm" ? "modal-sm" : size === "lg" ? "modal-lg" : "";
+  const sizeClass =
+    size === "sm" ? "modal-sm" : size === "lg" ? "modal-lg" : size === "xl" ? "modal-xl" : "";
 
   return (
     <Fragment>

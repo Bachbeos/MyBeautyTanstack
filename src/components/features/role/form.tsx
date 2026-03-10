@@ -59,23 +59,14 @@ export function RoleForm({ mode, role, onSubmit }: RoleFormProps) {
     >
       <form.AppField name="name">
         {(field) => (
-          <field.Input
-            label="Tên chức vụ"
-            disabled={isReadOnly}
-            placeholder="Nhập tên"
-            wrapperClassName="mb-0"
-          />
+          <field.Input label="Tên chức vụ" disabled={isReadOnly} placeholder="Nhập tên" />
         )}
       </form.AppField>
       <form.AppField name="isDefault">
-        {(field) => (
-          <field.Checkbox label="Quyền mặc định" disabled={isReadOnly} wrapperClassName="mb-0" />
-        )}
+        {(field) => <field.Checkbox label="Quyền mặc định" disabled={isReadOnly} />}
       </form.AppField>
       <form.AppField name="isOperator">
-        {(field) => (
-          <field.Checkbox label="Quyền điều hành" disabled={isReadOnly} wrapperClassName="mb-0" />
-        )}
+        {(field) => <field.Checkbox label="Quyền điều hành" disabled={isReadOnly} />}
       </form.AppField>
     </form>
   );

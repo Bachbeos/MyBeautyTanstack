@@ -1,16 +1,15 @@
 import { AsyncBoundary } from "@/components/async-boundary";
 import ExportButton from "@/components/export/export";
-import ModalCustomerSource from "@/components/features/customer-source/modal";
+import ModalCallHistory from "@/components/features/call-history/modal";
 import RefreshButton from "@/components/refresh/refresh";
 import ActionsTable from "@/components/table/actions-table";
 import { DataTable } from "@/components/table/data-table";
 import AddButton from "@/components/ui/add-button";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
-import {
-  customerSourceMutations,
-  customerSourceQueries
-} from "@/lib/tanstack/options/customer-source";
-import type { CustomerSourceDto } from "@/lib/types/customer-source";
+import { callHistoryMutations, callHistoryQueries } from "@/lib/tanstack/options/call-history";
+import { customerQueries } from "@/lib/tanstack/options/customer";
+import { userQueries } from "@/lib/tanstack/options/user";
+import type { callHistoryDto } from "@/lib/types/call-history";
 import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -22,9 +21,9 @@ import {
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
 
-const columnHelper = createColumnHelper<CustomerSourceDto>();
+const columnHelper = createColumnHelper<callHistoryDto>();
 
-export const Route = createFileRoute("/_crm/_customer-source/customer-source")({
+export const Route = createFileRoute("/_crm/_call-history/call-history")({
   component: RouteComponent
 });
 
@@ -42,7 +41,7 @@ function RouteComponent() {
 
   const [modal, setModal] = useState<{
     type: "add" | "edit" | "delete" | "detail" | null;
-    item?: CustomerSourceDto;
+    item?: callHistoryDto;
     shown: boolean;
   }>({
     type: null,
@@ -50,7 +49,7 @@ function RouteComponent() {
     shown: false
   });
 
-  const openModal = (type: "add" | "edit" | "delete" | "detail", item?: CustomerSourceDto) => {
+  const openModal = (type: "add" | "edit" | "delete" | "detail", item?: callHistoryDto) => {
     setModal({ type, item, shown: true });
   };
 
@@ -71,13 +70,13 @@ function RouteComponent() {
     setPageIndex(0);
   }, [nameFilter]);
 
-  const query = useQuery(customerSourceQueries.list(params));
-  const customerSources = query.data?.result?.items ?? [];
+  const query = useQuery(callHistoryQueries.list(params));
+  const callHistorys = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
 
-  const createMutation = useMutation(customerSourceMutations.create());
-  const updateMutation = useMutation(customerSourceMutations.update());
-  const deleteMutation = useMutation(customerSourceMutations.delete());
+  const createMutation = useMutation(callHistoryMutations.create());
+  const updateMutation = useMutation(callHistoryMutations.update());
+  const deleteMutation = useMutation(callHistoryMutations.delete());
 
   const columns = useMemo(
     () => [
@@ -87,8 +86,93 @@ function RouteComponent() {
         cell: (info) => pageIndex * pageSize + info.row.index + 1,
         meta: { className: "w-1 text-center" }
       }),
-      columnHelper.accessor("name", {
-        header: "Tên nguồn khách hàng"
+      columnHelper.accessor("callType", {
+        header: "Loại cuộc gọi",
+        meta: { className: "text-center w-1" },
+        cell: (info) => {
+          const callType = info.getValue();
+          const isAudio = Number(callType) === 1;
+
+          return (
+            <span className="fs-18 text-primary" title={isAudio ? "Audio" : "Video"}>
+              {isAudio ? <i className="ti ti-phone" /> : <i className="ti ti-video" />}
+            </span>
+          );
+        }
+      }),
+      columnHelper.display({
+        id: "participants",
+        header: "Người tham gia",
+        cell: (info) => {
+          const row = info.row.original;
+
+          return (
+            <div>
+              <div className="d-flex align-items-center mb-1">
+                <i className="ti ti-user-circle me-1 text-muted"></i>
+                <span className="text-muted small">{userMap[row.userName as any]}</span>
+              </div>
+
+              <div className="d-flex align-items-center">
+                <i className="ti ti-user me-1 text-muted"></i>
+                <span className="text-muted small">{customerMap[row.customerName as any]}</span>
+              </div>
+            </div>
+          );
+        }
+      }),
+      columnHelper.accessor("outcome", {
+        header: "Kết quả",
+        meta: { className: "text-center w-1" },
+        cell: (info) => {
+          const outcome = Number(info.getValue());
+          let badgeClass = "badge-soft-secondary";
+          let label = "Không xác định";
+
+          if (outcome === 1) {
+            badgeClass = "badge-soft-success";
+            label = "Cuộc gọi đến";
+          } else if (outcome === 2) {
+            badgeClass = "badge-soft-info";
+            label = "Cuộc gọi đi";
+          } else if (outcome === 3) {
+            badgeClass = "badge-soft-danger";
+            label = "Cuộc gọi nhỡ";
+          }
+
+          return <span className={`badge ${badgeClass}`}>{label}</span>;
+        }
+      }),
+      columnHelper.accessor("duration", {
+        header: "Thời lượng",
+        meta: { className: "text-center w-1" },
+        cell: (info) => {
+          const duration = info.getValue();
+          return formatDuration(duration);
+        }
+      }),
+      columnHelper.accessor("interestLevel", {
+        header: "Đánh giá",
+        meta: { className: "text-center w-1" },
+        cell: (info) => {
+          const row = info.row.original;
+          const level = Number(info.getValue() || 0);
+
+          return (
+            <div className="text-warning d-flex justify-content-center">
+              {Number(row.outcome) === 3 ? (
+                <span className="text-muted small">-</span>
+              ) : (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <i
+                    key={i}
+                    className={`ti ti-star ${i < level ? "fs-12" : "fs-12 text-muted opacity-25"}`}
+                  />
+                ))
+              )}
+            </div>
+          );
+        }
       }),
       columnHelper.accessor("status", {
         header: "Trạng thái",
@@ -132,7 +216,7 @@ function RouteComponent() {
   );
 
   const table = useReactTable({
-    data: customerSources,
+    data: callHistorys,
     columns,
     state: {
       columnFilters,
@@ -152,6 +236,34 @@ function RouteComponent() {
     getCoreRowModel: getCoreRowModel()
   });
 
+  const usersQuery = useQuery(userQueries.list({ page: 1, limit: 100 }));
+  const userOptions = useMemo(() => {
+    const items = usersQuery.data?.result?.items ?? [];
+    return items.map((u) => ({
+      label: String(u.name || u.fullname || `User ${u.id}`),
+      value: Number(u.id)
+    }));
+  }, [usersQuery.data]);
+
+  const userMap = useMemo(
+    () => Object.fromEntries(userOptions.map((o) => [o.value, o.label])),
+    [userOptions]
+  ) as Record<number, string>;
+
+  const customersQuery = useQuery(customerQueries.list({ page: 1, limit: 100 }));
+  const customerOptions = useMemo(() => {
+    const items = customersQuery.data?.result?.items ?? [];
+    return items.map((u) => ({
+      label: String(u.name || u.fullname || `User ${u.id}`),
+      value: Number(u.id)
+    }));
+  }, [customersQuery.data]);
+
+  const customerMap = useMemo(
+    () => Object.fromEntries(customerOptions.map((o) => [o.value, o.label])),
+    [customerOptions]
+  ) as Record<number, string>;
+
   const handleSubmit = async (values: any) => {
     if (modal.type === "add") await createMutation.mutateAsync(values);
     if (modal.type === "edit") await updateMutation.mutateAsync(values);
@@ -166,7 +278,17 @@ function RouteComponent() {
     query.refetch();
   };
 
-  const handleToggleStatus = async (row: CustomerSourceDto) => {
+  const formatDuration = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) {
+      return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  const handleToggleStatus = async (row: callHistoryDto) => {
     const newStatus = Number(row.status) === 1 ? 0 : 1;
 
     try {
@@ -204,7 +326,7 @@ function RouteComponent() {
           <div className="card-body p-3">
             <AsyncBoundary
               status={query.status}
-              data={customerSources}
+              data={callHistorys}
               error={query.error}
               onRetry={() => query.refetch()}
             >
@@ -213,9 +335,9 @@ function RouteComponent() {
                   table={table}
                   filterable={true}
                   filterKey="name"
-                  filterKeyPlaceholder="Tìm nhanh nguồn khách hàng..."
+                  filterKeyPlaceholder="Tìm nhanh lịch sử cuộc gọi..."
                   toolbarRight={
-                    <AddButton label="Thêm nguồn khách hàng" onClick={() => openModal("add")} />
+                    <AddButton label="Thêm lịch sử cuộc gọi" onClick={() => openModal("add")} />
                   }
                   toolbarLeft={<div className="text-muted small d-none d-md-block"></div>}
                 />
@@ -225,13 +347,15 @@ function RouteComponent() {
         </div>
       </div>
 
-      <ModalCustomerSource
+      <ModalCallHistory
         type={modal.type}
         shown={modal.shown}
         item={modal.item}
         onClose={closeModal}
         onSubmit={handleSubmit}
         onDelete={handleDelete}
+        userOptions={userOptions}
+        customerOptions={customerOptions}
       />
     </div>
   );

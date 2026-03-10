@@ -8,6 +8,7 @@ import AddButton from "@/components/ui/add-button";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { unitMutations, unitQueries } from "@/lib/tanstack/options/unit";
 import type { UnitDto } from "@/lib/types/unit";
+import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -90,10 +91,22 @@ function RouteComponent() {
         header: "Trạng thái",
         meta: { className: "text-center w-1" },
         cell: (info) => {
-          const status = Number(info.getValue());
+          const row = info.row.original;
+          const isActive = Number(row.status) === 1;
+
           return (
-            <span className={status === 1 ? "badge badge-soft-success" : "badge badge-soft-danger"}>
-              {status === 1 ? "Đang hoạt động" : "Ngưng hoạt động"}
+            <span
+              className={cn(
+                "badge cursor-pointer",
+                isActive ? "badge-soft-success" : "badge-soft-danger"
+              )}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleStatus(row);
+              }}
+            >
+              {isActive ? "Đang hoạt động" : "Ngưng hoạt động"}
             </span>
           );
         }
@@ -148,6 +161,20 @@ function RouteComponent() {
     await deleteMutation.mutateAsync(modal.item.id);
     closeModal();
     query.refetch();
+  };
+
+  const handleToggleStatus = async (row: UnitDto) => {
+    const newStatus = Number(row.status) === 1 ? 0 : 1;
+
+    try {
+      await updateMutation.mutateAsync({
+        ...row,
+        status: newStatus
+      });
+      query.refetch();
+    } catch (error) {
+      console.error("Toggle status failed:", error);
+    }
   };
 
   return (

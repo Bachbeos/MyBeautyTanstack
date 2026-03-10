@@ -16,6 +16,7 @@ import { Route as TestTestPermissionApiRouteImport } from './routes/_test/test-p
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
+import { Route as CrmVoucherVoucherRouteImport } from './routes/_crm/_voucher/voucher'
 import { Route as CrmUserUserRouteImport } from './routes/_crm/_user/user'
 import { Route as CrmUnitUnitRouteImport } from './routes/_crm/_unit/unit'
 import { Route as CrmServiceServiceRouteImport } from './routes/_crm/_service/service'
@@ -28,7 +29,9 @@ import { Route as CrmManagerUsersManagerUsersRouteImport } from './routes/_crm/_
 import { Route as CrmCustomerCustomerRouteImport } from './routes/_crm/_customer/customer'
 import { Route as CrmCustomerSourceCustomerSourceRouteImport } from './routes/_crm/_customer-source/customer-source'
 import { Route as CrmCategoryCategoryRouteImport } from './routes/_crm/_category/category'
+import { Route as CrmCallHistoryCallHistoryRouteImport } from './routes/_crm/_call-history/call-history'
 import { Route as CrmBranchBranchRouteImport } from './routes/_crm/_branch/branch'
+import { Route as CrmAppointmentAppointmentRouteImport } from './routes/_crm/_appointment/appointment'
 
 const CrmRoute = CrmRouteImport.update({
   id: '/_crm',
@@ -63,6 +66,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/_auth/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CrmVoucherVoucherRoute = CrmVoucherVoucherRouteImport.update({
+  id: '/_voucher/voucher',
+  path: '/voucher',
+  getParentRoute: () => CrmRoute,
 } as any)
 const CrmUserUserRoute = CrmUserUserRouteImport.update({
   id: '/_user/user',
@@ -128,11 +136,23 @@ const CrmCategoryCategoryRoute = CrmCategoryCategoryRouteImport.update({
   path: '/category',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmCallHistoryCallHistoryRoute =
+  CrmCallHistoryCallHistoryRouteImport.update({
+    id: '/_call-history/call-history',
+    path: '/call-history',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmBranchBranchRoute = CrmBranchBranchRouteImport.update({
   id: '/_branch/branch',
   path: '/branch',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmAppointmentAppointmentRoute =
+  CrmAppointmentAppointmentRouteImport.update({
+    id: '/_appointment/appointment',
+    path: '/appointment',
+    getParentRoute: () => CrmRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof CrmRouteWithChildren
@@ -142,7 +162,9 @@ export interface FileRoutesByFullPath {
   '/test-permission-api': typeof TestTestPermissionApiRoute
   '/test-resource-api': typeof TestTestResourceApiRoute
   '/test-role-api': typeof TestTestRoleApiRoute
+  '/appointment': typeof CrmAppointmentAppointmentRoute
   '/branch': typeof CrmBranchBranchRoute
+  '/call-history': typeof CrmCallHistoryCallHistoryRoute
   '/category': typeof CrmCategoryCategoryRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/customer': typeof CrmCustomerCustomerRoute
@@ -155,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/service': typeof CrmServiceServiceRoute
   '/unit': typeof CrmUnitUnitRoute
   '/user': typeof CrmUserUserRoute
+  '/voucher': typeof CrmVoucherVoucherRoute
 }
 export interface FileRoutesByTo {
   '/': typeof CrmRouteWithChildren
@@ -164,7 +187,9 @@ export interface FileRoutesByTo {
   '/test-permission-api': typeof TestTestPermissionApiRoute
   '/test-resource-api': typeof TestTestResourceApiRoute
   '/test-role-api': typeof TestTestRoleApiRoute
+  '/appointment': typeof CrmAppointmentAppointmentRoute
   '/branch': typeof CrmBranchBranchRoute
+  '/call-history': typeof CrmCallHistoryCallHistoryRoute
   '/category': typeof CrmCategoryCategoryRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/customer': typeof CrmCustomerCustomerRoute
@@ -177,6 +202,7 @@ export interface FileRoutesByTo {
   '/service': typeof CrmServiceServiceRoute
   '/unit': typeof CrmUnitUnitRoute
   '/user': typeof CrmUserUserRoute
+  '/voucher': typeof CrmVoucherVoucherRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -187,7 +213,9 @@ export interface FileRoutesById {
   '/_test/test-permission-api': typeof TestTestPermissionApiRoute
   '/_test/test-resource-api': typeof TestTestResourceApiRoute
   '/_test/test-role-api': typeof TestTestRoleApiRoute
+  '/_crm/_appointment/appointment': typeof CrmAppointmentAppointmentRoute
   '/_crm/_branch/branch': typeof CrmBranchBranchRoute
+  '/_crm/_call-history/call-history': typeof CrmCallHistoryCallHistoryRoute
   '/_crm/_category/category': typeof CrmCategoryCategoryRoute
   '/_crm/_customer-source/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/_crm/_customer/customer': typeof CrmCustomerCustomerRoute
@@ -200,6 +228,7 @@ export interface FileRoutesById {
   '/_crm/_service/service': typeof CrmServiceServiceRoute
   '/_crm/_unit/unit': typeof CrmUnitUnitRoute
   '/_crm/_user/user': typeof CrmUserUserRoute
+  '/_crm/_voucher/voucher': typeof CrmVoucherVoucherRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -211,7 +240,9 @@ export interface FileRouteTypes {
     | '/test-permission-api'
     | '/test-resource-api'
     | '/test-role-api'
+    | '/appointment'
     | '/branch'
+    | '/call-history'
     | '/category'
     | '/customer-source'
     | '/customer'
@@ -224,6 +255,7 @@ export interface FileRouteTypes {
     | '/service'
     | '/unit'
     | '/user'
+    | '/voucher'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -233,7 +265,9 @@ export interface FileRouteTypes {
     | '/test-permission-api'
     | '/test-resource-api'
     | '/test-role-api'
+    | '/appointment'
     | '/branch'
+    | '/call-history'
     | '/category'
     | '/customer-source'
     | '/customer'
@@ -246,6 +280,7 @@ export interface FileRouteTypes {
     | '/service'
     | '/unit'
     | '/user'
+    | '/voucher'
   id:
     | '__root__'
     | '/_crm'
@@ -255,7 +290,9 @@ export interface FileRouteTypes {
     | '/_test/test-permission-api'
     | '/_test/test-resource-api'
     | '/_test/test-role-api'
+    | '/_crm/_appointment/appointment'
     | '/_crm/_branch/branch'
+    | '/_crm/_call-history/call-history'
     | '/_crm/_category/category'
     | '/_crm/_customer-source/customer-source'
     | '/_crm/_customer/customer'
@@ -268,6 +305,7 @@ export interface FileRouteTypes {
     | '/_crm/_service/service'
     | '/_crm/_unit/unit'
     | '/_crm/_user/user'
+    | '/_crm/_voucher/voucher'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -330,6 +368,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/forgot-password'
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_crm/_voucher/voucher': {
+      id: '/_crm/_voucher/voucher'
+      path: '/voucher'
+      fullPath: '/voucher'
+      preLoaderRoute: typeof CrmVoucherVoucherRouteImport
+      parentRoute: typeof CrmRoute
     }
     '/_crm/_user/user': {
       id: '/_crm/_user/user'
@@ -415,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmCategoryCategoryRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/_call-history/call-history': {
+      id: '/_crm/_call-history/call-history'
+      path: '/call-history'
+      fullPath: '/call-history'
+      preLoaderRoute: typeof CrmCallHistoryCallHistoryRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/_crm/_branch/branch': {
       id: '/_crm/_branch/branch'
       path: '/branch'
@@ -422,11 +474,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmBranchBranchRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/_appointment/appointment': {
+      id: '/_crm/_appointment/appointment'
+      path: '/appointment'
+      fullPath: '/appointment'
+      preLoaderRoute: typeof CrmAppointmentAppointmentRouteImport
+      parentRoute: typeof CrmRoute
+    }
   }
 }
 
 interface CrmRouteChildren {
+  CrmAppointmentAppointmentRoute: typeof CrmAppointmentAppointmentRoute
   CrmBranchBranchRoute: typeof CrmBranchBranchRoute
+  CrmCallHistoryCallHistoryRoute: typeof CrmCallHistoryCallHistoryRoute
   CrmCategoryCategoryRoute: typeof CrmCategoryCategoryRoute
   CrmCustomerSourceCustomerSourceRoute: typeof CrmCustomerSourceCustomerSourceRoute
   CrmCustomerCustomerRoute: typeof CrmCustomerCustomerRoute
@@ -439,10 +500,13 @@ interface CrmRouteChildren {
   CrmServiceServiceRoute: typeof CrmServiceServiceRoute
   CrmUnitUnitRoute: typeof CrmUnitUnitRoute
   CrmUserUserRoute: typeof CrmUserUserRoute
+  CrmVoucherVoucherRoute: typeof CrmVoucherVoucherRoute
 }
 
 const CrmRouteChildren: CrmRouteChildren = {
+  CrmAppointmentAppointmentRoute: CrmAppointmentAppointmentRoute,
   CrmBranchBranchRoute: CrmBranchBranchRoute,
+  CrmCallHistoryCallHistoryRoute: CrmCallHistoryCallHistoryRoute,
   CrmCategoryCategoryRoute: CrmCategoryCategoryRoute,
   CrmCustomerSourceCustomerSourceRoute: CrmCustomerSourceCustomerSourceRoute,
   CrmCustomerCustomerRoute: CrmCustomerCustomerRoute,
@@ -456,6 +520,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmServiceServiceRoute: CrmServiceServiceRoute,
   CrmUnitUnitRoute: CrmUnitUnitRoute,
   CrmUserUserRoute: CrmUserUserRoute,
+  CrmVoucherVoucherRoute: CrmVoucherVoucherRoute,
 }
 
 const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)

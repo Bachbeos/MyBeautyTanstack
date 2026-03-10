@@ -7,6 +7,8 @@ type FormInputControlProps = FormControlProps & {
   type?: string;
   className?: string;
   disabled?: boolean;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 };
 
 export function FormInput({
@@ -14,6 +16,8 @@ export function FormInput({
   type = "text",
   className,
   disabled,
+  onChange,
+  onBlur,
   ...baseProps
 }: FormInputControlProps) {
   const field = useFieldContext<string>();
@@ -26,11 +30,19 @@ export function FormInput({
         name={field.name}
         type={type}
         value={field.state.value ?? ""}
-        onBlur={field.handleBlur}
-        onChange={(e) => field.handleChange(e.target.value)}
+        // onBlur={field.handleBlur}
+        // onChange={(e) => field.handleChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
         className={cn("form-control", isInvalid && "is-invalid", className)}
+        onBlur={(e) => {
+          field.handleBlur();
+          onBlur?.(e);
+        }}
+        onChange={(e) => {
+          field.handleChange(e.target.value);
+          onChange?.(e);
+        }}
       />
     </FormBase>
   );

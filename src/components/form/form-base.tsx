@@ -32,7 +32,7 @@ export function FormBase({
   label,
   description,
   errorStrategy = "touched",
-  wrapperClassName = "mb-3"
+  wrapperClassName = "mb-0"
 }: FormBaseProps) {
   const field = useFieldContext<any>();
   const meta = field.state.meta;
