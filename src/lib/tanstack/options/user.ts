@@ -1,4 +1,9 @@
-import { queryOptions, mutationOptions } from "@tanstack/react-query";
+import {
+  queryOptions,
+  mutationOptions,
+  infiniteQueryOptions,
+  type InfiniteData
+} from "@tanstack/react-query";
 import { getUsers, getUserDetail, upsertUser, deleteUser, updateUserStatus } from "@/lib/api/user";
 
 import type {
@@ -21,7 +26,8 @@ export const userKeys = createKeys("user", {
   create: () => ["create"] as const,
   update: () => ["update"] as const,
   delete: () => ["delete"] as const,
-  updateStatus: () => ["updateStatus"] as const
+  updateStatus: () => ["updateStatus"] as const,
+  infinite: (params: Omit<UserListRequest, "page">) => ["infinite", params] as const
 });
 
 /**
@@ -32,6 +38,29 @@ export const userQueries = {
     queryOptions<ApiResponse<UserListResponse>>({
       queryKey: userKeys.list(params),
       queryFn: ({ signal }) => getUsers(params, signal)
+    }),
+
+  infinite: (params: Omit<UserListRequest, "page">) =>
+    infiniteQueryOptions<
+      ApiResponse<UserListResponse>,
+      Error,
+      InfiniteData<ApiResponse<UserListResponse>>,
+      ReturnType<typeof userKeys.infinite>,
+      number
+    >({
+      queryKey: userKeys.infinite(params),
+      initialPageParam: 1,
+      queryFn: ({ signal, pageParam }) => getUsers({ ...(params as any), page: pageParam }, signal),
+      getNextPageParam: (lastPage, _pages, lastPageParam) => {
+        const items = lastPage?.result?.items ?? [];
+        const total = lastPage?.result?.total ?? 0;
+        const limit = (params as any).limit ?? items.length ?? 0;
+
+        const loadedSoFar = lastPageParam * (limit || 0);
+        if (!limit) return items.length > 0 ? lastPageParam + 1 : undefined;
+
+        return loadedSoFar < total ? lastPageParam + 1 : undefined;
+      }
     }),
 
   detail: (id: UserId) =>

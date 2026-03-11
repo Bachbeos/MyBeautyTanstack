@@ -7,7 +7,9 @@ export const callHistoryId = (v: number) => toId<"callHistory", number>(v);
 export type callHistoryDto = {
   id: callHistoryId;
   userId: number;
+  userName: string;
   customerId: number;
+  customerName: string;
   callType: number;
   outcome: number;
   interestLevel: number;

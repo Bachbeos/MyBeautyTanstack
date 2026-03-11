@@ -8,7 +8,7 @@ export type UserDto = {
   id: UserId;
   name: string;
   avatar: string;
-  phone: number | string;
+  phone: string;
   email: string;
   plainPassword?: string | number;
   branchName: string;
@@ -28,7 +28,7 @@ export type UserListResponse = Page<UserDto>;
 
 export type UserCreateRequest = {
   name?: string;
-  phone: number;
+  phone: string;
   email: string;
   plainPassword?: string | number;
   branchName: string;
@@ -38,7 +38,7 @@ export type UserCreateRequest = {
 export type UserUpdateRequest = {
   id: UserId;
   name?: string;
-  phone?: number;
+  phone?: string;
   email?: string;
   plainPassword?: string | number;
   branchName: string;

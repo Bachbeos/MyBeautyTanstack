@@ -11,7 +11,7 @@ import { customerQueries } from "@/lib/tanstack/options/customer";
 import { userQueries } from "@/lib/tanstack/options/user";
 import type { callHistoryDto } from "@/lib/types/call-history";
 import { cn } from "@/lib/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   createColumnHelper,
@@ -105,17 +105,17 @@ function RouteComponent() {
         header: "Người tham gia",
         cell: (info) => {
           const row = info.row.original;
-
+          const userName = row.userName;
+          const customerName = row.customerName;
           return (
             <div>
               <div className="d-flex align-items-center mb-1">
                 <i className="ti ti-user-circle me-1 text-muted"></i>
-                <span className="text-muted small">{userMap[row.userName as any]}</span>
+                <span className="text-muted small">{userName}</span>
               </div>
-
               <div className="d-flex align-items-center">
                 <i className="ti ti-user me-1 text-muted"></i>
-                <span className="text-muted small">{customerMap[row.customerName as any]}</span>
+                <span className="text-muted small">{customerName}</span>
               </div>
             </div>
           );
@@ -236,33 +236,24 @@ function RouteComponent() {
     getCoreRowModel: getCoreRowModel()
   });
 
-  const usersQuery = useQuery(userQueries.list({ page: 1, limit: 100 }));
-  const userOptions = useMemo(() => {
-    const items = usersQuery.data?.result?.items ?? [];
-    return items.map((u) => ({
-      label: String(u.name || u.fullname || `User ${u.id}`),
-      value: Number(u.id)
-    }));
-  }, [usersQuery.data]);
+  const usersInf = useInfiniteQuery(userQueries.infinite({ limit: 10 }));
+  const customersInf = useInfiniteQuery(customerQueries.infinite({ limit: 10 }));
 
-  const userMap = useMemo(
-    () => Object.fromEntries(userOptions.map((o) => [o.value, o.label])),
-    [userOptions]
-  ) as Record<number, string>;
+  const [userOptions, customerOptions] = useMemo(
+    () => [
+      usersInf.data?.pages
+        .flatMap((page) => page.result?.items ?? [])
+        .map((user) => ({ label: String(user.name), value: Number(user.id) })) ?? [],
+      customersInf.data?.pages
+        .flatMap((page) => page.result?.items ?? [])
+        .map((customer) => ({ label: String(customer.name), value: Number(customer.id) })) ?? []
+    ],
+    [usersInf.data, customersInf.data]
+  );
 
-  const customersQuery = useQuery(customerQueries.list({ page: 1, limit: 100 }));
-  const customerOptions = useMemo(() => {
-    const items = customersQuery.data?.result?.items ?? [];
-    return items.map((u) => ({
-      label: String(u.name || u.fullname || `User ${u.id}`),
-      value: Number(u.id)
-    }));
-  }, [customersQuery.data]);
-
-  const customerMap = useMemo(
-    () => Object.fromEntries(customerOptions.map((o) => [o.value, o.label])),
-    [customerOptions]
-  ) as Record<number, string>;
+  const [handleLoadMoreUsers, handleLoadMoreCustomers] = [usersInf, customersInf].map(
+    (q) => () => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()
+  );
 
   const handleSubmit = async (values: any) => {
     if (modal.type === "add") await createMutation.mutateAsync(values);
@@ -356,6 +347,8 @@ function RouteComponent() {
         onDelete={handleDelete}
         userOptions={userOptions}
         customerOptions={customerOptions}
+        onLoadMoreUsers={handleLoadMoreUsers}
+        onLoadMoreCustomers={handleLoadMoreCustomers}
       />
     </div>
   );
