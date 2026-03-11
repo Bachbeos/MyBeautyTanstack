@@ -18,7 +18,7 @@ type CallHistoryFormValues = z.infer<typeof callHistorySchema>;
 
 type CallHistoryFormProps = {
   mode: "add" | "edit" | "detail";
-  item?: callHistoryDto;
+  callHistory?: callHistoryDto;
   userOptions: { label: string; value: number }[];
   customerOptions: { label: string; value: number }[];
   onSubmit: (values: CallHistoryFormValues) => Promise<void>;
@@ -28,7 +28,7 @@ type CallHistoryFormProps = {
 
 export function CallHistoryForm({
   mode,
-  item,
+  callHistory,
   userOptions,
   customerOptions,
   onSubmit,
@@ -45,15 +45,15 @@ export function CallHistoryForm({
 
   const form = useAppForm({
     defaultValues: {
-      id: item?.id,
-      userId: item?.userId ?? 0,
-      customerId: item?.customerId ?? 0,
-      callType: item?.callType ?? 1,
-      outcome: item?.outcome ?? 1,
-      duration: item?.duration ?? 0,
-      interestLevel: item?.interestLevel ?? 3,
-      note: item?.note ?? "",
-      status: item?.status ?? 1
+      id: callHistory?.id,
+      userId: callHistory?.userId ?? 0,
+      customerId: callHistory?.customerId ?? 0,
+      callType: callHistory?.callType ?? 1,
+      outcome: callHistory?.outcome ?? 1,
+      duration: callHistory?.duration ?? 0,
+      interestLevel: callHistory?.interestLevel ?? 3,
+      note: callHistory?.note ?? "",
+      status: callHistory?.status ?? 1
     },
     validators: { onSubmit: callHistorySchema },
     onSubmit: async ({ value }) => {

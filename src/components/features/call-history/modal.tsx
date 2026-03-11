@@ -100,7 +100,7 @@ export default function ModalCallHistory({
     >
       <CallHistoryForm
         mode={type}
-        item={item}
+        callHistory={item}
         userOptions={userOptions}
         customerOptions={customerOptions}
         onSubmit={onSubmit}

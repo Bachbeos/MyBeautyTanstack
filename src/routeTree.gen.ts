@@ -10,9 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as CrmRouteImport } from './routes/_crm'
-import { Route as TestTestRoleApiRouteImport } from './routes/_test/test-role-api'
-import { Route as TestTestResourceApiRouteImport } from './routes/_test/test-resource-api'
-import { Route as TestTestPermissionApiRouteImport } from './routes/_test/test-permission-api'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
@@ -35,21 +32,6 @@ import { Route as CrmAppointmentAppointmentRouteImport } from './routes/_crm/_ap
 
 const CrmRoute = CrmRouteImport.update({
   id: '/_crm',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TestTestRoleApiRoute = TestTestRoleApiRouteImport.update({
-  id: '/_test/test-role-api',
-  path: '/test-role-api',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TestTestResourceApiRoute = TestTestResourceApiRouteImport.update({
-  id: '/_test/test-resource-api',
-  path: '/test-resource-api',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TestTestPermissionApiRoute = TestTestPermissionApiRouteImport.update({
-  id: '/_test/test-permission-api',
-  path: '/test-permission-api',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -159,9 +141,6 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
-  '/test-permission-api': typeof TestTestPermissionApiRoute
-  '/test-resource-api': typeof TestTestResourceApiRoute
-  '/test-role-api': typeof TestTestRoleApiRoute
   '/appointment': typeof CrmAppointmentAppointmentRoute
   '/branch': typeof CrmBranchBranchRoute
   '/call-history': typeof CrmCallHistoryCallHistoryRoute
@@ -184,9 +163,6 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
-  '/test-permission-api': typeof TestTestPermissionApiRoute
-  '/test-resource-api': typeof TestTestResourceApiRoute
-  '/test-role-api': typeof TestTestRoleApiRoute
   '/appointment': typeof CrmAppointmentAppointmentRoute
   '/branch': typeof CrmBranchBranchRoute
   '/call-history': typeof CrmCallHistoryCallHistoryRoute
@@ -210,9 +186,6 @@ export interface FileRoutesById {
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
-  '/_test/test-permission-api': typeof TestTestPermissionApiRoute
-  '/_test/test-resource-api': typeof TestTestResourceApiRoute
-  '/_test/test-role-api': typeof TestTestRoleApiRoute
   '/_crm/_appointment/appointment': typeof CrmAppointmentAppointmentRoute
   '/_crm/_branch/branch': typeof CrmBranchBranchRoute
   '/_crm/_call-history/call-history': typeof CrmCallHistoryCallHistoryRoute
@@ -237,9 +210,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/test-permission-api'
-    | '/test-resource-api'
-    | '/test-role-api'
     | '/appointment'
     | '/branch'
     | '/call-history'
@@ -262,9 +232,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/register'
-    | '/test-permission-api'
-    | '/test-resource-api'
-    | '/test-role-api'
     | '/appointment'
     | '/branch'
     | '/call-history'
@@ -287,9 +254,6 @@ export interface FileRouteTypes {
     | '/_auth/forgot-password'
     | '/_auth/login'
     | '/_auth/register'
-    | '/_test/test-permission-api'
-    | '/_test/test-resource-api'
-    | '/_test/test-role-api'
     | '/_crm/_appointment/appointment'
     | '/_crm/_branch/branch'
     | '/_crm/_call-history/call-history'
@@ -313,9 +277,6 @@ export interface RootRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
-  TestTestPermissionApiRoute: typeof TestTestPermissionApiRoute
-  TestTestResourceApiRoute: typeof TestTestResourceApiRoute
-  TestTestRoleApiRoute: typeof TestTestRoleApiRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -325,27 +286,6 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof CrmRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_test/test-role-api': {
-      id: '/_test/test-role-api'
-      path: '/test-role-api'
-      fullPath: '/test-role-api'
-      preLoaderRoute: typeof TestTestRoleApiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_test/test-resource-api': {
-      id: '/_test/test-resource-api'
-      path: '/test-resource-api'
-      fullPath: '/test-resource-api'
-      preLoaderRoute: typeof TestTestResourceApiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_test/test-permission-api': {
-      id: '/_test/test-permission-api'
-      path: '/test-permission-api'
-      fullPath: '/test-permission-api'
-      preLoaderRoute: typeof TestTestPermissionApiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/register': {
@@ -530,9 +470,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
-  TestTestPermissionApiRoute: TestTestPermissionApiRoute,
-  TestTestResourceApiRoute: TestTestResourceApiRoute,
-  TestTestRoleApiRoute: TestTestRoleApiRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

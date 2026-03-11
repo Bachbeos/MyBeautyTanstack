@@ -7,6 +7,9 @@ import type { ProductId } from "../types/product";
 import type { CustomerSourceId } from "../types/customer-source";
 import type { callHistoryId } from "../types/call-history";
 import type { CustomerId } from "../types/customer";
+import type { VoucherId } from "../types/voucher";
+import type { BranchId } from "../types/branch";
+import type { ServiceId } from "../types/service";
 
 export const ENDPOINTS = {
   auth: {
@@ -83,6 +86,44 @@ export const ENDPOINTS = {
     list: "/customer/list",
     update: "/customer/update",
     delete: (id: CustomerId) => `/customer/delete/${id}`,
-    detail: "/customer/getById"
+    detail: "/customer/get"
+  },
+  voucher: {
+    list: "/voucher/list",
+    update: "/voucher/update",
+    delete: (id: VoucherId) => `/voucher/delete/${id}`,
+    detail: "/voucher/get",
+    apply: "/voucher/applyVoucher"
+  },
+  invoice: {
+    list: "/invoice/list",
+    update: "/invoice/update",
+    delete: (id: string) => `/invoice/delete/${id}`,
+    detail: "/invoice/get",
+    draft: "/invoice/draft",
+    recalculate: "/invoice/recalculate"
+  },
+  boughtProduct: {
+    list: "/boughtProduct/list",
+    update: "/boughtProduct/update",
+    delete: (id: string) => `/boughtProduct/delete/${id}`
+  },
+  boughtService: {
+    list: "/boughtService/list",
+    update: "/boughtService/update",
+    delete: (id: string) => `/boughtService/delete/${id}`
+  },
+  branch: {
+    list: "/branch/list",
+    update: "/branch/update",
+    delete: (id: BranchId) => `/branch/delete/${id}`,
+    detail: "/branch/get",
+    updateStatus: "/branch/update-status"
+  },
+  service: {
+    list: "/service/list",
+    update: "/service/update",
+    delete: (id: ServiceId) => `/service/delete/${id}`,
+    detail: "/service/get"
   }
 } as const;
