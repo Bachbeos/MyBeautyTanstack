@@ -21,24 +21,25 @@ const productSchema = z.object({
   name: z.string().min(1, "Tên sản phẩm không được để trống"),
   categoryId: z.number().optional(),
   unitId: z.number().optional(),
-  price: z.any().transform((val) => parseMoney(String(val))),
-  discount: z.coerce.number().default(0),
-  discountUnit: z.coerce.number().default(1),
-  expiredPeriod: z.coerce.number().default(0),
-  position: z.coerce.number().default(1),
-  status: z.coerce.number().default(1),
+  price: z.string().min(1, "Giá bán không được để trống"),
+  discount: z.number().default(0),
+  discountUnit: z.number().default(1),
+  expiredPeriod: z.number().default(0),
+  position: z.number().default(1),
+  status: z.number().default(1),
   content: z.string().optional(),
   avatar: z.string().optional()
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
+type ProductSubmitValues = Omit<ProductFormValues, "price"> & { price: number };
 
 type ProductFormProps = {
   mode: "add" | "edit" | "detail";
   product?: ProductDto;
   categoryOptions: { label: string; value: number }[];
   unitOptions: { label: string; value: number }[];
-  onSubmit: (values: ProductFormValues) => Promise<void>;
+  onSubmit: (values: ProductSubmitValues) => Promise<void>;
   onLoadMoreCategories?: () => void;
   onLoadMoreUnits?: () => void;
 };
@@ -56,7 +57,7 @@ export function ProductForm({
 
   const form = useAppForm({
     defaultValues: {
-      id: product?.id,
+      id: product?.id ? Number(product.id) : undefined,
       code: product?.code ?? "",
       name: product?.name ?? "",
       categoryId: product?.categoryId,
@@ -69,21 +70,35 @@ export function ProductForm({
       status: product?.status ?? 1,
       content: product?.content ?? "",
       avatar: product?.avatar ?? ""
-    } as any,
-    validators: { onSubmit: productSchema },
+    },
+    validators: { onSubmit: productSchema as any },
     onSubmit: async ({ value }) => {
-      await onSubmit(value as any);
+      await onSubmit({
+        ...value,
+        price: parseMoney(value.price)
+      });
     }
   });
 
   useEffect(() => {
     if (product) {
       form.reset({
-        ...product,
-        price: formatMoney(product.price)
-      } as any);
+        id: Number(product.id),
+        code: product.code ?? "",
+        name: product.name,
+        categoryId: product.categoryId,
+        unitId: product.unitId,
+        price: formatMoney(product.price),
+        discount: product.discount ?? 0,
+        discountUnit: product.discountUnit ?? 1,
+        expiredPeriod: product.expiredPeriod ?? 0,
+        position: product.position ?? 1,
+        status: product.status ?? 1,
+        content: product.content ?? "",
+        avatar: product.avatar ?? ""
+      });
     }
-  }, [product]);
+  }, [product, form]);
 
   return (
     <form
@@ -189,7 +204,7 @@ export function ProductForm({
                       placeholder="0"
                       disabled={isReadOnly}
                       value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => field.handleChange(Number(e.target.value))}
                       onBlur={field.handleBlur}
                     />
                   )}
@@ -202,7 +217,7 @@ export function ProductForm({
                       style={{ maxWidth: "70px" }}
                       disabled={isReadOnly}
                       value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                      onChange={(e) => field.handleChange(Number(e.target.value))}
                     >
                       <option value={1}>%</option>
                       <option value={2}>$</option>
@@ -216,7 +231,7 @@ export function ProductForm({
                   field.state.meta.isTouched &&
                   field.state.meta.errors.length > 0 && (
                     <div className="invalid-feedback d-block">
-                      {field.state.meta.errors[0]?.message}
+                      {String(field.state.meta.errors[0] ?? "")}
                     </div>
                   )
                 }

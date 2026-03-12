@@ -21,6 +21,7 @@ export type ServiceDto = {
   featured: number;
   treatmentNum: number;
   parentId: number;
+  status: number;
   createdTime: string;
 };
 

@@ -1,9 +1,205 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { AsyncBoundary } from "@/components/async-boundary";
+import ExportButton from "@/components/export/export";
+import RefreshButton from "@/components/refresh/refresh";
+import ActionsTable from "@/components/table/actions-table";
+import { DataTable } from "@/components/table/data-table";
+import AddButton from "@/components/ui/add-button";
+import { useDebounceValue } from "@/hooks/use-debounce-value";
+import { serviceMutations, serviceQueries } from "@/lib/tanstack/options/service";
+import type { ServiceDto } from "@/lib/types/service";
+import { cn } from "@/lib/utils";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  useReactTable,
+  type ColumnFiltersState
+} from "@tanstack/react-table";
+import { useEffect, useMemo, useState } from "react";
 
-export const Route = createFileRoute('/_crm/_service/service')({
-  component: RouteComponent,
-})
+const columnHelper = createColumnHelper<ServiceDto>();
+
+export const Route = createFileRoute("/_crm/_service/service")({
+  component: RouteComponent
+});
 
 function RouteComponent() {
-  return <div>Hello "/_service/service"!</div>
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+
+  const rawNameFilter = useMemo(() => {
+    const filter = columnFilters.find((f) => f.id === "name");
+    return (filter?.value as string) || "";
+  }, [columnFilters]);
+
+  const [nameFilter] = useDebounceValue(rawNameFilter, 500);
+
+  const [modal, setModal] = useState<{
+    type: "add" | "edit" | "delete" | "detail" | null;
+    item?: ServiceDto;
+    shown: boolean;
+  }>({
+    type: null,
+    item: undefined,
+    shown: false
+  });
+
+  const openModal = (type: "add" | "edit" | "delete" | "detail", item?: ServiceDto) => {
+    setModal({ type, item, shown: true });
+  };
+
+  const closeModal = () => {
+    setModal((prev) => ({ ...prev, shown: false }));
+  };
+
+  const params = useMemo(
+    () => ({
+      page: pageIndex + 1,
+      limit: pageSize,
+      keyword: nameFilter || undefined
+    }),
+    [pageIndex, pageSize, nameFilter]
+  );
+
+  useEffect(() => {
+    setPageIndex(0);
+  }, [nameFilter]);
+
+  const query = useQuery(serviceQueries.list(params));
+  const services = query.data?.result?.items ?? [];
+  const total = query.data?.result?.total ?? 0;
+
+  const createMutation = useMutation(serviceMutations.create());
+  const updateMutation = useMutation(serviceMutations.update());
+  const deleteMutation = useMutation(serviceMutations.delete());
+
+  const columns = useMemo(
+    () => [
+      columnHelper.display({
+        id: "stt",
+        header: "STT",
+        cell: (info) => pageIndex * pageSize + info.row.index + 1,
+        meta: { className: "w-1 text-center" }
+      }),
+      columnHelper.accessor("code", {
+        id: "code",
+        header: "Mã dịch vụ"
+      }),
+      columnHelper.accessor("name", {
+        id: "name",
+        header: "Tên dịch vụ"
+      }),
+      columnHelper.accessor("categoryName", {
+        id: "categoryName",
+        header: "Danh mục"
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Thao tác",
+        meta: { className: "text-center w-1" },
+        cell: (info) => (
+          <ActionsTable
+            row={info.row}
+            onView={(data) => openModal("detail", data)}
+            onEdit={(data) => openModal("edit", data)}
+            onDelete={(data) => openModal("delete", data)}
+          />
+        )
+      })
+    ],
+    [pageIndex, pageSize]
+  );
+
+  const table = useReactTable({
+    data: services,
+    columns,
+    state: {
+      columnFilters,
+      pagination: { pageIndex, pageSize }
+    },
+    onPaginationChange: (updater) => {
+      if (typeof updater === "function") {
+        const newState = updater({ pageIndex, pageSize });
+        setPageIndex(newState.pageIndex);
+        setPageSize(newState.pageSize);
+      }
+    },
+    onColumnFiltersChange: setColumnFilters,
+    manualPagination: true,
+    manualFiltering: true,
+    pageCount: Math.ceil(total / pageSize),
+    getCoreRowModel: getCoreRowModel()
+  });
+
+  const handleSubmit = async (values: any) => {
+    if (modal.type === "add") await createMutation.mutateAsync(values);
+    if (modal.type === "edit") await updateMutation.mutateAsync(values);
+    closeModal();
+    query.refetch();
+  };
+
+  const handleDelete = async () => {
+    if (!modal.item?.id) return;
+    await deleteMutation.mutateAsync(modal.item.id);
+    closeModal();
+    query.refetch();
+  };
+
+  return (
+    <div className="page-wrapper">
+      <div className="content pb-0">
+        {/* Header & Breadcrumb */}
+        <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+          <div>
+            <h4 className="mb-1 fw-bold">
+              Danh sách dịch vụ
+              <span className="badge badge-soft-primary ms-2">{total}</span>
+            </h4>
+            {/* Breadcrumb component ở đây */}
+            <div className="text-muted small">dịch vụ / Danh sách</div>
+          </div>
+          <div className="gap-2 d-flex align-items-center flex-wrap">
+            <ExportButton onExport={() => {}} />
+            <RefreshButton onRefresh={() => query.refetch()} />
+          </div>
+        </div>
+
+        <div className="card border-0 rounded-0 shadow-sm">
+          {/* <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap bg-white py-3"></div> */}
+          <div className="card-body p-3">
+            <AsyncBoundary
+              status={query.status}
+              data={services}
+              error={query.error}
+              onRetry={() => query.refetch()}
+            >
+              {() => (
+                <DataTable
+                  table={table}
+                  filterable={true}
+                  filterKey="name"
+                  filterKeyPlaceholder="Tìm nhanh dịch vụ..."
+                  toolbarRight={<AddButton label="Thêm dịch vụ" onClick={() => openModal("add")} />}
+                  toolbarLeft={<div className="text-muted small d-none d-md-block"></div>}
+                />
+              )}
+            </AsyncBoundary>
+          </div>
+        </div>
+      </div>
+
+      {/* <ModalProduct
+        type={modal.type}
+        shown={modal.shown}
+        item={modal.item}
+        onClose={closeModal}
+        onSubmit={handleSubmit}
+        onDelete={handleDelete}
+        categoryOptions={[]}
+        unitOptions={[]}
+      /> */}
+    </div>
+  );
 }
