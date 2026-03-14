@@ -7,6 +7,7 @@ type FormInputControlProps = FormControlProps & {
   type?: string;
   className?: string;
   disabled?: boolean;
+  list?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 };
@@ -16,6 +17,7 @@ export function FormInput({
   type = "text",
   className,
   disabled,
+  list,
   onChange,
   onBlur,
   ...baseProps
@@ -30,6 +32,7 @@ export function FormInput({
         name={field.name}
         type={type}
         value={field.state.value ?? ""}
+        list={list}
         // onBlur={field.handleBlur}
         // onChange={(e) => field.handleChange(e.target.value)}
         placeholder={placeholder}

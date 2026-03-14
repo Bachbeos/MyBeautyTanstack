@@ -1,10 +1,12 @@
 import { AsyncBoundary } from "@/components/async-boundary";
 import ExportButton from "@/components/export/export";
+import ModalService from "@/components/features/service/modal";
 import RefreshButton from "@/components/refresh/refresh";
 import ActionsTable from "@/components/table/actions-table";
 import { DataTable } from "@/components/table/data-table";
 import AddButton from "@/components/ui/add-button";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
+import { categoryQueries } from "@/lib/tanstack/options/category";
 import { serviceMutations, serviceQueries } from "@/lib/tanstack/options/service";
 import type { ServiceDto } from "@/lib/types/service";
 import { cn } from "@/lib/utils";
@@ -83,17 +85,81 @@ function RouteComponent() {
         cell: (info) => pageIndex * pageSize + info.row.index + 1,
         meta: { className: "w-1 text-center" }
       }),
-      columnHelper.accessor("code", {
-        id: "code",
-        header: "Mã dịch vụ"
-      }),
       columnHelper.accessor("name", {
-        id: "name",
-        header: "Tên dịch vụ"
+        header: "Tên dịch vụ",
+        cell: (info) => {
+          const row = info.row.original;
+          const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(row.name || "avatar")}&background=random`;
+
+          return (
+            <div className="d-flex align-items-center">
+              <div
+                className="avatar avatar-sm rounded-circle border me-2 flex-shrink-0"
+                style={{ width: "32px", height: "32px", overflow: "hidden" }}
+              >
+                <img
+                  src={row.avatar || fallbackAvatar}
+                  alt={row.name}
+                  className="w-100 h-100 object-fit-cover rounded-circle"
+                  onError={(e) => {
+                    e.currentTarget.src = fallbackAvatar;
+                  }}
+                />
+              </div>
+              <span>{row.name}</span>
+            </div>
+          );
+        }
       }),
       columnHelper.accessor("categoryName", {
         id: "categoryName",
         header: "Danh mục"
+      }),
+      columnHelper.accessor("price", {
+        id: "price",
+        header: "Giá bán",
+        cell: (info) => (
+          <span>
+            {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
+              Number(info.getValue()) || 0
+            )}
+          </span>
+        )
+      }),
+      columnHelper.accessor("isCombo", {
+        id: "isCombo",
+        header: "Loại",
+        meta: { className: "text-center" },
+        cell: (info) =>
+          Number(info.getValue()) === 1 ? (
+            <span className="badge badge-soft-warning">Combo</span>
+          ) : (
+            <span className="badge badge-soft-info">Thường</span>
+          )
+      }),
+      columnHelper.accessor("status", {
+        header: "Trạng thái",
+        meta: { className: "text-center w-1" },
+        cell: (info) => {
+          const row = info.row.original;
+          const isActive = Number(row.status) === 1;
+
+          return (
+            <span
+              className={cn(
+                "badge cursor-pointer",
+                isActive ? "badge-soft-success" : "badge-soft-danger"
+              )}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleStatus(row);
+              }}
+            >
+              {isActive ? "Đang hoạt động" : "Ngưng hoạt động"}
+            </span>
+          );
+        }
       }),
       columnHelper.display({
         id: "actions",
@@ -147,18 +213,36 @@ function RouteComponent() {
     query.refetch();
   };
 
+  const handleToggleStatus = async (row: ServiceDto) => {
+    const newStatus = Number(row.status) === 1 ? 0 : 1;
+
+    try {
+      await updateMutation.mutateAsync({
+        ...row,
+        status: newStatus
+      });
+      query.refetch();
+    } catch (error) {
+      console.error("Toggle status failed:", error);
+    }
+  };
+
+  const categoryInf = useQuery(categoryQueries.list({ page: 1, limit: 1000 }));
+  const categoryOptions = useMemo(() => {
+    const items = categoryInf.data?.result?.items ?? [];
+    return items.map((c) => ({ label: String(c.name), value: Number(c.id) }));
+  }, [categoryInf.data]);
+
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
-        {/* Header & Breadcrumb */}
         <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
           <div>
             <h4 className="mb-1 fw-bold">
               Danh sách dịch vụ
               <span className="badge badge-soft-primary ms-2">{total}</span>
             </h4>
-            {/* Breadcrumb component ở đây */}
-            <div className="text-muted small">dịch vụ / Danh sách</div>
+            <div className="text-muted small">Dịch vụ / Danh sách</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
             <ExportButton onExport={() => {}} />
@@ -167,7 +251,6 @@ function RouteComponent() {
         </div>
 
         <div className="card border-0 rounded-0 shadow-sm">
-          {/* <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap bg-white py-3"></div> */}
           <div className="card-body p-3">
             <AsyncBoundary
               status={query.status}
@@ -190,16 +273,15 @@ function RouteComponent() {
         </div>
       </div>
 
-      {/* <ModalProduct
+      <ModalService
         type={modal.type}
         shown={modal.shown}
         item={modal.item}
         onClose={closeModal}
         onSubmit={handleSubmit}
         onDelete={handleDelete}
-        categoryOptions={[]}
-        unitOptions={[]}
-      /> */}
+        categoryOptions={categoryOptions}
+      />
     </div>
   );
 }

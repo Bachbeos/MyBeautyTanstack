@@ -2,7 +2,6 @@ import axios from "axios";
 import env from "@/lib/env";
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { axiosBase } from "@/lib/axios/instance";
-import { axiosInstance } from "@/lib/axios/instance";
 import type {
   LoginRequest,
   LoginResponse,

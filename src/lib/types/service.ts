@@ -48,6 +48,7 @@ export type ServiceCreateRequest = {
   featured: number;
   treatmentNum: number;
   parentId: number;
+  status: number;
 };
 
 export type ServiceUpdateRequest = {
@@ -66,4 +67,5 @@ export type ServiceUpdateRequest = {
   featured: number;
   treatmentNum: number;
   parentId: number;
+  status: number;
 };

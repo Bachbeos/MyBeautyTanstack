@@ -11,7 +11,7 @@ import logoWhite from "@assets/img/logo-white.svg";
 
 export default function Header() {
   const navigate = useNavigate();
-  const { clear, userId } = useAuthStore();
+  const { clear } = useAuthStore();
 
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     return localStorage.getItem("theme") === "dark";

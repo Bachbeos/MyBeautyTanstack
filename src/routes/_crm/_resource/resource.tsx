@@ -3,12 +3,11 @@ import {
   createColumnHelper,
   getCoreRowModel,
   useReactTable,
-  getFilteredRowModel,
   type ColumnFiltersState
 } from "@tanstack/react-table";
-import { useState, useMemo, useEffect, Fragment } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DataTable } from "@/components/table/data-table";
-import type { ResourceDto, ResourceId } from "@/lib/types/resource";
+import type { ResourceDto } from "@/lib/types/resource";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { resourceQueries, resourceMutations } from "@/lib/tanstack/options/resource";
 import { AsyncBoundary } from "@/components/async-boundary";

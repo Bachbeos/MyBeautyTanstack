@@ -31,8 +31,9 @@ const productSchema = z.object({
   avatar: z.string().optional()
 });
 
-type ProductFormValues = z.infer<typeof productSchema>;
-type ProductSubmitValues = Omit<ProductFormValues, "price"> & { price: number };
+type ProductFormValues = z.input<typeof productSchema>;
+type ProductSchemaOutput = z.output<typeof productSchema>;
+type ProductSubmitValues = Omit<ProductSchemaOutput, "price"> & { price: number };
 
 type ProductFormProps = {
   mode: "add" | "edit" | "detail";
@@ -70,12 +71,14 @@ export function ProductForm({
       status: product?.status ?? 1,
       content: product?.content ?? "",
       avatar: product?.avatar ?? ""
-    },
-    validators: { onSubmit: productSchema as any },
+    } as ProductFormValues,
+    validators: { onSubmit: productSchema },
     onSubmit: async ({ value }) => {
+      const parsedValue = productSchema.parse(value);
+
       await onSubmit({
-        ...value,
-        price: parseMoney(value.price)
+        ...parsedValue,
+        price: parseMoney(parsedValue.price)
       });
     }
   });

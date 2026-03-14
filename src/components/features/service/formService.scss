@@ -1,0 +1,19 @@
+.service-form {
+  .table-responsive {
+    .mb-0 {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+
+      label.form-label {
+        &:empty,
+        &:blank {
+          display: none !important;
+        }
+        margin-bottom: 0 !important;
+        display: none;
+      }
+    }
+  }
+}

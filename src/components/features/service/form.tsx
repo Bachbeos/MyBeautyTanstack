@@ -2,137 +2,373 @@ import { useEffect } from "react";
 import { z } from "zod";
 import { useAppForm } from "@/components/form/hooks";
 import { type ServiceDto } from "@/lib/types/service";
+import "./formService.scss";
 
 const serviceSchema = z.object({
   id: z.number().optional(),
+  code: z.string().optional(),
   name: z.string().min(1, "Vui lòng nhập tên dịch vụ"),
-  code: z.string().min(1, "Mã sản phẩm không được để trống"),
-  categoryId: z.coerce.number().min(1, "Vui lòng chọn danh mục"),
+  categoryId: z.number().min(1, "Vui lòng chọn danh mục"),
   price: z.coerce.number().min(0, "Giá bán không được âm"),
   cost: z.coerce.number().min(0, "Giá vốn không được âm"),
-  intro: z.string().optional(),
+  discount: z.coerce.number().min(0).max(100).optional(),
+  totalTime: z.coerce.number().min(0).optional(),
+  treatmentNum: z.coerce.number().min(1).optional(),
   avatar: z.string().optional(),
   status: z.coerce.number().default(1),
-  discount: z.coerce.number().min(0, "Giảm giá không được âm").default(0),
-  isCombo: z.coerce.number().default(0),
-  featured: z.coerce.number().default(0),
-  treatmentNum: z.coerce.number().min(0, "Số lần điều trị không được âm").default(0),
-  totalTime: z.coerce.number().min(0, "Tổng thời gian không được âm").default(0),
-  priceVariation: z.array(z.string()).optional()
+  type: z.coerce.number().default(1),
+  featured: z.coerce.number().optional(),
+  intro: z.string().optional(),
+  comboItems: z
+    .array(
+      z.object({
+        name: z.string().optional(),
+        price: z.coerce.number().min(0),
+        discount: z.coerce.number().min(0),
+        treatmentNum: z.coerce.number().min(1)
+      })
+    )
+    .optional()
 });
-
-type ServiceFormValues = z.infer<typeof serviceSchema>;
 
 type ServiceFormProps = {
   mode: "add" | "edit" | "detail";
   service?: ServiceDto;
-  onSubmit: (values: ServiceFormValues) => Promise<void>;
+  onSubmit: (values: ServiceSubmitValues) => Promise<void> | void;
   categoryOptions: { label: string; value: number }[];
+  onLoadMoreCategories?: () => void;
 };
 
-export function ServiceForm({ mode, service, onSubmit, categoryOptions }: ServiceFormProps) {
+type ServiceFormValues = z.input<typeof serviceSchema>;
+type ServiceSchemaOutput = z.output<typeof serviceSchema>;
+type ServiceSubmitValues = ServiceSchemaOutput & {
+  isCombo: number;
+  priceVariation: string;
+};
+
+function parseComboItems(value: unknown): ServiceFormValues["comboItems"] {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return [];
+    if (typeof value[0] !== "string") return value as ServiceFormValues["comboItems"];
+
+    const raw = value[0];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+export function ServiceForm({
+  mode,
+  service,
+  onSubmit,
+  categoryOptions,
+  onLoadMoreCategories
+}: ServiceFormProps) {
   const isReadOnly = mode === "detail";
 
   const form = useAppForm({
     defaultValues: {
       id: service?.id,
-      name: service?.name || "",
       code: service?.code || "",
-      categoryId: service?.categoryId,
-      price: service?.price ?? 0,
-      cost: service?.cost ?? 0,
-      intro: service?.intro || "",
+      name: service?.name || "",
+      categoryId: service?.categoryId || 0,
+      price: service?.price || 0,
+      cost: service?.cost || 0,
+      discount: service?.discount || 0,
+      totalTime: service?.totalTime || 0,
+      treatmentNum: service?.treatmentNum || 1,
       avatar: service?.avatar || "",
       status: service?.status ?? 1,
-      discount: service?.discount ?? 0,
-      isCombo: service?.isCombo ?? 0,
-      featured: service?.featured ?? 0,
-      treatmentNum: service?.treatmentNum ?? 0,
-      totalTime: service?.totalTime ?? 0,
-      priceVariation: service?.priceVariation || []
+      type: service?.isCombo === 1 ? 2 : 1,
+      featured: service?.featured || 0,
+      intro: service?.intro || "",
+      comboItems: parseComboItems(service?.priceVariation)
     } as ServiceFormValues,
+    validators: { onSubmit: serviceSchema },
     onSubmit: async ({ value }) => {
-      await onSubmit(value);
+      const parsedValue = serviceSchema.parse(value);
+      const payload: ServiceSubmitValues = {
+        ...parsedValue,
+        isCombo: parsedValue.type === 2 ? 1 : 0,
+        priceVariation: parsedValue.type === 2 ? JSON.stringify(parsedValue.comboItems) : "[]"
+      };
+      await onSubmit(payload);
     }
   });
 
-  // Đồng bộ dữ liệu khi voucher thay đổi (cho trường hợp Edit/Detail)
   useEffect(() => {
     if (service) {
-      form.setFieldValue("name", service.name);
-      // ... set các field khác tương tự
+      form.reset({
+        ...service,
+        type: service.isCombo === 1 ? 2 : 1,
+        comboItems: parseComboItems(service.priceVariation)
+      } as ServiceFormValues);
     }
   }, [service, form]);
 
   return (
     <form
       id="service-form"
+      className="service-form"
       onSubmit={(e) => {
         e.preventDefault();
-        e.stopPropagation();
         form.handleSubmit();
       }}
     >
       <div className="row">
-        {/* Giữ nguyên Classname từ ModalService.tsx */}
-        <div className="col-12 mb-3 text-center">
-          <div className="position-relative d-inline-block">
-            <img
-              src={form.getFieldValue("image") || "assets/img/profiles/avatar-01.jpg"}
-              className="avatar avatar-xxl rounded-circle border"
-              alt="Service"
-            />
-            {!isReadOnly && (
-              <div className="position-absolute bottom-0 end-0">
-                <label className="btn btn-icon btn-sm btn-primary rounded-circle m-0">
-                  <i className="ti ti-camera"></i>
-                  <input type="file" className="d-none" />
-                </label>
+        <div className="col-lg-3 text-center mb-3">
+          <label className="form-label fw-bold">Ảnh đại diện</label>
+          <div
+            className="border rounded d-flex align-items-center justify-content-center bg-light position-relative overflow-hidden mx-auto"
+            style={{
+              width: "100%",
+              maxWidth: "200px",
+              aspectRatio: "1/1",
+              cursor: isReadOnly ? "default" : "pointer"
+            }}
+          >
+            {form.getFieldValue("avatar") ? (
+              <img src={form.getFieldValue("avatar")} className="w-100 h-100 object-fit-cover" />
+            ) : (
+              <div className="text-muted">
+                <i className="ti ti-photo fs-1"></i>
+                <p className="small mb-0">Tải ảnh lên</p>
               </div>
             )}
           </div>
         </div>
 
-        <div className="col-md-6 mb-3">
-          <form.AppField name="name">
-            {(field) => (
-              <field.Input
-                label="Tên dịch vụ"
-                disabled={isReadOnly}
-                placeholder="Nhập tên dịch vụ"
-              />
-            )}
-          </form.AppField>
+        <div className="col-lg-9">
+          <div className="row">
+            <div className="col-md-6 mb-3">
+              <form.AppField name="name">
+                {(field) => (
+                  <field.Input
+                    label="Tên dịch vụ *"
+                    disabled={isReadOnly}
+                    placeholder="Nhập tên dịch vụ"
+                  />
+                )}
+              </form.AppField>
+            </div>
+            <div className="col-md-6 mb-3">
+              <form.AppField name="categoryId">
+                {(field) => (
+                  <field.Select
+                    label="Danh mục"
+                    disabled={isReadOnly}
+                    options={categoryOptions}
+                    placeholder="Chọn danh mục"
+                    onLoadMore={onLoadMoreCategories}
+                  />
+                )}
+              </form.AppField>
+            </div>
+
+            <div className="col-md-4 mb-3">
+              <form.AppField name="code">
+                {(field) => (
+                  <field.Input
+                    label="Mã dịch vụ"
+                    disabled={isReadOnly}
+                    placeholder="Nhập mã dịch vụ"
+                  />
+                )}
+              </form.AppField>
+            </div>
+            <div className="col-md-4 mb-3">
+              <form.AppField name="price">
+                {(field) => (
+                  <field.Input label="Giá bán (VNĐ)" type="number" disabled={isReadOnly} />
+                )}
+              </form.AppField>
+            </div>
+            <div className="col-md-4 mb-3">
+              <form.AppField name="cost">
+                {(field) => (
+                  <field.Input label="Giá vốn (VNĐ)" type="number" disabled={isReadOnly} />
+                )}
+              </form.AppField>
+            </div>
+
+            <div className="col-md-4 mb-3">
+              <form.AppField name="discount">
+                {(field) => (
+                  <field.Input label="Giảm giá (%)" type="number" disabled={isReadOnly} />
+                )}
+              </form.AppField>
+            </div>
+            <div className="col-md-4 mb-3">
+              <form.AppField name="treatmentNum">
+                {(field) => <field.Input label="Số buổi" type="number" disabled={isReadOnly} />}
+              </form.AppField>
+            </div>
+            <div className="col-md-4 mb-3">
+              <form.AppField name="totalTime">
+                {(field) => (
+                  <field.Input label="Thời gian (phút)" type="number" disabled={isReadOnly} />
+                )}
+              </form.AppField>
+            </div>
+          </div>
         </div>
 
-        <div className="col-md-6 mb-3">
-          <form.AppField name="categoryId">
-            {(field) => (
-              <field.Select
-                label="Danh mục"
-                disabled={isReadOnly}
-                options={categoryOptions}
-                placeholder="Chọn danh mục"
-              />
-            )}
-          </form.AppField>
-        </div>
+        <form.AppField name="type">
+          {(typeField) => {
+            const serviceType = Number(typeField.state.value ?? 1);
 
-        <div className="col-md-6 mb-3">
-          <form.AppField name="price">
-            {(field) => (
-              <field.Input label="Giá dịch vụ (VNĐ)" type="number" disabled={isReadOnly} />
-            )}
-          </form.AppField>
-        </div>
+            return (
+              <>
+                <div className="col-md-6 mb-3">
+                  <typeField.Radio
+                    label="Loại dịch vụ"
+                    disabled={isReadOnly}
+                    options={[
+                      { label: "Dịch vụ đơn lẻ", value: 1 },
+                      { label: "Gói dịch vụ (Combo)", value: 2 }
+                    ]}
+                  />
+                </div>
 
-        <div className="col-md-6 mb-3">
-          <form.AppField name="duration">
-            {(field) => (
-              <field.Input label="Thời gian (Phút)" type="number" disabled={isReadOnly} />
-            )}
-          </form.AppField>
-        </div>
+                <div className="col-md-6 mb-3">
+                  <form.AppField name="featured">
+                    {(field) => (
+                      <div className="form-check mt-4">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="featuredCheck"
+                          checked={field.state.value === 1}
+                          onChange={(e) => field.handleChange(e.target.checked ? 1 : 0)}
+                          disabled={isReadOnly}
+                        />
+                        <label className="form-check-label" htmlFor="featuredCheck">
+                          Dịch vụ nổi bật
+                        </label>
+                      </div>
+                    )}
+                  </form.AppField>
+                </div>
+
+                {serviceType === 2 && (
+                  <div className="col-12 mb-3">
+                    <form.AppField name="comboItems">
+                      {(comboField) => {
+                        const items = comboField.state.value || [];
+                        return (
+                          <div className="card border shadow-none">
+                            <div className="card-header d-flex justify-content-between align-items-center bg-light-lt py-2">
+                              <h6 className="mb-0 text-primary fw-bold">
+                                <i className="ti ti-table me-1"></i>Bảng giá Combo
+                              </h6>
+                              {!isReadOnly && (
+                                <button
+                                  type="button"
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={() =>
+                                    comboField.handleChange([
+                                      ...items,
+                                      { name: "", price: 0, discount: 0, treatmentNum: 1 }
+                                    ])
+                                  }
+                                >
+                                  <i className="ti ti-plus me-1"></i>Thêm dòng
+                                </button>
+                              )}
+                            </div>
+                            {/* <div className="table-responsive">
+                              <table className="table table-bordered">
+                                <thead className="table-light">
+                                  <tr>
+                                    <th>Tên gói combo</th>
+                                    <th style={{ width: "160px" }}>Giá bán</th>
+                                    <th style={{ width: "160px" }}>Giảm giá</th>
+                                    <th style={{ width: "100px" }}>Số buổi</th>
+                                    {!isReadOnly && <th style={{ width: "40px" }}></th>}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {items.map((_, idx) => (
+                                    <tr key={idx}>
+                                      <td className="p-0">
+                                        <form.AppField name={`comboItems[${idx}].name`}>
+                                          {(f) => (
+                                            <f.Input
+                                              label={undefined as any}
+                                              placeholder="Tên gói"
+                                              disabled={isReadOnly}
+                                            />
+                                          )}
+                                        </form.AppField>
+                                      </td>
+                                      <td className="p-2">
+                                        <form.AppField name={`comboItems[${idx}].price`}>
+                                          {(f) => (
+                                            <f.Input label="" type="number" disabled={isReadOnly} />
+                                          )}
+                                        </form.AppField>
+                                      </td>
+                                      <td className="p-2">
+                                        <form.AppField name={`comboItems[${idx}].discount`}>
+                                          {(f) => (
+                                            <f.Input label="" type="number" disabled={isReadOnly} />
+                                          )}
+                                        </form.AppField>
+                                      </td>
+                                      <td className="p-2">
+                                        <form.AppField name={`comboItems[${idx}].treatmentNum`}>
+                                          {(f) => (
+                                            <f.Input label="" type="number" disabled={isReadOnly} />
+                                          )}
+                                        </form.AppField>
+                                      </td>
+                                      {!isReadOnly && (
+                                        <td className="text-center align-middle">
+                                          <button
+                                            type="button"
+                                            className="btn btn-link text-danger p-0"
+                                            onClick={() => {
+                                              const next = [...items];
+                                              next.splice(idx, 1);
+                                              comboField.handleChange(next);
+                                            }}
+                                          >
+                                            <i className="ti ti-trash"></i>
+                                          </button>
+                                        </td>
+                                      )}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div> */}
+                          </div>
+                        );
+                      }}
+                    </form.AppField>
+                  </div>
+                )}
+              </>
+            );
+          }}
+        </form.AppField>
 
         <div className="col-12 mb-3">
           <form.AppField name="status">
@@ -150,8 +386,15 @@ export function ServiceForm({ mode, service, onSubmit, categoryOptions }: Servic
         </div>
 
         <div className="col-12 mb-3">
-          <form.AppField name="description">
-            {(field) => <field.Textarea label="Mô tả chi tiết" rows={3} disabled={isReadOnly} />}
+          <form.AppField name="intro">
+            {(field) => (
+              <field.Textarea
+                label="Giới thiệu"
+                rows={3}
+                disabled={isReadOnly}
+                placeholder="Nhập giới thiệu dịch vụ"
+              />
+            )}
           </form.AppField>
         </div>
       </div>

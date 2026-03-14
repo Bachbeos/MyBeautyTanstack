@@ -105,7 +105,7 @@ function RouteComponent() {
                   }}
                 />
               </div>
-              <span className="fw-semibold text-dark">{row.name}</span>
+              <span>{row.name}</span>
             </div>
           );
         }

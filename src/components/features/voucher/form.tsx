@@ -22,12 +22,13 @@ const voucherSchema = z.object({
   usageQuantity: z.coerce.number().optional()
 });
 
-type VoucherFormValues = z.infer<typeof voucherSchema>;
+type VoucherFormValues = z.input<typeof voucherSchema>;
+type VoucherSchemaOutput = z.output<typeof voucherSchema>;
 
 type VoucherFormProps = {
   mode: "add" | "edit" | "detail";
   voucher?: VoucherDto;
-  onSubmit: (values: VoucherFormValues) => void;
+  onSubmit: (values: VoucherSchemaOutput) => void;
   branchOptions: { label: string; value: number }[];
   onLoadMoreBranches: () => void;
 };
@@ -66,15 +67,17 @@ export function VoucherForm({
       branchId: voucher?.branchId || 0,
       usageQuantity: voucher?.usageQuantity || 0
     } as VoucherFormValues,
-    validators: { onSubmit: voucherSchema as any },
+    validators: { onSubmit: voucherSchema },
     onSubmit: async ({ value }) => {
-      const timeError = getTimeError(value.startDate, value.endDate);
+      const parsedValue = voucherSchema.parse(value);
+      const timeError = getTimeError(parsedValue.startDate, parsedValue.endDate);
       if (timeError) return;
 
-      const payload: VoucherFormValues = {
-        ...value,
-        branchId: value.branchId && value.branchId !== 0 ? value.branchId : undefined,
-        maxDiscount: value.discountType === 2 ? value.maxDiscount : 0
+      const payload: VoucherSchemaOutput = {
+        ...parsedValue,
+        branchId:
+          parsedValue.branchId && parsedValue.branchId !== 0 ? parsedValue.branchId : undefined,
+        maxDiscount: parsedValue.discountType === 2 ? parsedValue.maxDiscount : 0
       };
 
       await onSubmit(payload);
