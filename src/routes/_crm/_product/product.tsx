@@ -9,7 +9,7 @@ import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { productMutations, productQueries } from "@/lib/tanstack/options/product";
 import type { ProductDto } from "@/lib/types/product";
 import { cn } from "@/lib/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   createColumnHelper,
@@ -18,6 +18,10 @@ import {
   type ColumnFiltersState
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
+import { useModalFade, useCloseModal } from "@/hooks/use-modal-animation";
+import CollapseButton from "@/components/collapse/collapse-button";
+import { unitQueries } from "@/lib/tanstack/options/unit";
+import { categoryQueries } from "@/lib/tanstack/options/category";
 
 const columnHelper = createColumnHelper<ProductDto>();
 
@@ -29,6 +33,9 @@ function RouteComponent() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
+    document.body.classList.contains("header-collapse")
+  );
 
   const rawNameFilter = useMemo(() => {
     const filter = columnFilters.find((f) => f.id === "name");
@@ -37,22 +44,15 @@ function RouteComponent() {
 
   const [nameFilter] = useDebounceValue(rawNameFilter, 500);
 
-  const [modal, setModal] = useState<{
-    type: "add" | "edit" | "delete" | "detail" | null;
-    item?: ProductDto;
-    shown: boolean;
-  }>({
-    type: null,
-    item: undefined,
-    shown: false
-  });
+  const [modal, setModal] = useState<{ type: any; item: any }>({ type: null, item: null });
+  const [modalShown, setModalShown] = useState(false);
 
-  const openModal = (type: "add" | "edit" | "delete" | "detail", item?: ProductDto) => {
-    setModal({ type, item, shown: true });
-  };
+  useModalFade(modal.type, setModalShown);
 
-  const closeModal = () => {
-    setModal((prev) => ({ ...prev, shown: false }));
+  const closeModal = useCloseModal(setModalShown, (state) => setModal(state as any));
+
+  const openModal = (type: any, item: any) => {
+    setModal({ type, item });
   };
 
   const params = useMemo(
@@ -85,18 +85,54 @@ function RouteComponent() {
         meta: { className: "w-1 text-center" }
       }),
       columnHelper.accessor("code", {
-        header: "Mã sản phẩm"
+        id: "code",
+        header: "Mã sản phẩm",
+        meta: { className: "text-center w-1" }
       }),
       columnHelper.accessor("name", {
-        header: "Tên sản phẩm"
+        id: "name",
+        header: "Tên sản phẩm",
+        cell: (info) => {
+          const row = info.row.original;
+          const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(row.name || "avatar")}&background=random`;
+
+          return (
+            <div className="d-flex align-items-center">
+              <div
+                className="avatar avatar-sm rounded-circle border me-2 flex-shrink-0"
+                style={{ width: "32px", height: "32px", overflow: "hidden" }}
+              >
+                <img
+                  src={row.avatar || fallbackAvatar}
+                  alt={row.name}
+                  className="w-100 h-100 object-fit-cover rounded-circle"
+                  onError={(e) => {
+                    e.currentTarget.src = fallbackAvatar;
+                  }}
+                />
+              </div>
+              <span>{row.name}</span>
+            </div>
+          );
+        }
       }),
       columnHelper.accessor("categoryName", {
+        id: "categoryName",
         header: "Danh mục"
       }),
       columnHelper.accessor("price", {
-        header: "Giá bán"
+        id: "price",
+        header: "Giá bán",
+        cell: (info) => (
+          <span>
+            {new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(
+              Number(info.getValue()) || 0
+            )}
+          </span>
+        )
       }),
       columnHelper.accessor("discount", {
+        id: "discount",
         header: "Giảm giá",
         meta: { className: "text-center w-1" },
         cell: (info) => {
@@ -118,6 +154,7 @@ function RouteComponent() {
         }
       }),
       columnHelper.accessor("status", {
+        id: "status",
         header: "Trạng thái",
         meta: { className: "text-center w-1" },
         cell: (info) => {
@@ -179,6 +216,25 @@ function RouteComponent() {
     getCoreRowModel: getCoreRowModel()
   });
 
+  const unitsInf = useInfiniteQuery(unitQueries.infinite({ limit: 10 }));
+  const categorysInf = useInfiniteQuery(categoryQueries.infinite({ limit: 10 }));
+
+  const [unitOptions, categoryOptions] = useMemo(
+    () => [
+      unitsInf.data?.pages
+        .flatMap((page) => page.result?.items ?? [])
+        .map((unit) => ({ label: String(unit.name), value: Number(unit.id) })) ?? [],
+      categorysInf.data?.pages
+        .flatMap((page) => page.result?.items ?? [])
+        .map((category) => ({ label: String(category.name), value: Number(category.id) })) ?? []
+    ],
+    [unitsInf.data, categorysInf.data]
+  );
+
+  const [handleLoadMoreUnits, handleLoadMoreCategorys] = [unitsInf, categorysInf].map(
+    (q) => () => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()
+  );
+
   const handleSubmit = async (values: any) => {
     if (modal.type === "add") await createMutation.mutateAsync(values);
     if (modal.type === "edit") await updateMutation.mutateAsync(values);
@@ -207,27 +263,30 @@ function RouteComponent() {
     }
   };
 
+  const handleCollapse = () => {
+    document.body.classList.toggle("header-collapse");
+    setIsHeaderCollapsed(document.body.classList.contains("header-collapse"));
+  };
+
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
-        {/* Header & Breadcrumb */}
         <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
           <div>
             <h4 className="mb-1 fw-bold">
               Danh sách sản phẩm
               <span className="badge badge-soft-primary ms-2">{total}</span>
             </h4>
-            {/* Breadcrumb component ở đây */}
-            <div className="text-muted small">Sản phẩm / Danh sách</div>
+            <div className="text-muted small">Sản phẩm / Danh sách sản phẩm</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
             <ExportButton onExport={() => {}} />
             <RefreshButton onRefresh={() => query.refetch()} />
+            <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>
         </div>
 
         <div className="card border-0 rounded-0 shadow-sm">
-          {/* <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap bg-white py-3"></div> */}
           <div className="card-body p-3">
             <AsyncBoundary
               status={query.status}
@@ -242,7 +301,7 @@ function RouteComponent() {
                   filterKey="name"
                   filterKeyPlaceholder="Tìm nhanh sản phẩm..."
                   toolbarRight={
-                    <AddButton label="Thêm sản phẩm" onClick={() => openModal("add")} />
+                    <AddButton label="Thêm sản phẩm" onClick={() => openModal("add", null)} />
                   }
                   toolbarLeft={<div className="text-muted small d-none d-md-block"></div>}
                 />
@@ -254,13 +313,15 @@ function RouteComponent() {
 
       <ModalProduct
         type={modal.type}
-        shown={modal.shown}
+        shown={modalShown}
         item={modal.item}
         onClose={closeModal}
         onSubmit={handleSubmit}
         onDelete={handleDelete}
-        categoryOptions={[]}
-        unitOptions={[]}
+        categoryOptions={categoryOptions}
+        onLoadMoreCategories={handleLoadMoreCategorys}
+        unitOptions={unitOptions}
+        onLoadMoreUnits={handleLoadMoreUnits}
       />
     </div>
   );

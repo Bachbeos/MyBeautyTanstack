@@ -27,7 +27,7 @@ export default function ModalService({
 }: ModalProps) {
   void onLoadMoreCategories;
 
-  if (!type || !shown) return null;
+  if (!type && !shown) return null;
 
   const getTitle = () => {
     switch (type) {
@@ -62,7 +62,7 @@ export default function ModalService({
           </div>
         }
       >
-        <div className="p-4 text-center">
+        <div className="text-center">
           <span className="avatar avatar-sm badge-soft-danger border-0 text-danger rounded-circle mb-3">
             <i className="ti ti-trash fs-24"></i>
           </span>
@@ -98,13 +98,17 @@ export default function ModalService({
         )
       }
     >
-      <ServiceForm
-        mode={type}
-        service={item}
-        onSubmit={onSubmit}
-        categoryOptions={categoryOptions}
-        onLoadMoreCategories={onLoadMoreCategories}
-      />
+      <div>
+        {type && (type === "add" || type === "edit" || type === "detail") && (
+          <ServiceForm
+            mode={type}
+            service={item}
+            onSubmit={onSubmit}
+            categoryOptions={categoryOptions}
+            onLoadMoreCategories={onLoadMoreCategories}
+          />
+        )}
+      </div>
     </BaseModal>
   );
 }

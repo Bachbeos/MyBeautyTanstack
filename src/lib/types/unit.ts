@@ -6,9 +6,9 @@ export const UnitId = (v: number) => toId<"Unit", number>(v);
 
 export type UnitDto = {
   id: UnitId;
-  name?: string;
-  status?: number;
-  position: number;
+  name: string;
+  status: number;
+  position?: number;
   createdTime: string;
   updatedTime: string;
   [key: string]: unknown;
@@ -23,11 +23,11 @@ export type UnitUpdateRequest = {
   id: UnitId;
   name?: string;
   status?: number;
-  position: number;
+  position?: number;
 };
 
 export type UnitCreateRequest = {
-  name: string;
+  name?: string;
   status?: number;
   position?: number;
 };

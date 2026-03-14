@@ -8,10 +8,10 @@ type ModalProps = {
   type: ModalType | null;
   shown: boolean;
   item?: UserDto;
-  branchOptions: { label: string; value: number }[];
   onClose: () => void;
   onSubmit: (values: any) => Promise<void>;
   onDelete?: () => Promise<void> | void;
+  branchOptions: { label: string; value: number }[];
   onLoadMoreBranches?: () => void;
 };
 
@@ -25,7 +25,7 @@ export default function ModalUser({
   onDelete,
   onLoadMoreBranches
 }: ModalProps) {
-  if (!type || !shown) return null;
+  if (!type && !shown) return null;
 
   const getTitle = () => {
     switch (type) {
@@ -61,7 +61,7 @@ export default function ModalUser({
           </div>
         }
       >
-        <div className="p-4 text-center">
+        <div className="text-center">
           <div className="mb-3">
             <span className="avatar avatar-xl badge-soft-danger border-0 text-danger rounded-circle d-inline-flex align-items-center justify-content-center">
               <i className="ti ti-trash fs-24"></i>
@@ -99,13 +99,17 @@ export default function ModalUser({
         )
       }
     >
-      <UserForm
-        mode={type}
-        user={item}
-        branchOptions={branchOptions}
-        onSubmit={onSubmit}
-        onLoadMoreBranches={onLoadMoreBranches}
-      />
+      <div>
+        {type && (type === "add" || type === "edit" || type === "detail") && (
+          <UserForm
+            mode={type}
+            user={item}
+            branchOptions={branchOptions}
+            onSubmit={onSubmit}
+            onLoadMoreBranches={onLoadMoreBranches}
+          />
+        )}
+      </div>
     </BaseModal>
   );
 }

@@ -1,0 +1,22 @@
+.attribute-dropdown-options {
+  .mb-3,
+  .mb-2,
+  .mb-0 {
+    margin-bottom: 0 !important;
+
+    label.form-label {
+      display: none !important;
+      margin: 0 !important;
+    }
+  }
+
+  .row.g-2 {
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .form-control {
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+  }
+}

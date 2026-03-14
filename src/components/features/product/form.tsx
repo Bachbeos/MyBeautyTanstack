@@ -19,10 +19,10 @@ const productSchema = z.object({
   id: z.number().optional(),
   code: z.string().min(1, "Mã sản phẩm không được để trống"),
   name: z.string().min(1, "Tên sản phẩm không được để trống"),
-  categoryId: z.number().optional(),
-  unitId: z.number().optional(),
+  categoryId: z.number(),
+  unitId: z.number(),
   price: z.string().min(1, "Giá bán không được để trống"),
-  discount: z.number().default(0),
+  discount: z.string(),
   discountUnit: z.number().default(1),
   expiredPeriod: z.number().default(0),
   position: z.number().default(1),
@@ -33,7 +33,10 @@ const productSchema = z.object({
 
 type ProductFormValues = z.input<typeof productSchema>;
 type ProductSchemaOutput = z.output<typeof productSchema>;
-type ProductSubmitValues = Omit<ProductSchemaOutput, "price"> & { price: number };
+type ProductSubmitValues = Omit<ProductSchemaOutput, "price" | "discount"> & {
+  price: number;
+  discount: number;
+};
 
 type ProductFormProps = {
   mode: "add" | "edit" | "detail";
@@ -64,7 +67,7 @@ export function ProductForm({
       categoryId: product?.categoryId,
       unitId: product?.unitId,
       price: formatMoney(product?.price ?? 0),
-      discount: product?.discount ?? 0,
+      discount: formatMoney(product?.discount ?? 0),
       discountUnit: product?.discountUnit ?? 1,
       expiredPeriod: product?.expiredPeriod ?? 0,
       position: product?.position ?? 1,
@@ -78,7 +81,8 @@ export function ProductForm({
 
       await onSubmit({
         ...parsedValue,
-        price: parseMoney(parsedValue.price)
+        price: parseMoney(parsedValue.price),
+        discount: parseMoney(parsedValue.discount)
       });
     }
   });
@@ -92,7 +96,7 @@ export function ProductForm({
         categoryId: product.categoryId,
         unitId: product.unitId,
         price: formatMoney(product.price),
-        discount: product.discount ?? 0,
+        discount: formatMoney(product.discount ?? 0),
         discountUnit: product.discountUnit ?? 1,
         expiredPeriod: product.expiredPeriod ?? 0,
         position: product.position ?? 1,
@@ -139,7 +143,12 @@ export function ProductForm({
             <div className="mb-3 col-md-4">
               <form.AppField name="code">
                 {(field) => (
-                  <field.Input label="Mã sản phẩm *" disabled={isReadOnly} placeholder="Nhập mã" />
+                  <field.Input
+                    label="Mã sản phẩm"
+                    required
+                    disabled={isReadOnly}
+                    placeholder="Nhập mã"
+                  />
                 )}
               </form.AppField>
             </div>
@@ -147,7 +156,8 @@ export function ProductForm({
               <form.AppField name="name">
                 {(field) => (
                   <field.Input
-                    label="Tên sản phẩm *"
+                    label="Tên sản phẩm"
+                    required
                     disabled={isReadOnly}
                     placeholder="Nhập tên"
                   />
@@ -160,6 +170,7 @@ export function ProductForm({
                 {(field) => (
                   <field.Select
                     label="Danh mục"
+                    required
                     options={categoryOptions}
                     disabled={isReadOnly}
                     onLoadMore={onLoadMoreCategories}
@@ -172,6 +183,7 @@ export function ProductForm({
                 {(field) => (
                   <field.Select
                     label="Đơn vị tính"
+                    required
                     options={unitOptions}
                     disabled={isReadOnly}
                     onLoadMore={onLoadMoreUnits}
@@ -185,7 +197,8 @@ export function ProductForm({
                 {(field) => (
                   <field.Input
                     label="Giá bán (VNĐ)"
-                    placeholder="0"
+                    required
+                    placeholder="Nhập giá bán"
                     disabled={isReadOnly}
                     onChange={(e) => {
                       const formatted = formatMoney(e.target.value);
@@ -202,12 +215,19 @@ export function ProductForm({
                 <form.AppField name="discount">
                   {(field) => (
                     <input
-                      type="number"
                       className="form-control"
                       placeholder="0"
                       disabled={isReadOnly}
                       value={field.state.value}
-                      onChange={(e) => field.handleChange(Number(e.target.value))}
+                      onChange={(e) => {
+                        const unit = form.getFieldValue("discountUnit");
+
+                        if (unit === 2) {
+                          field.handleChange(formatMoney(e.target.value));
+                        } else {
+                          field.handleChange(e.target.value.replace(/\D/g, ""));
+                        }
+                      }}
                       onBlur={field.handleBlur}
                     />
                   )}
@@ -223,7 +243,7 @@ export function ProductForm({
                       onChange={(e) => field.handleChange(Number(e.target.value))}
                     >
                       <option value={1}>%</option>
-                      <option value={2}>$</option>
+                      <option value={2}>₫</option>
                     </select>
                   )}
                 </form.AppField>
@@ -240,35 +260,6 @@ export function ProductForm({
                 }
               </form.AppField>
             </div>
-            {/* <div className="mb-3 col-md-4">
-              <label className="form-label">Giảm giá</label>
-              <div className="input-group">
-                <form.AppField name="discount">
-                  {(field) => (
-                    <field.Input
-                      label=""
-                      wrapperClassName="flex-grow-1 mb-0"
-                      type="number"
-                      disabled={isReadOnly}
-                    />
-                  )}
-                </form.AppField>
-                <form.AppField name="discountUnit">
-                  {(field) => (
-                    <select
-                      className="form-select"
-                      style={{ maxWidth: "70px" }}
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(Number(e.target.value))}
-                      disabled={isReadOnly}
-                    >
-                      <option value={1}>%</option>
-                      <option value={2}>$</option>
-                    </select>
-                  )}
-                </form.AppField>
-              </div>
-            </div> */}
 
             <div className="mb-3 col-md-4">
               <form.AppField name="expiredPeriod">

@@ -29,7 +29,8 @@ export default function Sidebar() {
   const submenuParent: Record<string, string | undefined> = {
     "profile-settings": "settings_general",
     appointment: "application",
-    "call-history": "application"
+    "call-history": "application",
+    "customer-attribute": "system_settings"
   };
 
   const pathToTabKey: Record<string, string> = {
@@ -47,7 +48,8 @@ export default function Sidebar() {
     "/product": "product",
     "/service": "service",
     "/call-history": "call-history",
-    "/appointment": "appointment"
+    "/appointment": "appointment",
+    "/customer-attribute": "customer-attribute"
   };
 
   const location = useLocation();
@@ -333,6 +335,32 @@ export default function Sidebar() {
                         onClick={() => handleTabClick("profile-settings")}
                       >
                         Hồ sơ cá nhân
+                      </Link>
+                    </li>
+                  </SubMenuMotion>
+                </li>
+                <li className="submenu">
+                  <a
+                    href="#"
+                    className={openSubmenus.system_settings ? "active subdrop" : ""}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSubmenuToggle("system_settings");
+                    }}
+                  >
+                    <i className="ti ti-device-laptop"></i>
+                    <span>Cài đặt hệ thống</span>
+                    <span className="menu-arrow"></span>
+                  </a>
+                  <SubMenuMotion open={openSubmenus.system_settings}>
+                    <li>
+                      <Link
+                        to="/customer-attribute"
+                        className={activeTab === "customer-attribute" ? "active" : ""}
+                        onClick={() => handleTabClick("customer-attribute")}
+                        style={{ background: "none" }}
+                      >
+                        Cài đặt khách hàng
                       </Link>
                     </li>
                   </SubMenuMotion>

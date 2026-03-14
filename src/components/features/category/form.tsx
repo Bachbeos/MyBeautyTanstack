@@ -7,8 +7,8 @@ const categorySchema = z.object({
   id: z.number().optional(),
   name: z.string().min(1, "Tên danh mục không được để trống"),
   type: z.number(),
-  parentId: z.number(),
-  position: z.number(),
+  parentId: z.number().optional(),
+  position: z.number().optional(),
   active: z.number(),
   featured: z.string().optional(),
   avatar: z.string().optional()
@@ -107,11 +107,12 @@ export function CategoryForm({
 
         <div className="col-lg-8">
           <div className="row">
-            <div className="col-12">
+            <div className="col-12 mb-3">
               <form.AppField name="name">
                 {(field) => (
                   <field.Input
                     label="Tên danh mục"
+                    required
                     disabled={isReadOnly}
                     placeholder="Nhập tên danh mục"
                   />
@@ -119,15 +120,20 @@ export function CategoryForm({
               </form.AppField>
             </div>
 
-            <div className="col-md-6">
+            <div className="col-md-6 mb-3">
               <form.AppField name="type">
                 {(field) => (
-                  <field.Select label="Loại danh mục" options={typeOptions} disabled={isReadOnly} />
+                  <field.Select
+                    label="Loại danh mục"
+                    required
+                    options={typeOptions}
+                    disabled={isReadOnly}
+                  />
                 )}
               </form.AppField>
             </div>
 
-            <div className="col-md-6">
+            <div className="col-md-6 mb-3">
               <form.AppField name="parentId">
                 {(field) => (
                   <field.Select
@@ -140,7 +146,7 @@ export function CategoryForm({
               </form.AppField>
             </div>
 
-            <div className="col-md-6">
+            <div className="col-12 mb-3">
               <form.AppField name="position">
                 {(field) => (
                   <field.Input type="number" label="Thứ tự hiển thị" disabled={isReadOnly} />
@@ -148,7 +154,7 @@ export function CategoryForm({
               </form.AppField>
             </div>
 
-            <div className="col-md-6">
+            <div className="col-12 mb-3">
               <form.AppField name="active">
                 {(field) => (
                   <field.Radio label="Trạng thái" options={statusOptions} disabled={isReadOnly} />

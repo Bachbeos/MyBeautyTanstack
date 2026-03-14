@@ -17,9 +17,6 @@ import type {
 import type { ApiResponse } from "@/lib/types/common";
 import { createKeys } from "@/lib/tanstack/query-key";
 
-/**
- * 1. Key Factory (Queries + Mutations)
- */
 export const productKeys = createKeys("product", {
   list: (params: ProductListRequest) => ["list", params] as const,
   detail: (id: ProductId) => ["detail", id] as const,
@@ -29,9 +26,6 @@ export const productKeys = createKeys("product", {
   infinite: (params: Omit<ProductListRequest, "page">) => ["infinite", params] as const
 });
 
-/**
- * 2. Query Options
- */
 export const productQueries = {
   list: (params: ProductListRequest) =>
     queryOptions<ApiResponse<ProductListResponse>>({
@@ -71,13 +65,9 @@ export const productQueries = {
     })
 };
 
-/**
- * 3. Mutation Options
- */
 export const productMutations = {
   create: () =>
     mutationOptions<ApiResponse<ProductDto>, Error, ProductCreateRequest>({
-      // Using factory for mutationKey
       mutationKey: productKeys.create(),
       mutationFn: (body) => upsertProduct(body),
       meta: {
@@ -88,7 +78,6 @@ export const productMutations = {
 
   update: () =>
     mutationOptions<ApiResponse<ProductDto>, Error, ProductUpdateRequest>({
-      // Using factory for mutationKey
       mutationKey: productKeys.update(),
       mutationFn: (body) => upsertProduct(body),
       meta: {
@@ -99,7 +88,6 @@ export const productMutations = {
 
   delete: () =>
     mutationOptions<ApiResponse<void>, Error, ProductId>({
-      // Using factory for mutationKey
       mutationKey: productKeys.delete(),
       mutationFn: (id) => deleteProduct(id),
       meta: {

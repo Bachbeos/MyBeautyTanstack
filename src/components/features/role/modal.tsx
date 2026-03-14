@@ -14,7 +14,7 @@ type ModalProps = {
 };
 
 export default function ModalRole({ type, shown, item, onClose, onSubmit, onDelete }: ModalProps) {
-  if (!type || !shown) return null;
+  if (!type && !shown) return null;
 
   const getTitle = () => {
     switch (type) {
@@ -50,7 +50,7 @@ export default function ModalRole({ type, shown, item, onClose, onSubmit, onDele
           </div>
         }
       >
-        <div className="p-4 text-center">
+        <div className="text-center">
           <div className="mb-3">
             <span className="avatar avatar-xl badge-soft-danger border-0 text-danger rounded-circle d-inline-flex align-items-center justify-content-center">
               <i className="ti ti-trash fs-24"></i>
@@ -90,7 +90,9 @@ export default function ModalRole({ type, shown, item, onClose, onSubmit, onDele
       }
     >
       <div className="">
-        <RoleForm mode={type} role={item} onSubmit={onSubmit} />
+        {type && (type === "add" || type === "edit" || type === "detail") && (
+          <RoleForm mode={type} role={item} onSubmit={onSubmit} />
+        )}
       </div>
     </BaseModal>
   );

@@ -1,4 +1,9 @@
-import { queryOptions, mutationOptions } from "@tanstack/react-query";
+import {
+  queryOptions,
+  mutationOptions,
+  type InfiniteData,
+  infiniteQueryOptions
+} from "@tanstack/react-query";
 import { getUnits, getUnitDetail, upsertUnit, deleteUnit } from "@/lib/api/unit";
 
 import type {
@@ -12,20 +17,15 @@ import type {
 import type { ApiResponse } from "@/lib/types/common";
 import { createKeys } from "@/lib/tanstack/query-key";
 
-/**
- * 1. Key Factory (Queries + Mutations)
- */
 export const unitKeys = createKeys("unit", {
   list: (params: UnitListRequest) => ["list", params] as const,
   detail: (id: UnitId) => ["detail", id] as const,
   create: () => ["create"] as const,
   update: () => ["update"] as const,
-  delete: () => ["delete"] as const
+  delete: () => ["delete"] as const,
+  infinite: (params: Omit<UnitListRequest, "page">) => ["infinite", params] as const
 });
 
-/**
- * 2. Query Options
- */
 export const unitQueries = {
   list: (params: UnitListRequest) =>
     queryOptions<ApiResponse<UnitListResponse>>({
@@ -38,16 +38,35 @@ export const unitQueries = {
       queryKey: unitKeys.detail(id),
       queryFn: ({ signal }) => getUnitDetail(id, signal),
       enabled: !!id
+    }),
+
+  infinite: (params: Omit<UnitListRequest, "page">) =>
+    infiniteQueryOptions<
+      ApiResponse<UnitListResponse>,
+      Error,
+      InfiniteData<ApiResponse<UnitListResponse>>,
+      ReturnType<typeof unitKeys.infinite>,
+      number
+    >({
+      queryKey: unitKeys.infinite(params),
+      initialPageParam: 1,
+      queryFn: ({ signal, pageParam }) => getUnits({ ...(params as any), page: pageParam }, signal),
+      getNextPageParam: (lastPage, _pages, lastPageParam) => {
+        const items = lastPage?.result?.items ?? [];
+        const total = lastPage?.result?.total ?? 0;
+        const limit = (params as any).limit ?? items.length ?? 0;
+
+        const loadedSoFar = lastPageParam * (limit || 0);
+        if (!limit) return items.length > 0 ? lastPageParam + 1 : undefined;
+
+        return loadedSoFar < total ? lastPageParam + 1 : undefined;
+      }
     })
 };
 
-/**
- * 3. Mutation Options
- */
 export const unitMutations = {
   create: () =>
     mutationOptions<ApiResponse<UnitDto>, Error, UnitCreateRequest>({
-      // Using factory for mutationKey
       mutationKey: unitKeys.create(),
       mutationFn: (body) => upsertUnit(body),
       meta: {
@@ -58,7 +77,6 @@ export const unitMutations = {
 
   update: () =>
     mutationOptions<ApiResponse<UnitDto>, Error, UnitUpdateRequest>({
-      // Using factory for mutationKey
       mutationKey: unitKeys.update(),
       mutationFn: (body) => upsertUnit(body),
       meta: {
@@ -69,7 +87,6 @@ export const unitMutations = {
 
   delete: () =>
     mutationOptions<ApiResponse<void>, Error, UnitId>({
-      // Using factory for mutationKey
       mutationKey: unitKeys.delete(),
       mutationFn: (id) => deleteUnit(id),
       meta: {

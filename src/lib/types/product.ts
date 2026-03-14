@@ -48,17 +48,17 @@ export type ProductCreateRequest = {
 
 export type ProductUpdateRequest = {
   id: ProductId;
-  name: string;
-  categoryId: number;
+  name?: string;
+  categoryId?: number;
   content?: string;
   code?: string;
   avatar?: string;
-  price: number;
+  price?: number;
   discount?: number;
   discountUnit?: number;
   position?: number;
-  status: number;
-  unitId: number;
-  type: number;
+  status?: number;
+  unitId?: number;
+  type?: number;
   expiredPeriod?: number;
 };

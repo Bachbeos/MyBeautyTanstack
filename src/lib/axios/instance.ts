@@ -36,7 +36,7 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Not 401 → forward error
+    // Not 401 → forward error -> no need to refresh
     if (error.response?.status !== 401) {
       return Promise.reject(error);
     }

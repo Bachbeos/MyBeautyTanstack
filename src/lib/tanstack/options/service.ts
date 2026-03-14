@@ -17,9 +17,6 @@ import type {
 import type { ApiResponse } from "@/lib/types/common";
 import { createKeys } from "@/lib/tanstack/query-key";
 
-/**
- * 1. Key Factory (Queries + Mutations)
- */
 export const serviceKeys = createKeys("service", {
   list: (params: ServiceListRequest) => ["list", params] as const,
   detail: (id: ServiceId) => ["detail", id] as const,
@@ -29,9 +26,6 @@ export const serviceKeys = createKeys("service", {
   infinite: (params: Omit<ServiceListRequest, "page">) => ["infinite", params] as const
 });
 
-/**
- * 2. Query Options
- */
 export const serviceQueries = {
   list: (params: ServiceListRequest) =>
     queryOptions<ApiResponse<ServiceListResponse>>({
@@ -71,13 +65,9 @@ export const serviceQueries = {
     })
 };
 
-/**
- * 3. Mutation Options
- */
 export const serviceMutations = {
   create: () =>
     mutationOptions<ApiResponse<ServiceDto>, Error, ServiceCreateRequest>({
-      // Using factory for mutationKey
       mutationKey: serviceKeys.create(),
       mutationFn: (body) => upsertService(body),
       meta: {
@@ -88,7 +78,6 @@ export const serviceMutations = {
 
   update: () =>
     mutationOptions<ApiResponse<ServiceDto>, Error, ServiceUpdateRequest>({
-      // Using factory for mutationKey
       mutationKey: serviceKeys.update(),
       mutationFn: (body) => upsertService(body),
       meta: {
@@ -99,7 +88,6 @@ export const serviceMutations = {
 
   delete: () =>
     mutationOptions<ApiResponse<void>, Error, ServiceId>({
-      // Using factory for mutationKey
       mutationKey: serviceKeys.delete(),
       mutationFn: (id) => deleteService(id),
       meta: {

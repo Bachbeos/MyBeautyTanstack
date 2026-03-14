@@ -4,7 +4,14 @@ import {
   infiniteQueryOptions,
   type InfiniteData
 } from "@tanstack/react-query";
-import { getUsers, getUserDetail, upsertUser, deleteUser, updateUserStatus } from "@/lib/api/user";
+import {
+  getUsers,
+  getUserDetail,
+  upsertUser,
+  deleteUser,
+  updateUserStatus,
+  getUserInfo
+} from "@/lib/api/user";
 
 import type {
   UserId,
@@ -17,27 +24,29 @@ import type {
 import type { ApiResponse } from "@/lib/types/common";
 import { createKeys } from "@/lib/tanstack/query-key";
 
-/**
- * 1. Key Factory (Queries + Mutations)
- */
 export const userKeys = createKeys("user", {
   list: (params: UserListRequest) => ["list", params] as const,
   detail: (id: UserId) => ["detail", id] as const,
   create: () => ["create"] as const,
   update: () => ["update"] as const,
   delete: () => ["delete"] as const,
+  info: () => ["info"] as const,
   updateStatus: () => ["updateStatus"] as const,
   infinite: (params: Omit<UserListRequest, "page">) => ["infinite", params] as const
 });
 
-/**
- * 2. Query Options
- */
 export const userQueries = {
   list: (params: UserListRequest) =>
     queryOptions<ApiResponse<UserListResponse>>({
       queryKey: userKeys.list(params),
       queryFn: ({ signal }) => getUsers(params, signal)
+    }),
+
+  info: () =>
+    queryOptions<ApiResponse<UserDto>>({
+      queryKey: userKeys.info(),
+      queryFn: ({ signal }) => getUserInfo(signal),
+      staleTime: 5 * 60 * 1000
     }),
 
   infinite: (params: Omit<UserListRequest, "page">) =>
@@ -71,13 +80,9 @@ export const userQueries = {
     })
 };
 
-/**
- * 3. Mutation Options
- */
 export const userMutations = {
   create: () =>
     mutationOptions<ApiResponse<UserDto>, Error, UserCreateRequest>({
-      // Using factory for mutationKey
       mutationKey: userKeys.create(),
       mutationFn: (body) => upsertUser(body),
       meta: {
@@ -88,7 +93,6 @@ export const userMutations = {
 
   update: () =>
     mutationOptions<ApiResponse<UserDto>, Error, UserUpdateRequest>({
-      // Using factory for mutationKey
       mutationKey: userKeys.update(),
       mutationFn: (body) => upsertUser(body),
       meta: {
@@ -99,7 +103,6 @@ export const userMutations = {
 
   delete: () =>
     mutationOptions<ApiResponse<void>, Error, UserId>({
-      // Using factory for mutationKey
       mutationKey: userKeys.delete(),
       mutationFn: (id) => deleteUser(id),
       meta: {
@@ -110,7 +113,6 @@ export const userMutations = {
 
   updateStatus: () =>
     mutationOptions<ApiResponse<void>, Error, { id: UserId; active: number }>({
-      // Using factory for mutationKey
       mutationKey: userKeys.updateStatus(),
       mutationFn: ({ id, active }) => {
         return updateUserStatus(id, active);

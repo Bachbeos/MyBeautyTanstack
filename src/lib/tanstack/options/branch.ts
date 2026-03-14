@@ -23,9 +23,6 @@ import type {
 import type { ApiResponse } from "@/lib/types/common";
 import { createKeys } from "@/lib/tanstack/query-key";
 
-/**
- * 1. Key Factory (Queries + Mutations)
- */
 export const branchKeys = createKeys("branch", {
   list: (params: BranchListRequest) => ["list", params] as const,
   detail: (id: BranchId) => ["detail", id] as const,
@@ -36,9 +33,6 @@ export const branchKeys = createKeys("branch", {
   infinite: (params: Omit<BranchListRequest, "page">) => ["infinite", params] as const
 });
 
-/**
- * 2. Query Options
- */
 export const branchQueries = {
   list: (params: BranchListRequest) =>
     queryOptions<ApiResponse<BranchListResponse>>({
@@ -78,13 +72,9 @@ export const branchQueries = {
     })
 };
 
-/**
- * 3. Mutation Options
- */
 export const branchMutations = {
   create: () =>
     mutationOptions<ApiResponse<BranchDto>, Error, BranchCreateRequest>({
-      // Using factory for mutationKey
       mutationKey: branchKeys.create(),
       mutationFn: (body) => upsertBranch(body),
       meta: {
@@ -95,7 +85,6 @@ export const branchMutations = {
 
   update: () =>
     mutationOptions<ApiResponse<BranchDto>, Error, BranchUpdateRequest>({
-      // Using factory for mutationKey
       mutationKey: branchKeys.update(),
       mutationFn: (body) => upsertBranch(body),
       meta: {
@@ -106,7 +95,6 @@ export const branchMutations = {
 
   delete: () =>
     mutationOptions<ApiResponse<void>, Error, BranchId>({
-      // Using factory for mutationKey
       mutationKey: branchKeys.delete(),
       mutationFn: (id) => deleteBranch(id),
       meta: {
@@ -117,7 +105,6 @@ export const branchMutations = {
 
   updateStatus: () =>
     mutationOptions<ApiResponse<void>, Error, { id: BranchId; active: number }>({
-      // Using factory for mutationKey
       mutationKey: branchKeys.updateStatus(),
       mutationFn: ({ id, active }) => {
         return updateBranchStatus(id, active);

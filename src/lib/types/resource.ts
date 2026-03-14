@@ -9,7 +9,7 @@ export type ResourceDto = {
   name: string;
   code: string;
   uri: string;
-  actions: string;
+  actions: string[];
   description?: string;
   [key: string]: unknown;
 };
@@ -25,8 +25,8 @@ export type ResourceListResponse = Page<ResourceDto>;
 export type ResourceCreateRequest = {
   name: string;
   code: string;
-  uri?: string;
-  actions?: string[];
+  uri: string;
+  actions: string[];
   description?: string;
 };
 
@@ -34,7 +34,7 @@ export type ResourceUpdateRequest = {
   id: ResourceId;
   name: string;
   code: string;
-  uri?: string;
-  actions?: string[];
+  uri: string;
+  actions: string[];
   description?: string;
 };

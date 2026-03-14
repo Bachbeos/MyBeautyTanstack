@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { z } from "zod";
+import "./formRole.scss";
 
 import { type RoleDto } from "@/lib/types/role";
 import { useAppForm } from "@/components/form/hooks";
@@ -57,11 +58,19 @@ export function RoleForm({ mode, role, onSubmit }: RoleFormProps) {
         form.handleSubmit();
       }}
     >
-      <form.AppField name="name">
-        {(field) => (
-          <field.Input label="Tên chức vụ" disabled={isReadOnly} placeholder="Nhập tên" />
-        )}
-      </form.AppField>
+      <div className="mb-3">
+        <form.AppField name="name">
+          {(field) => (
+            <field.Input
+              label="Tên chức vụ"
+              required
+              disabled={isReadOnly}
+              placeholder="Nhập tên"
+            />
+          )}
+        </form.AppField>
+      </div>
+
       <form.AppField name="isDefault">
         {(field) => <field.Checkbox label="Quyền mặc định" disabled={isReadOnly} />}
       </form.AppField>

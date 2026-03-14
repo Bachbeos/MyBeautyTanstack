@@ -10,7 +10,7 @@ import { categoryQueries } from "@/lib/tanstack/options/category";
 import { serviceMutations, serviceQueries } from "@/lib/tanstack/options/service";
 import type { ServiceDto } from "@/lib/types/service";
 import { cn } from "@/lib/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   createColumnHelper,
@@ -86,6 +86,7 @@ function RouteComponent() {
         meta: { className: "w-1 text-center" }
       }),
       columnHelper.accessor("name", {
+        id: "name",
         header: "Tên dịch vụ",
         cell: (info) => {
           const row = info.row.original;
@@ -138,6 +139,7 @@ function RouteComponent() {
           )
       }),
       columnHelper.accessor("status", {
+        id: "status",
         header: "Trạng thái",
         meta: { className: "text-center w-1" },
         cell: (info) => {
@@ -227,11 +229,19 @@ function RouteComponent() {
     }
   };
 
-  const categoryInf = useQuery(categoryQueries.list({ page: 1, limit: 1000 }));
+  const categorysInf = useInfiniteQuery(categoryQueries.infinite({ limit: 10 }));
+
   const categoryOptions = useMemo(() => {
-    const items = categoryInf.data?.result?.items ?? [];
-    return items.map((c) => ({ label: String(c.name), value: Number(c.id) }));
-  }, [categoryInf.data]);
+    return (
+      categorysInf.data?.pages
+        .flatMap((page) => page.result?.items ?? [])
+        .map((category) => ({ label: String(category.name), value: Number(category.id) })) ?? []
+    );
+  }, [categorysInf.data]);
+
+  const [handleLoadMoreCategories] = [categorysInf].map(
+    (q) => () => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()
+  );
 
   return (
     <div className="page-wrapper">
@@ -281,6 +291,7 @@ function RouteComponent() {
         onSubmit={handleSubmit}
         onDelete={handleDelete}
         categoryOptions={categoryOptions}
+        onLoadMoreCategories={handleLoadMoreCategories}
       />
     </div>
   );

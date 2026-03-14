@@ -27,6 +27,6 @@ export type CustomerSourceCreateRequest = {
 
 export type CustomerSourceUpdateRequest = {
   id: CustomerSourceId;
-  name: string;
-  status: number;
+  name?: string;
+  status?: number;
 };

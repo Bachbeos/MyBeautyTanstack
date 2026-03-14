@@ -4,15 +4,27 @@ import { z } from "zod";
 import { type VoucherDto } from "@/lib/types/voucher";
 import { useAppForm } from "@/components/form/hooks";
 
+const formatMoney = (value: number | string | undefined): string => {
+  if (value === undefined || value === null || value === "") return "";
+  return String(value)
+    .replace(/\D/g, "")
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
+const parseMoney = (value: string | undefined): number => {
+  if (!value) return 0;
+  return Number(String(value).replace(/\./g, ""));
+};
+
 const voucherSchema = z.object({
   id: z.number().optional(),
   code: z.string().min(1, "Vui lòng nhập mã voucher"),
   name: z.string().min(1, "Vui lòng nhập tên chương trình"),
   description: z.string().optional(),
   discountType: z.coerce.number(),
-  discountValue: z.coerce.number().min(0, "Giá trị không được âm"),
-  maxDiscount: z.coerce.number().optional(),
-  minInvoiceAmount: z.coerce.number(),
+  discountValue: z.coerce.string(),
+  maxDiscount: z.coerce.string().optional(),
+  minInvoiceAmount: z.coerce.string(),
   totalQuantity: z.coerce.number().min(1, "Số lượng phải lớn hơn 0"),
   perUserLimit: z.coerce.number().min(1),
   startDate: z.string().min(1, "Vui lòng chọn ngày bắt đầu"),
@@ -24,11 +36,19 @@ const voucherSchema = z.object({
 
 type VoucherFormValues = z.input<typeof voucherSchema>;
 type VoucherSchemaOutput = z.output<typeof voucherSchema>;
+type VoucherSubmitValues = Omit<
+  VoucherSchemaOutput,
+  "discountValue" | "maxDiscount" | "minInvoiceAmount"
+> & {
+  discountValue: number;
+  maxDiscount: number;
+  minInvoiceAmount: number;
+};
 
 type VoucherFormProps = {
   mode: "add" | "edit" | "detail";
   voucher?: VoucherDto;
-  onSubmit: (values: VoucherSchemaOutput) => void;
+  onSubmit: (values: VoucherSubmitValues) => void;
   branchOptions: { label: string; value: number }[];
   onLoadMoreBranches: () => void;
 };
@@ -56,9 +76,9 @@ export function VoucherForm({
       name: voucher?.name || "",
       description: voucher?.description || "",
       discountType: voucher?.discountType ?? 1,
-      discountValue: voucher?.discountValue ?? 0,
-      maxDiscount: voucher?.maxDiscount ?? 0,
-      minInvoiceAmount: voucher?.minInvoiceAmount ?? 0,
+      discountValue: voucher?.discountValue ? formatMoney(voucher.discountValue) : "",
+      maxDiscount: voucher?.maxDiscount ? formatMoney(voucher.maxDiscount) : "",
+      minInvoiceAmount: voucher?.minInvoiceAmount ? formatMoney(voucher.minInvoiceAmount) : "",
       totalQuantity: voucher?.totalQuantity ?? 100,
       perUserLimit: voucher?.perUserLimit ?? 1,
       startDate: voucher?.startDate ? voucher.startDate.slice(0, 16) : "",
@@ -73,11 +93,14 @@ export function VoucherForm({
       const timeError = getTimeError(parsedValue.startDate, parsedValue.endDate);
       if (timeError) return;
 
-      const payload: VoucherSchemaOutput = {
-        ...parsedValue,
-        branchId:
-          parsedValue.branchId && parsedValue.branchId !== 0 ? parsedValue.branchId : undefined,
-        maxDiscount: parsedValue.discountType === 2 ? parsedValue.maxDiscount : 0
+      const { discountValue, maxDiscount, minInvoiceAmount, ...rest } = parsedValue;
+      const payload: VoucherSubmitValues = {
+        ...rest,
+        discountValue:
+          parsedValue.discountType === 1 ? parseMoney(discountValue) : Number(discountValue),
+        maxDiscount: parsedValue.discountType === 2 ? parseMoney(String(maxDiscount ?? "0")) : 0,
+        minInvoiceAmount: parseMoney(minInvoiceAmount),
+        branchId: rest.branchId && rest.branchId !== 0 ? rest.branchId : undefined
       };
 
       await onSubmit(payload);
@@ -88,6 +111,9 @@ export function VoucherForm({
     if (voucher) {
       form.reset({
         ...voucher,
+        discountValue: voucher.discountValue ? formatMoney(voucher.discountValue) : "",
+        maxDiscount: voucher.maxDiscount ? formatMoney(voucher.maxDiscount) : "",
+        minInvoiceAmount: voucher.minInvoiceAmount ? formatMoney(voucher.minInvoiceAmount) : "",
         startDate: voucher.startDate ? voucher.startDate.slice(0, 16) : "",
         endDate: voucher.endDate ? voucher.endDate.slice(0, 16) : ""
       } as VoucherFormValues);
@@ -152,8 +178,16 @@ export function VoucherForm({
                     {(field) => (
                       <field.Input
                         label={discountType === 1 ? "Số tiền giảm (VNĐ)" : "Phần trăm giảm (%)"}
-                        type="number"
+                        type={discountType === 1 ? "text" : "number"}
                         disabled={isReadOnly}
+                        onChange={
+                          discountType === 1
+                            ? (e) => {
+                                const formatted = formatMoney(e.target.value);
+                                field.handleChange(formatted);
+                              }
+                            : undefined
+                        }
                       />
                     )}
                   </form.AppField>
@@ -164,8 +198,12 @@ export function VoucherForm({
                       {(field) => (
                         <field.Input
                           label="Giảm tối đa (VNĐ)"
-                          type="number"
+                          type="text"
                           disabled={isReadOnly}
+                          onChange={(e) => {
+                            const formatted = formatMoney(e.target.value);
+                            field.handleChange(formatted);
+                          }}
                         />
                       )}
                     </form.AppField>
@@ -179,7 +217,15 @@ export function VoucherForm({
         <div className="col-md-6 mb-3">
           <form.AppField name="minInvoiceAmount">
             {(field) => (
-              <field.Input label="Giá trị đơn hàng tối thiểu" type="number" disabled={isReadOnly} />
+              <field.Input
+                label="Giá trị đơn hàng tối thiểu"
+                type="text"
+                disabled={isReadOnly}
+                onChange={(e) => {
+                  const formatted = formatMoney(e.target.value);
+                  field.handleChange(formatted);
+                }}
+              />
             )}
           </form.AppField>
         </div>

@@ -9,9 +9,10 @@ export type UserDto = {
   name: string;
   avatar: string;
   phone: string;
-  email: string;
+  email?: string;
   plainPassword?: string | number;
-  branchName: string;
+  branchId?: number;
+  branchName?: string;
   roleId: number;
   active: number;
   regisDate: string;
@@ -27,11 +28,11 @@ export type UserListRequest = {
 export type UserListResponse = Page<UserDto>;
 
 export type UserCreateRequest = {
-  name?: string;
+  name: string;
   phone: string;
-  email: string;
+  email?: string;
   plainPassword?: string | number;
-  branchName: string;
+  branchId?: number;
   active: number;
 };
 
@@ -41,6 +42,6 @@ export type UserUpdateRequest = {
   phone?: string;
   email?: string;
   plainPassword?: string | number;
-  branchName: string;
-  active: number;
+  branchId?: number;
+  active?: number;
 };

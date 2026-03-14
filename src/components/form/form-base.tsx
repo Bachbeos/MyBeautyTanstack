@@ -6,6 +6,7 @@ type ErrorStrategy = "touched" | "dirty" | "submit" | "always";
 export type FormControlProps = {
   label: string;
   description?: string;
+  required?: boolean;
   errorStrategy?: ErrorStrategy;
   wrapperClassName?: string;
 };
@@ -31,6 +32,7 @@ export function FormBase({
   children,
   label,
   description,
+  required,
   errorStrategy = "touched",
   wrapperClassName = "mb-0"
 }: FormBaseProps) {
@@ -44,6 +46,7 @@ export function FormBase({
     <div className={wrapperClassName}>
       <label className="form-label" htmlFor={field.name}>
         {label}
+        {required && <span className="text-danger ms-1">*</span>}
       </label>
 
       {children}

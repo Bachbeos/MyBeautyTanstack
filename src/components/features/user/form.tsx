@@ -10,9 +10,9 @@ const userSchema = z.object({
     .string()
     .min(9, "Số điện thoại không hợp lệ")
     .regex(/^\+?\d+$/, "Chỉ được chứa số"),
-  email: z.email("Email không hợp lệ"),
+  email: z.email("Email không hợp lệ").or(z.literal("")),
   active: z.number(),
-  plainPassword: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự").optional(),
+  plainPassword: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự").or(z.literal("")),
   branchId: z.number().optional(),
   roleId: z.number().optional()
 });
@@ -86,7 +86,8 @@ export function UserForm({
           <form.AppField name="name">
             {(field) => (
               <field.Input
-                label="Tên người dùng *"
+                label="Tên người dùng"
+                required
                 disabled={isReadOnly}
                 placeholder="Nhập tên người dùng"
               />
@@ -98,7 +99,8 @@ export function UserForm({
           <form.AppField name="phone">
             {(field) => (
               <field.Input
-                label="Số điện thoại *"
+                label="Số điện thoại"
+                required
                 disabled={isReadOnly}
                 placeholder="Nhập số điện thoại"
               />
@@ -118,7 +120,7 @@ export function UserForm({
           <form.AppField name="branchId">
             {(field) => (
               <field.Select
-                label="Tên chi nhánh"
+                label="Chi nhánh"
                 options={branchOptions}
                 disabled={isReadOnly}
                 placeholder="Chọn chi nhánh"

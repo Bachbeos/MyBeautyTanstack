@@ -8,7 +8,7 @@ const unitSchema = z.object({
   id: z.number().optional(),
   name: z.string().min(1, "Tên đơn vị không được để trống").max(255, "Tên đơn vị tối đa 255 ký tự"),
   status: z.number(),
-  position: z.number()
+  position: z.number().optional()
 });
 
 type UnitFormValues = z.infer<typeof unitSchema>;

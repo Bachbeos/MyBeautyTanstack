@@ -12,9 +12,9 @@ export type callHistoryDto = {
   customerName: string;
   callType: number;
   outcome: number;
-  interestLevel: number;
+  interestLevel?: number;
   duration: number;
-  note: string;
+  note?: string;
   status: number;
   [key: string]: unknown;
 };
@@ -32,9 +32,9 @@ export type callHistoryCreateRequest = {
   customerId: number;
   callType: number;
   outcome: number;
-  interestLevel: number;
-  duration: number;
-  note: string;
+  interestLevel?: number;
+  duration?: number;
+  note?: string;
   status: number;
 };
 
@@ -44,8 +44,8 @@ export type callHistoryUpdateRequest = {
   customerId: number;
   callType: number;
   outcome: number;
-  interestLevel: number;
-  duration: number;
-  note: string;
+  interestLevel?: number;
+  duration?: number;
+  note?: string;
   status: number;
 };

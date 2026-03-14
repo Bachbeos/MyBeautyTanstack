@@ -50,3 +50,8 @@ export const updateUserStatus = async (id: UserId, active: number): Promise<ApiR
   });
   return res.data;
 };
+
+export const getUserInfo = async (signal?: AbortSignal): Promise<ApiResponse<UserDto>> => {
+  const res = await axiosInstance.get<ApiResponse<UserDto>>(ENDPOINTS.user.info, { signal });
+  return res.data;
+};

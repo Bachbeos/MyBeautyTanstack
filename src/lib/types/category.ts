@@ -6,13 +6,13 @@ export const CategoryId = (v: number) => toId<"Category", number>(v);
 
 export type CategoryDto = {
   id: CategoryId;
-  name?: string;
-  active?: number;
-  position: number;
-  avatar: string;
+  name: string;
+  active: number;
+  position?: number;
+  avatar?: string;
   type?: number;
-  parentId: CategoryId;
-  featured: string;
+  parentId?: CategoryId;
+  featured?: string;
   [key: string]: unknown;
 };
 
@@ -25,21 +25,21 @@ export type CategoryUpdateRequest = {
   id: CategoryId;
   name?: string;
   active?: number;
-  position: number;
-  avatar: string;
+  position?: number;
+  avatar?: string;
   type?: number;
-  parentId: CategoryId;
-  featured: string;
+  parentId?: CategoryId;
+  featured?: string;
 };
 
 export type CategoryCreateRequest = {
   name: string;
-  active?: number;
-  position: number;
-  avatar: string;
+  active: number;
+  position?: number;
+  avatar?: string;
   type?: number;
-  parentId: CategoryId;
-  featured: string;
+  parentId?: CategoryId;
+  featured?: string;
 };
 
 export type CategoryListResponse = Page<CategoryDto>;

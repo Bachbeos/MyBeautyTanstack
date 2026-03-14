@@ -29,7 +29,7 @@ export default function ModalCallHistory({
   onLoadMoreUsers,
   onLoadMoreCustomers
 }: ModalProps) {
-  if (!type || !shown) return null;
+  if (!type && !shown) return null;
 
   const getTitle = () => {
     switch (type) {
@@ -64,7 +64,7 @@ export default function ModalCallHistory({
           </div>
         }
       >
-        <div className="p-4 text-center">
+        <div className="text-center">
           <span className="avatar avatar-xl badge-soft-danger border-0 text-danger rounded-circle mb-3">
             <i className="ti ti-trash fs-24"></i>
           </span>
@@ -98,15 +98,19 @@ export default function ModalCallHistory({
         )
       }
     >
-      <CallHistoryForm
-        mode={type}
-        callHistory={item}
-        userOptions={userOptions}
-        customerOptions={customerOptions}
-        onSubmit={onSubmit}
-        onLoadMoreUsers={onLoadMoreUsers}
-        onLoadMoreCustomers={onLoadMoreCustomers}
-      />
+      <div>
+        {type && (type === "add" || type === "edit" || type === "detail") && (
+          <CallHistoryForm
+            mode={type}
+            callHistory={item}
+            userOptions={userOptions}
+            customerOptions={customerOptions}
+            onSubmit={onSubmit}
+            onLoadMoreUsers={onLoadMoreUsers}
+            onLoadMoreCustomers={onLoadMoreCustomers}
+          />
+        )}
+      </div>
     </BaseModal>
   );
 }

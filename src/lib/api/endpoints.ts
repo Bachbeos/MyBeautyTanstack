@@ -10,6 +10,7 @@ import type { CustomerId } from "../types/customer";
 import type { VoucherId } from "../types/voucher";
 import type { BranchId } from "../types/branch";
 import type { ServiceId } from "../types/service";
+import type { CustomerAttributeId } from "../types/customer-attribute";
 
 export const ENDPOINTS = {
   auth: {
@@ -20,7 +21,7 @@ export const ENDPOINTS = {
     me: "/auth/me"
   },
   user: {
-    info: "/users/info",
+    info: "/user/info",
     list: "/user/list",
     update: "/user/update",
     delete: (id: UserId) => `/user/delete/${id}`,
@@ -125,5 +126,11 @@ export const ENDPOINTS = {
     update: "/service/update",
     delete: (id: ServiceId) => `/service/delete/${id}`,
     detail: "/service/get"
+  },
+  customerAttribute: {
+    list: "/customerAttribute/list",
+    update: "/customerAttribute/update",
+    delete: (id: CustomerAttributeId) => `/customerAttribute/delete/${id}`,
+    detail: "/customerAttribute/get"
   }
 } as const;

@@ -19,6 +19,8 @@ import {
   type ColumnFiltersState
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
+import { useModalFade, useCloseModal } from "@/hooks/use-modal-animation";
+import CollapseButton from "@/components/collapse/collapse-button";
 
 const columnHelper = createColumnHelper<VoucherDto>();
 
@@ -30,6 +32,9 @@ function RouteComponent() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
+    document.body.classList.contains("header-collapse")
+  );
 
   const rawNameFilter = useMemo(() => {
     const filter = columnFilters.find((f) => f.id === "name");
@@ -38,22 +43,15 @@ function RouteComponent() {
 
   const [nameFilter] = useDebounceValue(rawNameFilter, 500);
 
-  const [modal, setModal] = useState<{
-    type: "add" | "edit" | "delete" | "detail" | null;
-    item?: VoucherDto;
-    shown: boolean;
-  }>({
-    type: null,
-    item: undefined,
-    shown: false
-  });
+  const [modal, setModal] = useState<{ type: any; item: any }>({ type: null, item: null });
+  const [modalShown, setModalShown] = useState(false);
 
-  const openModal = (type: "add" | "edit" | "delete" | "detail", item?: VoucherDto) => {
-    setModal({ type, item, shown: true });
-  };
+  useModalFade(modal.type, setModalShown);
 
-  const closeModal = () => {
-    setModal((prev) => ({ ...prev, shown: false }));
+  const closeModal = useCloseModal(setModalShown, (state) => setModal(state as any));
+
+  const openModal = (type: any, item: any) => {
+    setModal({ type, item });
   };
 
   const params = useMemo(
@@ -87,7 +85,8 @@ function RouteComponent() {
       }),
       columnHelper.accessor("code", {
         id: "code",
-        header: "Mã giảm giá"
+        header: "Mã giảm giá",
+        meta: { className: "text-center" }
       }),
       columnHelper.accessor("name", {
         id: "name",
@@ -127,7 +126,8 @@ function RouteComponent() {
               <span className="text-muted"> / {row.totalQuantity}</span>
             </span>
           );
-        }
+        },
+        meta: { className: "text-center" }
       }),
       columnHelper.display({
         id: "time",
@@ -269,27 +269,30 @@ function RouteComponent() {
     }
   };
 
+  const handleCollapse = () => {
+    document.body.classList.toggle("header-collapse");
+    setIsHeaderCollapsed(document.body.classList.contains("header-collapse"));
+  };
+
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
-        {/* Header & Breadcrumb */}
         <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
           <div>
             <h4 className="mb-1 fw-bold">
               Danh sách mã giảm giá
               <span className="badge badge-soft-primary ms-2">{total}</span>
             </h4>
-            {/* Breadcrumb component ở đây */}
-            <div className="text-muted small">Mã giảm giá / Danh sách</div>
+            <div className="text-muted small">Mã giảm giá / Danh sách mã giảm giá</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
             <ExportButton onExport={() => {}} />
             <RefreshButton onRefresh={() => query.refetch()} />
+            <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>
         </div>
 
         <div className="card border-0 rounded-0 shadow-sm">
-          {/* <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap bg-white py-3"></div> */}
           <div className="card-body p-3">
             <AsyncBoundary
               status={query.status}
@@ -304,7 +307,7 @@ function RouteComponent() {
                   filterKey="name"
                   filterKeyPlaceholder="Tìm nhanh mã giảm giá..."
                   toolbarRight={
-                    <AddButton label="Thêm mã giảm giá" onClick={() => openModal("add")} />
+                    <AddButton label="Thêm mã giảm giá" onClick={() => openModal("add", null)} />
                   }
                   toolbarLeft={<div className="text-muted small d-none d-md-block"></div>}
                 />
@@ -316,7 +319,7 @@ function RouteComponent() {
 
       <ModalVoucher
         type={modal.type}
-        shown={modal.shown}
+        shown={modalShown}
         item={modal.item}
         onClose={closeModal}
         onSubmit={handleSubmit}

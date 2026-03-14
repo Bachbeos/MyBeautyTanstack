@@ -22,9 +22,10 @@ import { Route as CrmRolesPermissionsPermissionRouteImport } from './routes/_crm
 import { Route as CrmResourceResourceRouteImport } from './routes/_crm/_resource/resource'
 import { Route as CrmProfileSettingsProfileSettingsRouteImport } from './routes/_crm/_profile-settings/profile-settings'
 import { Route as CrmProductProductRouteImport } from './routes/_crm/_product/product'
-import { Route as CrmManagerUsersManagerUsersRouteImport } from './routes/_crm/_manager-users/manager-users'
+import { Route as CrmErrorError505RouteImport } from './routes/_crm/_error/error505'
 import { Route as CrmCustomerCustomerRouteImport } from './routes/_crm/_customer/customer'
 import { Route as CrmCustomerSourceCustomerSourceRouteImport } from './routes/_crm/_customer-source/customer-source'
+import { Route as CrmCustomerSettingsCustomerAttributeRouteImport } from './routes/_crm/_customer-settings/customer-attribute'
 import { Route as CrmCategoryCategoryRouteImport } from './routes/_crm/_category/category'
 import { Route as CrmCallHistoryCallHistoryRouteImport } from './routes/_crm/_call-history/call-history'
 import { Route as CrmBranchBranchRouteImport } from './routes/_crm/_branch/branch'
@@ -96,12 +97,11 @@ const CrmProductProductRoute = CrmProductProductRouteImport.update({
   path: '/product',
   getParentRoute: () => CrmRoute,
 } as any)
-const CrmManagerUsersManagerUsersRoute =
-  CrmManagerUsersManagerUsersRouteImport.update({
-    id: '/_manager-users/manager-users',
-    path: '/manager-users',
-    getParentRoute: () => CrmRoute,
-  } as any)
+const CrmErrorError505Route = CrmErrorError505RouteImport.update({
+  id: '/_error/error505',
+  path: '/error505',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmCustomerCustomerRoute = CrmCustomerCustomerRouteImport.update({
   id: '/_customer/customer',
   path: '/customer',
@@ -111,6 +111,12 @@ const CrmCustomerSourceCustomerSourceRoute =
   CrmCustomerSourceCustomerSourceRouteImport.update({
     id: '/_customer-source/customer-source',
     path: '/customer-source',
+    getParentRoute: () => CrmRoute,
+  } as any)
+const CrmCustomerSettingsCustomerAttributeRoute =
+  CrmCustomerSettingsCustomerAttributeRouteImport.update({
+    id: '/_customer-settings/customer-attribute',
+    path: '/customer-attribute',
     getParentRoute: () => CrmRoute,
   } as any)
 const CrmCategoryCategoryRoute = CrmCategoryCategoryRouteImport.update({
@@ -145,9 +151,10 @@ export interface FileRoutesByFullPath {
   '/branch': typeof CrmBranchBranchRoute
   '/call-history': typeof CrmCallHistoryCallHistoryRoute
   '/category': typeof CrmCategoryCategoryRoute
+  '/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/customer': typeof CrmCustomerCustomerRoute
-  '/manager-users': typeof CrmManagerUsersManagerUsersRoute
+  '/error505': typeof CrmErrorError505Route
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/resource': typeof CrmResourceResourceRoute
@@ -167,9 +174,10 @@ export interface FileRoutesByTo {
   '/branch': typeof CrmBranchBranchRoute
   '/call-history': typeof CrmCallHistoryCallHistoryRoute
   '/category': typeof CrmCategoryCategoryRoute
+  '/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/customer': typeof CrmCustomerCustomerRoute
-  '/manager-users': typeof CrmManagerUsersManagerUsersRoute
+  '/error505': typeof CrmErrorError505Route
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/resource': typeof CrmResourceResourceRoute
@@ -190,9 +198,10 @@ export interface FileRoutesById {
   '/_crm/_branch/branch': typeof CrmBranchBranchRoute
   '/_crm/_call-history/call-history': typeof CrmCallHistoryCallHistoryRoute
   '/_crm/_category/category': typeof CrmCategoryCategoryRoute
+  '/_crm/_customer-settings/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/_crm/_customer-source/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/_crm/_customer/customer': typeof CrmCustomerCustomerRoute
-  '/_crm/_manager-users/manager-users': typeof CrmManagerUsersManagerUsersRoute
+  '/_crm/_error/error505': typeof CrmErrorError505Route
   '/_crm/_product/product': typeof CrmProductProductRoute
   '/_crm/_profile-settings/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/_crm/_resource/resource': typeof CrmResourceResourceRoute
@@ -214,9 +223,10 @@ export interface FileRouteTypes {
     | '/branch'
     | '/call-history'
     | '/category'
+    | '/customer-attribute'
     | '/customer-source'
     | '/customer'
-    | '/manager-users'
+    | '/error505'
     | '/product'
     | '/profile-settings'
     | '/resource'
@@ -236,9 +246,10 @@ export interface FileRouteTypes {
     | '/branch'
     | '/call-history'
     | '/category'
+    | '/customer-attribute'
     | '/customer-source'
     | '/customer'
-    | '/manager-users'
+    | '/error505'
     | '/product'
     | '/profile-settings'
     | '/resource'
@@ -258,9 +269,10 @@ export interface FileRouteTypes {
     | '/_crm/_branch/branch'
     | '/_crm/_call-history/call-history'
     | '/_crm/_category/category'
+    | '/_crm/_customer-settings/customer-attribute'
     | '/_crm/_customer-source/customer-source'
     | '/_crm/_customer/customer'
-    | '/_crm/_manager-users/manager-users'
+    | '/_crm/_error/error505'
     | '/_crm/_product/product'
     | '/_crm/_profile-settings/profile-settings'
     | '/_crm/_resource/resource'
@@ -372,11 +384,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmProductProductRouteImport
       parentRoute: typeof CrmRoute
     }
-    '/_crm/_manager-users/manager-users': {
-      id: '/_crm/_manager-users/manager-users'
-      path: '/manager-users'
-      fullPath: '/manager-users'
-      preLoaderRoute: typeof CrmManagerUsersManagerUsersRouteImport
+    '/_crm/_error/error505': {
+      id: '/_crm/_error/error505'
+      path: '/error505'
+      fullPath: '/error505'
+      preLoaderRoute: typeof CrmErrorError505RouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/_customer/customer': {
@@ -391,6 +403,13 @@ declare module '@tanstack/react-router' {
       path: '/customer-source'
       fullPath: '/customer-source'
       preLoaderRoute: typeof CrmCustomerSourceCustomerSourceRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_customer-settings/customer-attribute': {
+      id: '/_crm/_customer-settings/customer-attribute'
+      path: '/customer-attribute'
+      fullPath: '/customer-attribute'
+      preLoaderRoute: typeof CrmCustomerSettingsCustomerAttributeRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/_category/category': {
@@ -429,9 +448,10 @@ interface CrmRouteChildren {
   CrmBranchBranchRoute: typeof CrmBranchBranchRoute
   CrmCallHistoryCallHistoryRoute: typeof CrmCallHistoryCallHistoryRoute
   CrmCategoryCategoryRoute: typeof CrmCategoryCategoryRoute
+  CrmCustomerSettingsCustomerAttributeRoute: typeof CrmCustomerSettingsCustomerAttributeRoute
   CrmCustomerSourceCustomerSourceRoute: typeof CrmCustomerSourceCustomerSourceRoute
   CrmCustomerCustomerRoute: typeof CrmCustomerCustomerRoute
-  CrmManagerUsersManagerUsersRoute: typeof CrmManagerUsersManagerUsersRoute
+  CrmErrorError505Route: typeof CrmErrorError505Route
   CrmProductProductRoute: typeof CrmProductProductRoute
   CrmProfileSettingsProfileSettingsRoute: typeof CrmProfileSettingsProfileSettingsRoute
   CrmResourceResourceRoute: typeof CrmResourceResourceRoute
@@ -448,9 +468,11 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmBranchBranchRoute: CrmBranchBranchRoute,
   CrmCallHistoryCallHistoryRoute: CrmCallHistoryCallHistoryRoute,
   CrmCategoryCategoryRoute: CrmCategoryCategoryRoute,
+  CrmCustomerSettingsCustomerAttributeRoute:
+    CrmCustomerSettingsCustomerAttributeRoute,
   CrmCustomerSourceCustomerSourceRoute: CrmCustomerSourceCustomerSourceRoute,
   CrmCustomerCustomerRoute: CrmCustomerCustomerRoute,
-  CrmManagerUsersManagerUsersRoute: CrmManagerUsersManagerUsersRoute,
+  CrmErrorError505Route: CrmErrorError505Route,
   CrmProductProductRoute: CrmProductProductRoute,
   CrmProfileSettingsProfileSettingsRoute:
     CrmProfileSettingsProfileSettingsRoute,

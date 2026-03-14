@@ -23,7 +23,7 @@ export default function ModalCategory({
   onSubmit,
   onDelete
 }: ModalProps) {
-  if (!type || !shown) return null;
+  if (!type && !shown) return null;
 
   const getTitle = () => {
     switch (type) {
@@ -59,7 +59,7 @@ export default function ModalCategory({
           </div>
         }
       >
-        <div className="p-4 text-center">
+        <div className="text-center">
           <div className="mb-3">
             <span className="avatar avatar-xl badge-soft-danger border-0 text-danger rounded-circle d-inline-flex align-items-center justify-content-center">
               <i className="ti ti-trash fs-24"></i>
@@ -100,12 +100,14 @@ export default function ModalCategory({
       }
     >
       <div>
-        <CategoryForm
-          mode={type}
-          category={item}
-          parentOptions={parentOptions}
-          onSubmit={onSubmit}
-        />
+        {type && (type === "add" || type === "edit" || type === "detail") && (
+          <CategoryForm
+            mode={type}
+            category={item}
+            parentOptions={parentOptions}
+            onSubmit={onSubmit}
+          />
+        )}
       </div>
     </BaseModal>
   );

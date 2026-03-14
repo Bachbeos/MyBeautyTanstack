@@ -66,7 +66,8 @@ export function CustomerSourceForm({ mode, customerSource, onSubmit }: CustomerS
           <form.AppField name="name">
             {(field) => (
               <field.Input
-                label="Tên nguồn khách hàng *"
+                label="Tên nguồn khách hàng"
+                required
                 disabled={isReadOnly}
                 placeholder="Nhập tên nguồn khách hàng"
               />

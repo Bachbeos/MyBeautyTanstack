@@ -81,7 +81,8 @@ export function CallHistoryForm({
           <form.AppField name="userId">
             {(field) => (
               <field.Select
-                label="Nhân viên *"
+                label="Nhân viên"
+                required
                 options={userOptions}
                 disabled={isReadOnly}
                 onLoadMore={onLoadMoreUsers}
@@ -94,7 +95,8 @@ export function CallHistoryForm({
           <form.AppField name="customerId">
             {(field) => (
               <field.Select
-                label="Khách hàng *"
+                label="Khách hàng"
+                required
                 options={customerOptions}
                 disabled={isReadOnly}
                 onLoadMore={onLoadMoreCustomers}
