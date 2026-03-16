@@ -7,7 +7,8 @@ import type {
   UserListRequest,
   UserUpdateRequest,
   UserListResponse,
-  UserCreateRequest
+  UserCreateRequest,
+  UserInfoUpdateRequest
 } from "@/lib/types/user";
 
 export const getUsers = async (
@@ -36,6 +37,13 @@ export const upsertUser = async (
   body: UserUpdateRequest | UserCreateRequest
 ): Promise<ApiResponse<UserDto>> => {
   const res = await axiosInstance.post<ApiResponse<UserDto>>(ENDPOINTS.user.update, body);
+  return res.data;
+};
+
+export const updateUserInfo = async (
+  body: UserInfoUpdateRequest
+): Promise<ApiResponse<UserDto>> => {
+  const res = await axiosInstance.post<ApiResponse<UserDto>>(ENDPOINTS.user.updateInfo, body);
   return res.data;
 };
 

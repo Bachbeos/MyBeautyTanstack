@@ -10,6 +10,7 @@ import {
 import { Pagination } from "@/components/table/pagination";
 import { cn } from "@/lib/utils";
 import { clsx } from "clsx";
+import { DataTableViewOptions } from "@/components/table/data-table-view-options";
 
 interface DataTableProps<TData> {
   table: TanStackTable<TData>;
@@ -54,7 +55,10 @@ export function DataTable<TData>({
           {toolbarLeft}
         </div>
 
-        <div className="d-flex align-items-center gap-2">{toolbarRight}</div>
+        <div className="d-flex align-items-center gap-2">
+          {toolbarRight}
+          <DataTableViewOptions table={table} />
+        </div>
       </div>
 
       {/* Table */}

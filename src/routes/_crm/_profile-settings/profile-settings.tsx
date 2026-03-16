@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { userQueries, userMutations, userKeys } from "@/lib/tanstack/options/user";
 import { useAppForm } from "@/components/form/hooks";
 import { AsyncBoundary } from "@/components/async-boundary";
-import { queryClient } from "@/lib/tanstack/query-client";
+import { useVietnamLocations } from "@/hooks/use-vietnam-locations";
 
 const profileSchema = z.object({
   id: z.any(),
@@ -28,14 +28,14 @@ export const Route = createFileRoute("/_crm/_profile-settings/profile-settings")
 
 function RouteComponent() {
   const query = useQuery(userQueries.info());
-  const updateMutation = useMutation(userMutations.update());
+  const updateMutation = useMutation(userMutations.updateInfo());
   const user = query.data?.result;
+  const location = useVietnamLocations();
 
   const [uploading, setUploading] = useState(false);
 
   const form = useAppForm({
     defaultValues: {
-      id: user?.id,
       name: user?.name || "",
       phone: user?.phone || "",
       email: user?.email || "",
@@ -47,15 +47,13 @@ function RouteComponent() {
     } as ProfileFormValues,
     validators: { onSubmit: profileSchema },
     onSubmit: async ({ value }) => {
-      await updateMutation.mutateAsync(value as any);
-      queryClient.invalidateQueries({ queryKey: userKeys.info() });
+      await updateMutation.mutateAsync(value);
     }
   });
 
   useEffect(() => {
     if (user) {
       form.reset({
-        id: user.id,
         name: user.name || "",
         phone: user.phone || "",
         email: user.email || "",
@@ -65,8 +63,15 @@ function RouteComponent() {
         cityName: user.cityName || "",
         subdistrictName: user.subdistrictName || ""
       } as ProfileFormValues);
+
+      if (user.cityName) {
+        const province = location.provinces.find((p) => p.name === user.cityName);
+        if (province) {
+          location.handleProvinceChange(String(province.code));
+        }
+      }
     }
-  }, [user]);
+  }, [user, location]);
 
   // Logic upload file giữ nguyên từ bản cũ của Bách
   // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,22 +260,59 @@ function RouteComponent() {
                           <h6 className="mb-1">Địa chỉ</h6>
                         </div>
                         <div className="row">
-                          <div className="col-md-6 mb-3">
-                            <form.AppField name="cityName">
+                          <div className="col-md-4 mb-3">
+                            <form.AppField
+                              name="cityName"
+                              listeners={{
+                                onChange: ({ value }) => {
+                                  if (!value) return;
+
+                                  const province = location.provinces.find((p) => p.name === value);
+                                  if (province) {
+                                    location.handleProvinceChange(String(province.code));
+                                  }
+                                }
+                              }}
+                            >
                               {(field) => (
-                                <field.Input
+                                <field.Select
                                   label="Tỉnh / Thành phố"
-                                  placeholder="Nhập tên thành phố"
+                                  options={[
+                                    { label: "Chọn tỉnh / thành", value: "" },
+                                    ...location.provinces.map((p) => ({
+                                      label: p.name,
+                                      value: p.name
+                                    }))
+                                  ]}
                                 />
                               )}
                             </form.AppField>
                           </div>
-                          <div className="col-md-6 mb-3">
-                            <form.AppField name="subdistrictName">
+
+                          <div className="col-md-4 mb-3">
+                            <form.AppField
+                              name="subdistrictName"
+                              listeners={{
+                                onChange: ({ value }) => {
+                                  if (!value) return;
+
+                                  const district = location.districts.find((d) => d.name === value);
+                                  if (district) {
+                                    location.handleDistrictChange(String(district.code));
+                                  }
+                                }
+                              }}
+                            >
                               {(field) => (
-                                <field.Input
-                                  label="Phường / Xã / Quận"
-                                  placeholder="Nhập tên phường/xã"
+                                <field.Select
+                                  label="Quận / Huyện"
+                                  options={[
+                                    { label: "Chọn quận / huyện", value: "" },
+                                    ...location.districts.map((d) => ({
+                                      label: d.name,
+                                      value: d.name
+                                    }))
+                                  ]}
                                 />
                               )}
                             </form.AppField>

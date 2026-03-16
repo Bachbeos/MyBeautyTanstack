@@ -10,7 +10,8 @@ import {
   upsertUser,
   deleteUser,
   updateUserStatus,
-  getUserInfo
+  getUserInfo,
+  updateUserInfo
 } from "@/lib/api/user";
 
 import type {
@@ -19,7 +20,8 @@ import type {
   UserListRequest,
   UserUpdateRequest,
   UserListResponse,
-  UserCreateRequest
+  UserCreateRequest,
+  UserInfoUpdateRequest
 } from "@/lib/types/user";
 import type { ApiResponse } from "@/lib/types/common";
 import { createKeys } from "@/lib/tanstack/query-key";
@@ -31,6 +33,7 @@ export const userKeys = createKeys("user", {
   update: () => ["update"] as const,
   delete: () => ["delete"] as const,
   info: () => ["info"] as const,
+  updateInfo: () => ["update-info"] as const,
   updateStatus: () => ["updateStatus"] as const,
   infinite: (params: Omit<UserListRequest, "page">) => ["infinite", params] as const
 });
@@ -98,6 +101,16 @@ export const userMutations = {
       meta: {
         successMessage: "Cập nhật người dùng thành công",
         invalidatesQuery: [userKeys.list({})]
+      }
+    }),
+
+  updateInfo: () =>
+    mutationOptions<ApiResponse<UserDto>, Error, UserInfoUpdateRequest>({
+      mutationKey: userKeys.updateInfo(),
+      mutationFn: (body) => updateUserInfo(body),
+      meta: {
+        successMessage: "Cập nhật thông tin người dùng thành công",
+        invalidatesQuery: [userKeys.info()]
       }
     }),
 
