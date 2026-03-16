@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { z } from "zod";
 import { useAppForm } from "@/components/form/hooks";
 import { useCollapse } from "@/hooks/use-collapse";
 import type { CustomerDto } from "@/lib/types/customer";
 import { useQuery } from "@tanstack/react-query";
 import { customerAttributeQueries } from "@/lib/tanstack/options/customer-attribute";
+import { uploadFile } from "@/lib/api/upload-image";
 
 type DynamicAttribute = {
   id: number;
@@ -95,6 +96,7 @@ export function CustomerForm({
   const basic = useCollapse(true);
   const address = useCollapse(false);
   const extraInfo = useCollapse(false);
+  const [uploading, setUploading] = useState(false);
 
   const { data: attrData } = useQuery(customerAttributeQueries.list({ page: 1, limit: 1000 }));
   const attributes = (attrData?.result?.items ?? []) as DynamicAttribute[];
@@ -147,6 +149,27 @@ export function CustomerForm({
       } as any);
     }
   }, [customer]);
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      e.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await uploadFile(file);
+      if (response?.result) {
+        form.setFieldValue("avatar", response.result);
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
 
   return (
     <form
@@ -214,8 +237,14 @@ export function CustomerForm({
                           style={{ cursor: "pointer" }}
                         >
                           <i className="ti ti-file-broken me-1" />
-                          {/* {uploading ? "Đang tải..." : "Tải ảnh lên"} */}
-                          {/* <input type="file" accept="image/*" className="position-absolute w-100 h-100 opacity-0 top-0 start-0" onChange={handleFileChange} disabled={uploading} /> */}
+                          {uploading ? "Đang tải..." : "Tải ảnh lên"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="position-absolute w-100 h-100 opacity-0 top-0 start-0"
+                            onChange={handleFileChange}
+                            disabled={uploading || isReadOnly}
+                          />
                         </label>
                         <p className="mb-0">JPG, GIF hoặc PNG. Tối đa 5MB</p>
                       </div>

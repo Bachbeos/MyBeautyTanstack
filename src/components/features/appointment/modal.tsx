@@ -11,6 +11,7 @@ type ModalProps = {
   onClose: () => void;
   onSubmit: (values: any) => Promise<void>;
   onDelete?: () => Promise<void> | void;
+  onRequestDelete?: () => void;
   userOptions: { label: string; value: number }[];
   onLoadMoreUsers: () => void;
   customerOptions: { label: string; value: number }[];
@@ -24,6 +25,7 @@ export default function ModalAppointment({
   onClose,
   onSubmit,
   onDelete,
+  onRequestDelete,
   userOptions,
   onLoadMoreUsers,
   customerOptions,
@@ -89,6 +91,12 @@ export default function ModalAppointment({
       footer={
         type !== "detail" ? (
           <>
+            {type === "edit" && item?.id ? (
+              <button type="button" className="btn btn-danger me-auto" onClick={onRequestDelete}>
+                <i className="ti ti-trash me-1"></i>
+                Xóa
+              </button>
+            ) : null}
             <button type="button" className="btn btn-light me-2" onClick={onClose}>
               Hủy
             </button>
@@ -97,9 +105,17 @@ export default function ModalAppointment({
             </button>
           </>
         ) : (
-          <button type="button" className="btn btn-light" onClick={onClose}>
-            Đóng
-          </button>
+          <>
+            {item?.id ? (
+              <button type="button" className="btn btn-danger me-auto" onClick={onRequestDelete}>
+                <i className="ti ti-trash me-1"></i>
+                Xóa
+              </button>
+            ) : null}
+            <button type="button" className="btn btn-light" onClick={onClose}>
+              Đóng
+            </button>
+          </>
         )
       }
     >

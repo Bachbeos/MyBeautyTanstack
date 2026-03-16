@@ -95,13 +95,17 @@ export function AppointmentForm({
       <div className="row gx-3">
         <div className="col-12 mb-3">
           <form.AppField name="title">
-            {(f) => <f.Input label="Tiêu đề *" disabled={isReadOnly} placeholder="Nhập tiêu đề" />}
+            {(f) => (
+              <f.Input label="Tiêu đề" required disabled={isReadOnly} placeholder="Nhập tiêu đề" />
+            )}
           </form.AppField>
         </div>
 
         <div className="col-12 mb-3">
           <form.AppField name="type">
-            {(f) => <f.Select label="Loại lịch" options={TYPE_OPTIONS} disabled={isReadOnly} />}
+            {(f) => (
+              <f.Select label="Loại lịch" required options={TYPE_OPTIONS} disabled={isReadOnly} />
+            )}
           </form.AppField>
         </div>
 
@@ -111,7 +115,8 @@ export function AppointmentForm({
               <form.AppField name="customerId">
                 {(f) => (
                   <f.Select
-                    label="Khách hàng *"
+                    label="Khách hàng"
+                    required
                     options={customerOptions}
                     onLoadMore={onLoadMoreCustomers}
                     disabled={isReadOnly}
@@ -125,6 +130,7 @@ export function AppointmentForm({
                 {(f) => (
                   <f.Select
                     label="Nhân viên phụ trách"
+                    required
                     options={userOptions}
                     onLoadMore={onLoadMoreUsers}
                     disabled={isReadOnly}
@@ -138,13 +144,17 @@ export function AppointmentForm({
 
         <div className="col-md-6 mb-3">
           <form.AppField name="startTime">
-            {(f) => <f.Input label="Bắt đầu *" type="datetime-local" disabled={isReadOnly} />}
+            {(f) => (
+              <f.Input label="Bắt đầu" required type="datetime-local" disabled={isReadOnly} />
+            )}
           </form.AppField>
         </div>
 
         <div className="col-md-6 mb-3">
           <form.AppField name="endTime">
-            {(f) => <f.Input label="Kết thúc *" type="datetime-local" disabled={isReadOnly} />}
+            {(f) => (
+              <f.Input label="Kết thúc" required type="datetime-local" disabled={isReadOnly} />
+            )}
           </form.AppField>
         </div>
 

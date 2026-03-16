@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { z } from "zod";
 import { useAppForm } from "@/components/form/hooks";
 import type { ProductDto } from "@/lib/types/product";
+import { uploadFile } from "@/lib/api/upload-image";
 
 const formatMoney = (value: number | string | undefined): string => {
   if (value === undefined || value === null || value === "") return "";
@@ -58,6 +59,7 @@ export function ProductForm({
   onLoadMoreUnits
 }: ProductFormProps) {
   const isReadOnly = mode === "detail";
+  const [uploading, setUploading] = useState(false);
 
   const form = useAppForm({
     defaultValues: {
@@ -107,6 +109,27 @@ export function ProductForm({
     }
   }, [product, form]);
 
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      e.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await uploadFile(file);
+      if (response?.result) {
+        form.setFieldValue("avatar", response.result);
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
   return (
     <form
       id="product-form"
@@ -133,6 +156,13 @@ export function ProductForm({
               <div className="text-muted">
                 <i className="ti ti-photo fs-1"></i>
                 <p className="small mb-0">Tải ảnh lên</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="position-absolute w-100 h-100 opacity-0 top-0 start-0"
+                  onChange={handleFileChange}
+                  disabled={uploading || isReadOnly}
+                />
               </div>
             )}
           </div>

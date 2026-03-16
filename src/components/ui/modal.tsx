@@ -8,6 +8,7 @@ type BaseModalProps = {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  headerActions?: ReactNode;
   contentClassName?: string;
 };
 
@@ -18,6 +19,7 @@ export function BaseModal({
   onClose,
   children,
   footer,
+  headerActions,
   contentClassName
 }: BaseModalProps) {
   // if (!shown) return null;
@@ -35,7 +37,10 @@ export function BaseModal({
           <div className={cn("modal-content", contentClassName)}>
             <div className="modal-header">
               <h5 className="modal-title">{title}</h5>
-              <button type="button" className="btn-close" onClick={onClose} />
+              <div className="ms-auto d-flex align-items-center gap-2">
+                {headerActions}
+                <button type="button" className="btn-close" onClick={onClose} />
+              </div>
             </div>
 
             <div className="modal-body">{children}</div>
