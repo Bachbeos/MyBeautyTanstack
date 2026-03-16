@@ -31,8 +31,6 @@ export function BaseOffcanvas({
     };
   }, [shown]);
 
-  if (!shown) return null;
-
   const sizeClass =
     size === "lg"
       ? "offcanvas-large"
@@ -45,8 +43,8 @@ export function BaseOffcanvas({
   return (
     <Fragment>
       <div
-        className={cn("offcanvas offcanvas-end show", sizeClass, className)}
-        style={{ visibility: "visible", zIndex: 1051 }}
+        className={cn("offcanvas offcanvas-end", shown && "show", sizeClass, className)}
+        style={{ visibility: shown ? "visible" : "hidden", zIndex: 1051 }}
         tabIndex={-1}
       >
         <div className="offcanvas-header border-bottom">
@@ -64,8 +62,8 @@ export function BaseOffcanvas({
       </div>
 
       <div
-        className="offcanvas-backdrop fade show"
-        style={{ zIndex: 1050 }}
+        className={cn("offcanvas-backdrop fade", shown && "show")}
+        style={{ zIndex: 1050, display: shown ? "block" : "none" }}
         onClick={onClose}
       ></div>
     </Fragment>

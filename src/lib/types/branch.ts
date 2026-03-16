@@ -9,7 +9,7 @@ export type BranchDto = {
   name: string;
   parentId?: number;
   avatar: string;
-  adress: string;
+  address: string;
   website: string;
   email: string;
   phone: string;
@@ -35,7 +35,7 @@ export type BranchCreateRequest = {
   name: string;
   parentId?: number;
   avatar: string;
-  adress: string;
+  address: string;
   website: string;
   email: string;
   phone: string;
@@ -52,7 +52,7 @@ export type BranchUpdateRequest = {
   name: string;
   parentId?: number;
   avatar: string;
-  adress: string;
+  address: string;
   website: string;
   email: string;
   phone: string;

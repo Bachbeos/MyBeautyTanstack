@@ -68,8 +68,8 @@ export default function ModalCallHistory({
           <span className="avatar avatar-xl badge-soft-danger border-0 text-danger rounded-circle mb-3">
             <i className="ti ti-trash fs-24"></i>
           </span>
-          <h5 className="mb-1">Xóa bản ghi?</h5>
-          <p className="text-muted small">Bạn có chắc muốn xóa lịch sử cuộc gọi này không?</p>
+          <h5 className="mb-1">Xóa lịch sử cuộc gọi</h5>
+          <p className="mb-3 text-muted">Bạn có chắc muốn xóa lịch sử cuộc gọi này không?</p>
         </div>
       </BaseModal>
     );
