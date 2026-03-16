@@ -4,7 +4,7 @@ import { type ReactNode, Fragment } from "react";
 type BaseModalProps = {
   title: string;
   shown: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
@@ -20,13 +20,17 @@ export function BaseModal({
   footer,
   contentClassName
 }: BaseModalProps) {
-  if (!shown) return null;
+  // if (!shown) return null;
 
-  const sizeClass = size === "sm" ? "modal-sm" : size === "lg" ? "modal-lg" : "";
+  const sizeClass =
+    size === "sm" ? "modal-sm" : size === "lg" ? "modal-lg" : size === "xl" ? "modal-xl" : "";
 
   return (
     <Fragment>
-      <div className="modal fade show d-block" style={{ zIndex: 1051 }}>
+      <div
+        className={cn("modal fade", shown && "show d-block")}
+        style={{ zIndex: 1051, display: "block" }}
+      >
         <div className={`modal-dialog modal-dialog-centered ${sizeClass}`}>
           <div className={cn("modal-content", contentClassName)}>
             <div className="modal-header">
@@ -41,7 +45,14 @@ export function BaseModal({
         </div>
       </div>
 
-      <div className="modal-backdrop fade show" style={{ zIndex: 1050 }} onClick={onClose} />
+      <div
+        className={cn("modal-backdrop fade", shown && "show")}
+        style={{
+          zIndex: 1050,
+          display: shown ? "block" : "none"
+        }}
+        onClick={onClose}
+      />
     </Fragment>
   );
 }

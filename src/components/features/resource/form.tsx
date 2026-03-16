@@ -4,6 +4,7 @@ import "./form.scss";
 
 import { type ResourceDto } from "@/lib/types/resource";
 import { useAppForm } from "@/components/form/hooks";
+import { FormCheckboxGroup } from "@/components/form/form-checkbox-group";
 
 const resourceSchema = z.object({
   id: z.number().optional(),
@@ -17,7 +18,7 @@ const resourceSchema = z.object({
     .max(100, "Mã tài nguyên tối đa 100 ký tự"),
   uri: z.string().min(1, "Đường dẫn không được để trống").max(255, "Đường dẫn tối đa 255 ký tự"),
   description: z.string().max(1000, "Mô tả tối đa 1000 ký tự").optional(),
-  actions: z.array(z.string())
+  actions: z.array(z.string()).min(1, "Vui lòng chọn ít nhất một hành động")
 });
 
 type ResourceFormValues = z.infer<typeof resourceSchema>;
@@ -55,7 +56,12 @@ export function ResourceForm({ mode, resource, onSubmit }: ResourceFormProps) {
       onSubmit: resourceSchema
     },
     onSubmit: async ({ value }) => {
-      await onSubmit(value);
+      const payload = {
+        ...value,
+        actions: JSON.stringify(value.actions)
+      };
+
+      await onSubmit(payload as any);
     }
   });
 
@@ -83,59 +89,53 @@ export function ResourceForm({ mode, resource, onSubmit }: ResourceFormProps) {
       }}
     >
       <div className="row gx-3">
-        <div className="col-md-6">
+        <div className="col-md-6 mb-3">
           <form.AppField name="name">
             {(field) => (
-              <field.Input label="Tên tài nguyên" disabled={isReadOnly} placeholder="Nhập tên" />
+              <field.Input
+                label="Tên tài nguyên"
+                required
+                disabled={isReadOnly}
+                placeholder="Nhập tên"
+              />
             )}
           </form.AppField>
         </div>
-        <div className="col-md-6">
+        <div className="col-md-6 mb-3">
           <form.AppField name="code">
             {(field) => (
-              <field.Input label="Mã tài nguyên" disabled={isReadOnly} placeholder="Nhập mã" />
+              <field.Input
+                label="Mã tài nguyên"
+                required
+                disabled={isReadOnly}
+                placeholder="Nhập mã"
+              />
             )}
           </form.AppField>
         </div>
-        <div className="col-12">
+        <div className="col-12 mb-3">
           <form.AppField name="uri">
             {(field) => (
-              <field.Input label="Đường dẫn" disabled={isReadOnly} placeholder="Nhập đường dẫn" />
+              <field.Input
+                label="Đường dẫn"
+                required
+                disabled={isReadOnly}
+                placeholder="Nhập đường dẫn"
+              />
             )}
           </form.AppField>
         </div>
-        <div className="col-12 mb-2">
-          <label className="form-label">Lựa chọn hành động</label>
-          <div className="action-checkboxes d-flex gap-3 flex-wrap mt-2">
-            <form.AppField name="actions">
-              {(field) => (
-                <>
-                  {action_options.map((opt) => (
-                    <div className="form-check" key={opt.value}>
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id={`action-${opt.value}`}
-                        disabled={isReadOnly}
-                        checked={field.state.value?.includes(opt.value)}
-                        onChange={(e) => {
-                          const val = field.state.value || [];
-                          if (e.target.checked) {
-                            field.handleChange([...val, opt.value]);
-                          } else {
-                            field.handleChange(val.filter((v: string) => v !== opt.value));
-                          }
-                        }}
-                      />
-                      <label className="form-check-label" htmlFor={`action-${opt.value}`}>
-                        {opt.label}
-                      </label>
-                    </div>
-                  ))}
-                </>
-              )}
-            </form.AppField>
-          </div>
+        <div className="col-12 mb-3">
+          <form.AppField name="actions">
+            {() => (
+              <FormCheckboxGroup
+                label="Lựa chọn hành động"
+                required
+                options={action_options}
+                disabled={isReadOnly}
+              />
+            )}
+          </form.AppField>
         </div>
         <div className="col-12 mb-2">
           <label className="form-label">Mô tả</label>
@@ -153,11 +153,6 @@ export function ResourceForm({ mode, resource, onSubmit }: ResourceFormProps) {
           </form.AppField>
         </div>
       </div>
-      {/* {!isReadOnly && (
-        <button type="submit" className="btn btn-primary" disabled={form.state.isSubmitting}>
-          {mode === "add" ? "Thêm mới" : "Lưu thay đổi"}
-        </button>
-      )} */}
     </form>
   );
 }

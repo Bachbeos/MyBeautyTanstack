@@ -1,0 +1,98 @@
+import {
+  queryOptions,
+  mutationOptions,
+  infiniteQueryOptions,
+  type InfiniteData
+} from "@tanstack/react-query";
+import { getProducts, getProductDetail, upsertProduct, deleteProduct } from "@/lib/api/product";
+
+import type {
+  ProductId,
+  ProductDto,
+  ProductListRequest,
+  ProductUpdateRequest,
+  ProductListResponse,
+  ProductCreateRequest
+} from "@/lib/types/product";
+import type { ApiResponse } from "@/lib/types/common";
+import { createKeys } from "@/lib/tanstack/query-key";
+
+export const productKeys = createKeys("product", {
+  list: (params: ProductListRequest) => ["list", params] as const,
+  detail: (id: ProductId) => ["detail", id] as const,
+  create: () => ["create"] as const,
+  update: () => ["update"] as const,
+  delete: () => ["delete"] as const,
+  infinite: (params: Omit<ProductListRequest, "page">) => ["infinite", params] as const
+});
+
+export const productQueries = {
+  list: (params: ProductListRequest) =>
+    queryOptions<ApiResponse<ProductListResponse>>({
+      queryKey: productKeys.list(params),
+      queryFn: ({ signal }) => getProducts(params, signal)
+    }),
+
+  infinite: (params: Omit<ProductListRequest, "page">) =>
+    infiniteQueryOptions<
+      ApiResponse<ProductListResponse>,
+      Error,
+      InfiniteData<ApiResponse<ProductListResponse>>,
+      ReturnType<typeof productKeys.infinite>,
+      number
+    >({
+      queryKey: productKeys.infinite(params),
+      initialPageParam: 1,
+      queryFn: ({ signal, pageParam }) =>
+        getProducts({ ...(params as any), page: pageParam }, signal),
+      getNextPageParam: (lastPage, _pages, lastPageParam) => {
+        const items = lastPage?.result?.items ?? [];
+        const total = lastPage?.result?.total ?? 0;
+        const limit = (params as any).limit ?? items.length ?? 0;
+
+        const loadedSoFar = lastPageParam * (limit || 0);
+        if (!limit) return items.length > 0 ? lastPageParam + 1 : undefined;
+
+        return loadedSoFar < total ? lastPageParam + 1 : undefined;
+      }
+    }),
+
+  detail: (id: ProductId) =>
+    queryOptions<ApiResponse<ProductDto>>({
+      queryKey: productKeys.detail(id),
+      queryFn: ({ signal }) => getProductDetail(id, signal),
+      enabled: !!id
+    })
+};
+
+export const productMutations = {
+  create: () =>
+    mutationOptions<ApiResponse<ProductDto>, Error, ProductCreateRequest>({
+      mutationKey: productKeys.create(),
+      mutationFn: (body) => upsertProduct(body),
+      meta: {
+        successMessage: "Tạo sản phẩm thành công",
+        invalidatesQuery: [productKeys.list({})]
+      }
+    }),
+
+  update: () =>
+    mutationOptions<ApiResponse<ProductDto>, Error, ProductUpdateRequest>({
+      mutationKey: productKeys.update(),
+      mutationFn: (body) => upsertProduct(body),
+      meta: {
+        successMessage: "Cập nhật sản phẩm thành công",
+        invalidatesQuery: [productKeys.list({})]
+      }
+    }),
+
+  delete: () =>
+    mutationOptions<ApiResponse<void>, Error, ProductId>({
+      mutationKey: productKeys.delete(),
+      mutationFn: (id) => deleteProduct(id),
+      meta: {
+        successMessage: "Xóa sản phẩm thành công",
+        invalidatesQuery: [productKeys.list({})]
+      }
+    })
+};

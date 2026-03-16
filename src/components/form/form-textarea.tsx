@@ -7,6 +7,8 @@ type FormTextareaProps = FormControlProps & {
   rows?: number;
   className?: string;
   disabled?: boolean;
+  onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
 };
 
 export function FormTextarea({
@@ -14,6 +16,8 @@ export function FormTextarea({
   rows = 3,
   className,
   disabled,
+  onChange,
+  onBlur,
   ...baseProps
 }: FormTextareaProps) {
   const field = useFieldContext<string>();
@@ -26,8 +30,14 @@ export function FormTextarea({
         name={field.name}
         rows={rows}
         value={field.state.value ?? ""}
-        onBlur={field.handleBlur}
-        onChange={(e) => field.handleChange(e.target.value)}
+        onBlur={(e) => {
+          field.handleBlur();
+          onBlur?.(e);
+        }}
+        onChange={(e) => {
+          field.handleChange(e.target.value);
+          onChange?.(e);
+        }}
         placeholder={placeholder}
         disabled={disabled}
         className={cn("form-control", isInvalid && "is-invalid", className)}

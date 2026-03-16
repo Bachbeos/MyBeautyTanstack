@@ -10,8 +10,6 @@ import logoWhite from "@assets/img/logo-white.svg";
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<string>("");
-  const [isMini, setIsMini] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
 
   const [openSubmenus, setOpenSubmenus] = useState<{ [key: string]: boolean }>({
     dashboard: true,
@@ -29,7 +27,10 @@ export default function Sidebar() {
   };
 
   const submenuParent: Record<string, string | undefined> = {
-    "profile-settings": "settings_general"
+    "profile-settings": "settings_general",
+    appointment: "application",
+    "call-history": "application",
+    "customer-attribute": "system_settings"
   };
 
   const pathToTabKey: Record<string, string> = {
@@ -45,7 +46,10 @@ export default function Sidebar() {
     "/unit": "unit",
     "/category": "category",
     "/product": "product",
-    "/service": "service"
+    "/service": "service",
+    "/call-history": "call-history",
+    "/appointment": "appointment",
+    "/customer-attribute": "customer-attribute"
   };
 
   const location = useLocation();
@@ -125,6 +129,47 @@ export default function Sidebar() {
       <SimpleBar className="sidebar-inner">
         <div id="sidebar-menu" className="sidebar-menu">
           <ul>
+            <li className="menu-title">
+              <span>Menu chính</span>
+            </li>
+            <li>
+              <ul>
+                <li className="submenu">
+                  <a
+                    href="#"
+                    className={openSubmenus.application ? "active subdrop" : ""}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSubmenuToggle("application");
+                    }}
+                  >
+                    <i className="ti ti-brand-airtable"></i>
+                    <span>Ứng dụng</span>
+                    <span className="menu-arrow"></span>
+                  </a>
+                  <SubMenuMotion open={openSubmenus.application}>
+                    <li>
+                      <Link
+                        to="/call-history"
+                        className={activeTab === "call-history" ? "active" : ""}
+                        onClick={() => handleTabClick("call-history")}
+                      >
+                        Lịch sử cuộc gọi
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/appointment"
+                        className={activeTab === "appointment" ? "active" : ""}
+                        onClick={() => handleTabClick("appointment")}
+                      >
+                        Lịch hẹn
+                      </Link>
+                    </li>
+                  </SubMenuMotion>
+                </li>
+              </ul>
+            </li>
             {/* ================= CRM ================= */}
             <li className="menu-title">
               <span>CRM</span>
@@ -161,6 +206,17 @@ export default function Sidebar() {
                   >
                     <i className="ti ti-building-community"></i>
                     <span>Chi nhánh</span>
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/voucher"
+                    className={activeTab === "voucher" ? "active" : ""}
+                    onClick={() => handleTabClick("voucher")}
+                  >
+                    <i className="ti ti-medal"></i>
+                    <span>Mã giảm giá</span>
                   </Link>
                 </li>
 
@@ -218,7 +274,7 @@ export default function Sidebar() {
               <ul>
                 <li>
                   <Link
-                    to="/manager-users"
+                    to="/user"
                     className={activeTab === "manager-users" ? "active" : ""}
                     onClick={() => handleTabClick("manager-users")}
                   >
@@ -229,7 +285,7 @@ export default function Sidebar() {
 
                 <li>
                   <Link
-                    to="/roles-permissions"
+                    to="/role"
                     className={activeTab === "roles-permissions" ? "active" : ""}
                     onClick={() => handleTabClick("roles-permissions")}
                   >
@@ -279,6 +335,32 @@ export default function Sidebar() {
                         onClick={() => handleTabClick("profile-settings")}
                       >
                         Hồ sơ cá nhân
+                      </Link>
+                    </li>
+                  </SubMenuMotion>
+                </li>
+                <li className="submenu">
+                  <a
+                    href="#"
+                    className={openSubmenus.system_settings ? "active subdrop" : ""}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSubmenuToggle("system_settings");
+                    }}
+                  >
+                    <i className="ti ti-device-laptop"></i>
+                    <span>Cài đặt hệ thống</span>
+                    <span className="menu-arrow"></span>
+                  </a>
+                  <SubMenuMotion open={openSubmenus.system_settings}>
+                    <li>
+                      <Link
+                        to="/customer-attribute"
+                        className={activeTab === "customer-attribute" ? "active" : ""}
+                        onClick={() => handleTabClick("customer-attribute")}
+                        style={{ background: "none" }}
+                      >
+                        Cài đặt khách hàng
                       </Link>
                     </li>
                   </SubMenuMotion>
