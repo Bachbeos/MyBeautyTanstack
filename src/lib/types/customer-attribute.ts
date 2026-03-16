@@ -12,7 +12,7 @@ export type CustomerAttributeDto = {
   readonly: number;
   unique: number;
   datatype: string;
-  attributes: string[];
+  attributes: string | string[];
   position: number;
   parentId: number;
   parentName: string;
@@ -35,7 +35,7 @@ export type CustomerAttributeCreateRequest = {
   readonly: number;
   unique: number;
   datatype: string;
-  attributes: string[];
+  attributes: string;
   position: number;
   parentId?: number;
 };
@@ -48,7 +48,7 @@ export type CustomerAttributeUpdateRequest = {
   readonly?: number;
   unique?: number;
   datatype?: string;
-  attributes?: string[];
+  attributes?: string;
   position?: number;
   parentId?: number;
 };

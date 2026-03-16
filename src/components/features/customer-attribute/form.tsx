@@ -102,12 +102,12 @@ function normalizeAttributesFromDto(attribute?: CustomerAttributeDto): {
   return fallback;
 }
 
-function serializeAttributes(values: AttributeFormValues): string[] {
+function serializeAttributes(values: AttributeFormValues): string {
   const dt = values.datatype;
 
   if (dt === "number") {
     const payload = { numberFormat: values.numberFormat ?? "" };
-    return [JSON.stringify(payload)];
+    return JSON.stringify(payload);
   }
 
   if (isChoiceDatatype(dt)) {
@@ -118,10 +118,10 @@ function serializeAttributes(values: AttributeFormValues): string[] {
       }))
       .filter((o) => o.value || o.label);
 
-    return [JSON.stringify(options)];
+    return JSON.stringify(options);
   }
 
-  return [];
+  return "[]";
 }
 
 export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: AttributeFormProps) {
@@ -131,7 +131,7 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
     defaultValues: {
       id: attribute?.id,
       name: attribute?.name || "",
-      fieldName: String(attribute?.fileName || ""),
+      fieldName: String(attribute?.fieldName || ""),
       datatype: attribute?.datatype || "text",
       position: attribute?.position || 0,
       parentId: attribute?.parentId || 0,
@@ -148,7 +148,7 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
       await onSubmit({
         id: value.id,
         name: value.name,
-        fileName: value.fieldName,
+        fieldName: value.fieldName,
         datatype: value.datatype,
         position: value.position,
 
@@ -171,7 +171,7 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
     form.reset({
       id: attribute.id,
       name: attribute.name ?? "",
-      fieldName: String(attribute.fileName ?? ""),
+      fieldName: String(attribute.fieldName ?? ""),
       datatype: attribute.datatype ?? "text",
       position: attribute.position ?? 0,
       parentId: attribute.parentId ?? 0,
