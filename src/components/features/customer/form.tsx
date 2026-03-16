@@ -13,6 +13,10 @@ type DynamicAttribute = {
   attributes?: unknown;
   data?: string;
   options?: string;
+  required?: number;
+  readonly?: number;
+  parentId?: number;
+  parentName?: string;
 };
 
 type DynamicOption = {
@@ -174,22 +178,46 @@ export function CustomerForm({
               <div className="col-12 mb-3">
                 <form.AppField name="avatar">
                   {(f) => (
-                    <div className="d-flex align-items-center">
-                      <div className="avatar avatar-xxl border border-dashed rounded me-3 flex-shrink-0">
-                        <img
-                          src={f.state.value || "assets/img/profiles/avatar-01.jpg"}
-                          style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8 }}
-                        />
-                      </div>
-                      <div>
-                        <button type="button" className="btn btn-sm btn-primary position-relative">
-                          <i className="ti ti-file-broken me-1"></i> Tải ảnh lên
-                          <input
-                            type="file"
-                            className="position-absolute w-100 h-100 opacity-0 top-0 start-0"
-                            disabled={isReadOnly}
+                    <div className="profile-upload d-flex align-items-center">
+                      <div className="profile-upload-img avatar avatar-xxl border border-dashed rounded position-relative flex-shrink-0">
+                        {form.getFieldValue("avatar") ? (
+                          <img
+                            src={form.getFieldValue("avatar") as string}
+                            alt="avatar"
+                            style={{
+                              width: 80,
+                              height: 80,
+                              objectFit: "cover",
+                              borderRadius: 8
+                            }}
                           />
-                        </button>
+                        ) : (
+                          <div className="d-flex align-items-center justify-content-center h-100">
+                            <i className="ti ti-photo text-dark fs-16"></i>
+                          </div>
+                        )}
+                        {form.getFieldValue("avatar") && (
+                          <button
+                            type="button"
+                            className="profile-remove btn btn-sm position-absolute"
+                            style={{ top: 6, right: 6 }}
+                            onClick={() => form.setFieldValue("avatar", "")}
+                          >
+                            <i className="ti ti-x" />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="profile-upload-content ms-3">
+                        <label
+                          className="d-inline-flex align-items-center position-relative btn btn-primary btn-sm mb-2"
+                          style={{ cursor: "pointer" }}
+                        >
+                          <i className="ti ti-file-broken me-1" />
+                          {/* {uploading ? "Đang tải..." : "Tải ảnh lên"} */}
+                          {/* <input type="file" accept="image/*" className="position-absolute w-100 h-100 opacity-0 top-0 start-0" onChange={handleFileChange} disabled={uploading} /> */}
+                        </label>
+                        <p className="mb-0">JPG, GIF hoặc PNG. Tối đa 5MB</p>
                       </div>
                     </div>
                   )}
@@ -197,22 +225,50 @@ export function CustomerForm({
               </div>
               <div className="col-12 mb-3">
                 <form.AppField name="name">
-                  {(f) => <f.Input label="Họ tên *" disabled={isReadOnly} />}
+                  {(f) => (
+                    <f.Input
+                      label="Họ tên"
+                      required
+                      disabled={isReadOnly}
+                      placeholder="Nhập họ tên"
+                    />
+                  )}
                 </form.AppField>
               </div>
               <div className="col-md-4 mb-3">
                 <form.AppField name="age">
-                  {(f) => <f.Input label="Tuổi" type="number" disabled={isReadOnly} />}
+                  {(f) => (
+                    <f.Input
+                      label="Tuổi"
+                      type="number"
+                      disabled={isReadOnly}
+                      placeholder="Nhập tuổi"
+                    />
+                  )}
                 </form.AppField>
               </div>
               <div className="col-md-4 mb-3">
                 <form.AppField name="height">
-                  {(f) => <f.Input label="Chiều cao (cm)" type="number" disabled={isReadOnly} />}
+                  {(f) => (
+                    <f.Input
+                      label="Chiều cao (cm)"
+                      type="number"
+                      disabled={isReadOnly}
+                      placeholder="Nhập chiều cao"
+                    />
+                  )}
                 </form.AppField>
               </div>
               <div className="col-md-4 mb-3">
                 <form.AppField name="weight">
-                  {(f) => <f.Input label="Cân nặng (kg)" type="number" disabled={isReadOnly} />}
+                  {(f) => (
+                    <f.Input
+                      label="Cân nặng (kg)"
+                      type="number"
+                      disabled={isReadOnly}
+                      placeholder="Nhập cân nặng"
+                    />
+                  )}
                 </form.AppField>
               </div>
               <div className="col-md-6 mb-3">
@@ -270,22 +326,38 @@ export function CustomerForm({
             <div className="accordion-body border-top row">
               <div className="col-md-6 mb-3">
                 <form.AppField name="phone">
-                  {(f) => <f.Input label="Số điện thoại *" disabled={isReadOnly} />}
+                  {(f) => (
+                    <f.Input
+                      label="Số điện thoại"
+                      required
+                      disabled={isReadOnly}
+                      placeholder="Nhập số điện thoại"
+                    />
+                  )}
                 </form.AppField>
               </div>
               <div className="col-md-6 mb-3">
                 <form.AppField name="email">
-                  {(f) => <f.Input label="Email" disabled={isReadOnly} />}
+                  {(f) => <f.Input label="Email" disabled={isReadOnly} placeholder="Nhập email" />}
                 </form.AppField>
               </div>
               <div className="col-12 mb-3">
                 <form.AppField name="address">
-                  {(f) => <f.Input label="Địa chỉ" disabled={isReadOnly} />}
+                  {(f) => (
+                    <f.Input label="Địa chỉ" disabled={isReadOnly} placeholder="Nhập địa chỉ" />
+                  )}
                 </form.AppField>
               </div>
               <div className="col-12 mb-0">
                 <form.AppField name="note">
-                  {(f) => <f.Textarea label="Ghi chú" disabled={isReadOnly} rows={3} />}
+                  {(f) => (
+                    <f.Textarea
+                      label="Ghi chú"
+                      disabled={isReadOnly}
+                      rows={3}
+                      placeholder="Nhập ghi chú"
+                    />
+                  )}
                 </form.AppField>
               </div>
             </div>
@@ -310,99 +382,150 @@ export function CustomerForm({
               className={`accordion-collapse collapse ${extraInfo.isOpen ? "show" : ""}`}
               ref={extraInfo.ref}
             >
-              <div className="accordion-body border-top row">
-                {attributes.map((attr: any) => {
-                  const baseName = `extraValues.${attr.id}` as const;
+              <div className="accordion-body border-top">
+                {(() => {
+                  const groups: {
+                    parentId: number | null;
+                    parentName: string | null;
+                    items: DynamicAttribute[];
+                  }[] = [];
+                  const groupMap = new Map<number | null, (typeof groups)[number]>();
 
-                  const opts = getOptionsForAttribute(attr);
-                  const selectOptions = opts.map((o) => ({ value: o.id, label: o.name }));
-                  const radioOptions = selectOptions;
+                  for (const attr of attributes) {
+                    const pid = attr.parentId || null;
+                    const pname = attr.parentName || null;
+                    if (!groupMap.has(pid)) {
+                      const g = { parentId: pid, parentName: pname, items: [] };
+                      groupMap.set(pid, g);
+                      groups.push(g);
+                    }
+                    groupMap.get(pid)!.items.push(attr);
+                  }
 
-                  const label = String(attr.name ?? "");
-
-                  return (
-                    <div className="col-md-6 mb-3" key={attr.id}>
-                      <form.AppField name={`${baseName}.id`}>
-                        {(f) => {
-                          return null;
-                        }}
-                      </form.AppField>
-
-                      <form.AppField name={`${baseName}.attributeValue`}>
-                        {(f) => {
-                          if (attr.datatype === "text") {
-                            return (
-                              <f.Input label={label} disabled={isReadOnly} placeholder="Nhập..." />
-                            );
-                          }
-
-                          if (attr.datatype === "textarea") {
-                            return (
-                              <f.Textarea
-                                label={label}
-                                disabled={isReadOnly}
-                                rows={3}
-                                placeholder="Nhập..."
-                              />
-                            );
-                          }
-
-                          if (attr.datatype === "number") {
-                            return (
-                              <f.Input
-                                label={label}
-                                type="number"
-                                disabled={isReadOnly}
-                                placeholder="Nhập..."
-                              />
-                            );
-                          }
-
-                          if (attr.datatype === "date") {
-                            return <f.Input label={label} type="date" disabled={isReadOnly} />;
-                          }
-
-                          if (attr.datatype === "dropdown" || attr.datatype === "select") {
-                            return (
-                              <f.Select
-                                label={label}
-                                options={selectOptions}
-                                disabled={isReadOnly}
-                                placeholder="Chọn"
-                              />
-                            );
-                          }
-
-                          if (attr.datatype === "radio") {
-                            return (
-                              <f.Radio label={label} options={radioOptions} disabled={isReadOnly} />
-                            );
-                          }
-
-                          if (attr.datatype === "checkbox") {
-                            return (
-                              <f.Checkbox fieldLabel={label} label={label} disabled={isReadOnly} />
-                            );
-                          }
-
-                          if (attr.datatype === "multiselect") {
-                            return (
-                              <div className="text-muted small italic">
-                                multiselect: bạn chưa có component tương ứng (có thể bổ sung sau)
-                              </div>
-                            );
-                          }
+                  return groups.map((group) => (
+                    <div key={group.parentId ?? "no-group"}>
+                      {group.parentName && (
+                        <p className="fw-semibold mb-2 mt-1 text-dark">{group.parentName}</p>
+                      )}
+                      <div className="row">
+                        {group.items.map((attr) => {
+                          const baseName = `extraValues.${attr.id}` as const;
+                          const opts = getOptionsForAttribute(attr);
+                          const selectOptions = opts.map((o) => ({ value: o.id, label: o.name }));
+                          const radioOptions = selectOptions;
+                          const label = String(attr.name ?? "");
+                          const isRequired = !!attr.required;
+                          const isDisabled = isReadOnly || !!attr.readonly;
 
                           return (
-                            <div className="text-muted small italic">
-                              Loại {String(attr.datatype)}
+                            <div className="col-md-6 mb-3" key={attr.id}>
+                              <form.AppField name={`${baseName}.id`}>{() => null}</form.AppField>
+
+                              <form.AppField name={`${baseName}.attributeValue`}>
+                                {(f) => {
+                                  if (attr.datatype === "text") {
+                                    return (
+                                      <f.Input
+                                        label={label}
+                                        required={isRequired}
+                                        disabled={isDisabled}
+                                        placeholder="Nhập..."
+                                      />
+                                    );
+                                  }
+
+                                  if (attr.datatype === "textarea") {
+                                    return (
+                                      <f.Textarea
+                                        label={label}
+                                        required={isRequired}
+                                        disabled={isDisabled}
+                                        rows={3}
+                                        placeholder="Nhập..."
+                                      />
+                                    );
+                                  }
+
+                                  if (attr.datatype === "number") {
+                                    return (
+                                      <f.Input
+                                        label={label}
+                                        type="number"
+                                        required={isRequired}
+                                        disabled={isDisabled}
+                                        placeholder="Nhập..."
+                                      />
+                                    );
+                                  }
+
+                                  if (attr.datatype === "date") {
+                                    return (
+                                      <f.Input
+                                        label={label}
+                                        type="date"
+                                        required={isRequired}
+                                        disabled={isDisabled}
+                                      />
+                                    );
+                                  }
+
+                                  if (attr.datatype === "dropdown" || attr.datatype === "select") {
+                                    return (
+                                      <f.Select
+                                        label={label}
+                                        options={selectOptions}
+                                        required={isRequired}
+                                        disabled={isDisabled}
+                                        placeholder="Chọn"
+                                      />
+                                    );
+                                  }
+
+                                  if (attr.datatype === "radio") {
+                                    return (
+                                      <f.Radio
+                                        label={label}
+                                        options={radioOptions}
+                                        required={isRequired}
+                                        disabled={isDisabled}
+                                      />
+                                    );
+                                  }
+
+                                  if (attr.datatype === "checkbox") {
+                                    return (
+                                      <f.Checkbox
+                                        fieldLabel={label}
+                                        label={label}
+                                        required={isRequired}
+                                        disabled={isDisabled}
+                                      />
+                                    );
+                                  }
+
+                                  if (attr.datatype === "multiselect") {
+                                    return (
+                                      <div className="text-muted small fst-italic">
+                                        multiselect: bạn chưa có component tương ứng (có thể bổ sung
+                                        sau)
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <div className="text-muted small fst-italic">
+                                      Loại {String(attr.datatype)}
+                                    </div>
+                                  );
+                                }}
+                              </form.AppField>
                             </div>
                           );
-                        }}
-                      </form.AppField>
+                        })}
+                      </div>
                     </div>
-                  );
-                })}
+                  ));
+                })()}
               </div>
             </div>
           </div>

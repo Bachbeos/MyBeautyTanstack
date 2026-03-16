@@ -13,9 +13,9 @@ export default function Header() {
   const navigate = useNavigate();
   const { clear } = useAuthStore();
 
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    return localStorage.getItem("theme") === "dark";
-  });
+  const [theme, setTheme] = useState<"light" | "dark">(
+    (localStorage.getItem("theme") as "light" | "dark") ?? "light"
+  );
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -38,22 +38,25 @@ export default function Header() {
 
   useEffect(() => {
     const html = document.documentElement;
-    if (darkMode) {
+    if (theme === "dark") {
       html.setAttribute("data-bs-theme", "dark");
       localStorage.setItem("theme", "dark");
     } else {
       html.setAttribute("data-bs-theme", "light");
       localStorage.setItem("theme", "light");
     }
-  }, [darkMode]);
+  }, [theme]);
 
   const handleToggleDropdown = (e: React.MouseEvent) => {
     e.preventDefault();
     setDropdownOpen((open) => !open);
   };
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => !prev);
+  const toggle = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    document.documentElement.classList.toggle("dark", next === "dark");
   };
 
   const handleLogout = (e: React.MouseEvent) => {
@@ -130,8 +133,8 @@ export default function Header() {
           </div>
 
           <div className="header-item d-none d-sm-flex me-2">
-            <button className="topbar-link btn" type="button" onClick={toggleDarkMode}>
-              <i className={`${darkMode ? "ti ti-sun" : "ti ti-moon"} fs-16`}></i>
+            <button className="topbar-link btn" type="button" onClick={toggle}>
+              <i className={`${theme === "dark" ? "ti ti-sun" : "ti ti-moon"} fs-16`}></i>
             </button>
           </div>
 

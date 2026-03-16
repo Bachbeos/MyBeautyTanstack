@@ -52,26 +52,26 @@ function RouteComponent() {
   });
 
   useEffect(() => {
-    if (user) {
-      form.reset({
-        name: user.name || "",
-        phone: user.phone || "",
-        email: user.email || "",
-        avatar: user.avatar || "",
-        gender: user.gender ?? 1,
-        alias: user.alias || "",
-        cityName: user.cityName || "",
-        subdistrictName: user.subdistrictName || ""
-      } as ProfileFormValues);
+    if (!user) return;
 
-      if (user.cityName) {
-        const province = location.provinces.find((p) => p.name === user.cityName);
-        if (province) {
-          location.handleProvinceChange(String(province.code));
-        }
+    form.reset({
+      name: user.name || "",
+      phone: user.phone || "",
+      email: user.email || "",
+      avatar: user.avatar || "",
+      gender: user.gender ?? 1,
+      alias: user.alias || "",
+      cityName: user.cityName || "",
+      subdistrictName: user.subdistrictName || ""
+    } as ProfileFormValues);
+
+    if (user.cityName) {
+      const province = location.provinces.find((p) => p.name === user.cityName);
+      if (province) {
+        location.handleProvinceChange(String(province.code));
       }
     }
-  }, [user, location]);
+  }, [user, location.provinces]);
 
   // Logic upload file giữ nguyên từ bản cũ của Bách
   // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

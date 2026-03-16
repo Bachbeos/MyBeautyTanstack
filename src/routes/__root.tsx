@@ -1,12 +1,15 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 
 const RootLayout = () => (
   <>
-    <Outlet />
-    <TanStackRouterDevtools />
-    <Toaster position="top-right" expand richColors={false} />
+    <ThemeProvider>
+      <Outlet />
+      <TanStackRouterDevtools />
+      <Toaster position="top-right" expand richColors={false} />
+    </ThemeProvider>
   </>
 );
 

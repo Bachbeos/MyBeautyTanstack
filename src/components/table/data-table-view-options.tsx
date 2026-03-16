@@ -34,14 +34,14 @@ export function DataTableViewOptions<TData>({ table }: Props<TData>) {
         onClick={() => setOpen((v) => !v)}
       >
         <i className="ti ti-settings me-1"></i>
-        View
+        Quản lý cột
       </button>
 
       <ul
         className={`dropdown-menu dropdown-menu-end ${open ? "show" : ""}`}
         aria-labelledby={dropdownId}
       >
-        <li className="dropdown-header">Toggle columns</li>
+        <li className="dropdown-header">Chuyển đổi cột</li>
 
         {columns.map((column) => (
           <li key={column.id}>
