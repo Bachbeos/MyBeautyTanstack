@@ -9,7 +9,7 @@ import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { branchMutations, branchQueries } from "@/lib/tanstack/options/branch";
 import type { BranchDto } from "@/lib/types/branch";
 import { cn } from "@/lib/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   createColumnHelper,
@@ -18,6 +18,9 @@ import {
   type ColumnFiltersState
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
+import { useModalFade, useCloseModal } from "@/hooks/use-modal-animation";
+import CollapseButton from "@/components/collapse/collapse-button";
+import { userQueries } from "@/lib/tanstack/options/user";
 
 const columnHelper = createColumnHelper<BranchDto>();
 
@@ -29,6 +32,9 @@ function RouteComponent() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
+    document.body.classList.contains("header-collapse")
+  );
 
   const rawNameFilter = useMemo(() => {
     const filter = columnFilters.find((f) => f.id === "name");
@@ -37,22 +43,15 @@ function RouteComponent() {
 
   const [nameFilter] = useDebounceValue(rawNameFilter, 500);
 
-  const [modal, setModal] = useState<{
-    type: "add" | "edit" | "delete" | "detail" | null;
-    item?: BranchDto;
-    shown: boolean;
-  }>({
-    type: null,
-    item: undefined,
-    shown: false
-  });
+  const [modal, setModal] = useState<{ type: any; item: any }>({ type: null, item: null });
+  const [modalShown, setModalShown] = useState(false);
 
-  const openModal = (type: "add" | "edit" | "delete" | "detail", item?: BranchDto) => {
-    setModal({ type, item, shown: true });
-  };
+  useModalFade(modal.type, setModalShown);
 
-  const closeModal = () => {
-    setModal((prev) => ({ ...prev, shown: false }));
+  const closeModal = useCloseModal(setModalShown, (state) => setModal(state as any));
+
+  const openModal = (type: any, item: any) => {
+    setModal({ type, item });
   };
 
   const params = useMemo(
@@ -75,14 +74,6 @@ function RouteComponent() {
   const createMutation = useMutation(branchMutations.create());
   const updateMutation = useMutation(branchMutations.update());
   const deleteMutation = useMutation(branchMutations.delete());
-  const updateStatusMutation = useMutation(branchMutations.updateStatus());
-
-  const handleToggleStatus = async (branch: BranchDto) => {
-    await updateStatusMutation.mutateAsync({
-      id: branch.id,
-      active: Number(branch.active) === 1 ? 0 : 1
-    });
-  };
 
   const columns = useMemo(
     () => [
@@ -93,23 +84,55 @@ function RouteComponent() {
         meta: { className: "w-1 text-center" }
       }),
       columnHelper.accessor("name", {
-        header: "Tên chi nhánh"
+        id: "name",
+        header: "Tên chi nhánh",
+        cell: (info) => {
+          const row = info.row.original;
+          const fallbackAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(row.name || "avatar")}&background=random`;
+
+          return (
+            <div className="d-flex align-items-center">
+              <div
+                className="avatar avatar-sm rounded-circle border me-2 flex-shrink-0"
+                style={{ width: "32px", height: "32px", overflow: "hidden" }}
+              >
+                <img
+                  src={row.avatar || fallbackAvatar}
+                  alt={row.name}
+                  className="w-100 h-100 object-fit-cover rounded-circle"
+                  onError={(e) => {
+                    e.currentTarget.src = fallbackAvatar;
+                  }}
+                />
+              </div>
+              <span>{row.name}</span>
+            </div>
+          );
+        }
       }),
       columnHelper.accessor("phone", {
+        id: "phone",
         header: "Số điện thoại"
       }),
       columnHelper.accessor("email", {
+        id: "email",
         header: "Email"
       }),
-      columnHelper.accessor("branchName", {
-        header: "Chi nhánh"
+      columnHelper.accessor("address", {
+        id: "address",
+        header: "Địa chỉ"
       }),
-      columnHelper.accessor("active", {
+      columnHelper.accessor("website", {
+        id: "website",
+        header: "Website"
+      }),
+      columnHelper.accessor("status", {
+        id: "status",
         header: "Trạng thái",
         meta: { className: "text-center w-1" },
         cell: (info) => {
           const row = info.row.original;
-          const isActive = Number(row.active) === 1;
+          const isActive = Number(row.status) === 1;
 
           return (
             <span
@@ -166,6 +189,25 @@ function RouteComponent() {
     getCoreRowModel: getCoreRowModel()
   });
 
+  const parentsInf = useInfiniteQuery(branchQueries.infinite({ limit: 10 }));
+  const ownersInf = useInfiniteQuery(userQueries.infinite({ limit: 10 }));
+
+  const [parentOptions, ownerOptions] = useMemo(
+    () => [
+      parentsInf.data?.pages
+        .flatMap((page) => page.result?.items ?? [])
+        .map((parent) => ({ label: String(parent.name), value: Number(parent.id) })) ?? [],
+      ownersInf.data?.pages
+        .flatMap((page) => page.result?.items ?? [])
+        .map((owner) => ({ label: String(owner.name), value: Number(owner.id) })) ?? []
+    ],
+    [parentsInf.data, ownersInf.data]
+  );
+
+  const [handleLoadMoreParents, handleLoadMoreOwners] = [parentsInf, ownersInf].map(
+    (q) => () => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()
+  );
+
   const handleSubmit = async (values: any) => {
     if (modal.type === "add") await createMutation.mutateAsync(values);
     if (modal.type === "edit") await updateMutation.mutateAsync(values);
@@ -180,27 +222,44 @@ function RouteComponent() {
     query.refetch();
   };
 
+  const handleToggleStatus = async (row: BranchDto) => {
+    const newStatus = Number(row.status) === 1 ? 0 : 1;
+
+    try {
+      await updateMutation.mutateAsync({
+        ...row,
+        status: newStatus
+      });
+      query.refetch();
+    } catch (error) {
+      console.error("Toggle status failed:", error);
+    }
+  };
+
+  const handleCollapse = () => {
+    document.body.classList.toggle("header-collapse");
+    setIsHeaderCollapsed(document.body.classList.contains("header-collapse"));
+  };
+
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
-        {/* Header & Breadcrumb */}
         <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
           <div>
             <h4 className="mb-1 fw-bold">
-              Danh sách người dùng
+              Danh sách chi nhánh
               <span className="badge badge-soft-primary ms-2">{total}</span>
             </h4>
-            {/* Breadcrumb component ở đây */}
-            <div className="text-muted small">Người dùng / Danh sách</div>
+            <div className="text-muted small">Chi nhánh / Danh sách chi nhánh</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
             <ExportButton onExport={() => {}} />
             <RefreshButton onRefresh={() => query.refetch()} />
+            <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>
         </div>
 
         <div className="card border-0 rounded-0 shadow-sm">
-          {/* <div className="card-header d-flex align-items-center justify-content-between gap-2 flex-wrap bg-white py-3"></div> */}
           <div className="card-body p-3">
             <AsyncBoundary
               status={query.status}
@@ -213,9 +272,9 @@ function RouteComponent() {
                   table={table}
                   filterable={true}
                   filterKey="name"
-                  filterKeyPlaceholder="Tìm nhanh người dùng..."
+                  filterKeyPlaceholder="Tìm nhanh chi nhánh..."
                   toolbarRight={
-                    <AddButton label="Thêm người dùng" onClick={() => openModal("add")} />
+                    <AddButton label="Thêm chi nhánh" onClick={() => openModal("add", null)} />
                   }
                   toolbarLeft={<div className="text-muted small d-none d-md-block"></div>}
                 />
@@ -227,12 +286,15 @@ function RouteComponent() {
 
       <ModalBranch
         type={modal.type}
-        shown={modal.shown}
+        shown={modalShown}
         item={modal.item}
         onClose={closeModal}
         onSubmit={handleSubmit}
         onDelete={handleDelete}
-        branchOptions={[]}
+        parentOptions={parentOptions}
+        onLoadMoreParents={handleLoadMoreParents}
+        userOptions={ownerOptions}
+        onLoadMoreUsers={handleLoadMoreOwners}
       />
     </div>
   );

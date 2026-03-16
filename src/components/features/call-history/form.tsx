@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { useAppForm } from "@/components/form/hooks";
 import type { callHistoryDto } from "@/lib/types/call-history";
+import { useEffect } from "react";
 
 const callHistorySchema = z.object({
   id: z.custom<callHistoryDto["id"]>().or(z.undefined()),
@@ -67,6 +68,22 @@ export function CallHistoryForm({
   });
 
   const currentOutcome = form.state.values.outcome;
+
+  useEffect(() => {
+    if (callHistory) {
+      form.reset({
+        id: callHistory?.id,
+        userId: callHistory?.userId ?? 0,
+        customerId: callHistory?.customerId ?? 0,
+        callType: callHistory?.callType ?? 1,
+        outcome: callHistory?.outcome ?? 1,
+        duration: callHistory?.duration ?? 0,
+        interestLevel: callHistory?.interestLevel ?? 3,
+        note: callHistory?.note ?? "",
+        status: callHistory?.status ?? 1
+      });
+    }
+  }, [callHistory]);
 
   return (
     <form
