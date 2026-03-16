@@ -22,6 +22,8 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useModalFade, useCloseModal } from "@/hooks/use-modal-animation";
 import CollapseButton from "@/components/collapse/collapse-button";
+import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
+import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
 
 const columnHelper = createColumnHelper<CustomerAttributeDto>();
 
@@ -178,7 +180,18 @@ function RouteComponent() {
             <div className="text-muted small">Cài đặt khách hàng / Thuộc tính khách hàng</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
-            <ExportButton onExport={() => {}} />
+            <ExportButton
+              onExport={(format) => {
+                switch (format) {
+                  case "xls":
+                    exportVisibleTableToXLSX(table);
+                    break;
+                  case "pdf":
+                    exportVisibleTableToPDF(table);
+                    break;
+                }
+              }}
+            />
             <RefreshButton onRefresh={() => query.refetch()} />
             <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>

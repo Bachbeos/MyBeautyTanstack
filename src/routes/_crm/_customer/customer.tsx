@@ -8,6 +8,8 @@ import { DataTable } from "@/components/table/data-table";
 import AddButton from "@/components/ui/add-button";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { useCloseModal, useModalFade } from "@/hooks/use-modal-animation";
+import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
+import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
 import { customerMutations, customerQueries } from "@/lib/tanstack/options/customer";
 import { customerAttributeQueries } from "@/lib/tanstack/options/customer-attribute";
 import { customerSourceQueries } from "@/lib/tanstack/options/customer-source";
@@ -223,7 +225,18 @@ function RouteComponent() {
             <div className="text-muted small">Khách hàng / Danh sách khách hàng</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
-            <ExportButton onExport={() => {}} />
+            <ExportButton
+              onExport={(format) => {
+                switch (format) {
+                  case "xls":
+                    exportVisibleTableToXLSX(table);
+                    break;
+                  case "pdf":
+                    exportVisibleTableToPDF(table);
+                    break;
+                }
+              }}
+            />
             <RefreshButton onRefresh={() => query.refetch()} />
             <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>

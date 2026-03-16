@@ -15,6 +15,8 @@ import {
 import type { ResourcePermissionDto } from "@/lib/types/permission";
 import type { RoleId } from "@/lib/types/role";
 import CollapseButton from "@/components/collapse/collapse-button";
+import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
+import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
 
 const columnHelper = createColumnHelper<ResourcePermissionDto>();
 
@@ -209,7 +211,18 @@ function RouteComponent() {
             <div className="text-muted small">Vai trò & Phân quyền / Phân quyền</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
-            <ExportButton onExport={() => {}} />
+            <ExportButton
+              onExport={(format) => {
+                switch (format) {
+                  case "xls":
+                    exportVisibleTableToXLSX(table);
+                    break;
+                  case "pdf":
+                    exportVisibleTableToPDF(table);
+                    break;
+                }
+              }}
+            />
             <RefreshButton onRefresh={() => query.refetch()} />
             <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>
