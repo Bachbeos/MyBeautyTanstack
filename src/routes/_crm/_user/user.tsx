@@ -21,6 +21,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useModalFade, useCloseModal } from "@/hooks/use-modal-animation";
 import CollapseButton from "@/components/collapse/collapse-button";
 import { branchQueries } from "@/lib/tanstack/options/branch";
+import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
+import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
 
 const columnHelper = createColumnHelper<UserDto>();
 
@@ -90,10 +92,9 @@ function RouteComponent() {
 
   const columns = useMemo(
     () => [
-      columnHelper.display({
+      columnHelper.accessor((_, index) => pageIndex * pageSize + index + 1, {
         id: "stt",
         header: "STT",
-        cell: (info) => pageIndex * pageSize + info.row.index + 1,
         meta: { className: "w-1 text-center" }
       }),
       columnHelper.accessor("name", {
@@ -133,7 +134,8 @@ function RouteComponent() {
       }),
       columnHelper.accessor("branchName", {
         id: "branchName",
-        header: "Chi nhánh"
+        header: "Chi nhánh",
+        enableHiding: true
       }),
       columnHelper.accessor("active", {
         id: "active",
@@ -247,7 +249,18 @@ function RouteComponent() {
             <div className="text-muted small">Tài khoản người dùng / Danh sách người dùng</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
-            <ExportButton onExport={() => {}} />
+            <ExportButton
+              onExport={(format) => {
+                switch (format) {
+                  case "xls":
+                    exportVisibleTableToXLSX(table);
+                    break;
+                  case "pdf":
+                    exportVisibleTableToPDF(table);
+                    break;
+                }
+              }}
+            />
             <RefreshButton onRefresh={() => query.refetch()} />
             <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>

@@ -45,3 +45,14 @@ export type UserUpdateRequest = {
   branchId?: number;
   active?: number;
 };
+
+export type UserInfoUpdateRequest = {
+  name?: string;
+  phone?: string;
+  email?: string;
+  avatar?: string;
+  gender?: number;
+  alias?: string;
+  cityName?: string;
+  subdistrictName?: string;
+};

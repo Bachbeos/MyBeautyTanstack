@@ -22,6 +22,7 @@ export const ENDPOINTS = {
   },
   user: {
     info: "/user/info",
+    updateInfo: "/user/info",
     list: "/user/list",
     update: "/user/update",
     delete: (id: UserId) => `/user/delete/${id}`,

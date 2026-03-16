@@ -7,30 +7,32 @@ type Props = {
 
 export default function ExportButton({ onExport, className }: Props) {
   const [open, setOpen] = useState(false);
-  const btnRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (btnRef.current && !btnRef.current.contains(e.target as Node)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
+
     if (open) document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
   return (
     <div className={className}>
-      <div className="dropdown">
+      <div className="dropdown" ref={dropdownRef}>
         <button
-          ref={btnRef}
           className={`dropdown-toggle btn btn-outline-light px-2 shadow${open ? " active" : ""}`}
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
         >
-          <i className="ti ti-package-export me-2"></i>Export
+          <i className="ti ti-package-export me-2"></i>
+          Export
         </button>
+
         <div
           className={`dropdown-menu dropdown-menu-end${open ? " show" : ""}`}
           style={{ right: 0, left: "auto" }}
@@ -49,6 +51,7 @@ export default function ExportButton({ onExport, className }: Props) {
                 Export as PDF
               </button>
             </li>
+
             <li>
               <button
                 type="button"
