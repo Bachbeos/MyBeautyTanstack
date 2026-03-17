@@ -10,7 +10,9 @@ export type OpportunityDto = {
   id: OpportunityId;
   code: string;
   customerId: number;
+  customerName: string;
   userId: number;
+  userName: string;
   branchId: number;
   creatorId: number;
   name: string;

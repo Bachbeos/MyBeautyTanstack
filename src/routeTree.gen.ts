@@ -22,6 +22,7 @@ import { Route as CrmRolesPermissionsPermissionRouteImport } from './routes/_crm
 import { Route as CrmResourceResourceRouteImport } from './routes/_crm/_resource/resource'
 import { Route as CrmProfileSettingsProfileSettingsRouteImport } from './routes/_crm/_profile-settings/profile-settings'
 import { Route as CrmProductProductRouteImport } from './routes/_crm/_product/product'
+import { Route as CrmOpportunityOpportunityRouteImport } from './routes/_crm/_opportunity/opportunity'
 import { Route as CrmNotificationNotificationRouteImport } from './routes/_crm/_notification/notification'
 import { Route as CrmErrorError505RouteImport } from './routes/_crm/_error/error505'
 import { Route as CrmCustomerCustomerRouteImport } from './routes/_crm/_customer/customer'
@@ -99,6 +100,12 @@ const CrmProductProductRoute = CrmProductProductRouteImport.update({
   path: '/product',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmOpportunityOpportunityRoute =
+  CrmOpportunityOpportunityRouteImport.update({
+    id: '/_opportunity/opportunity',
+    path: '/opportunity',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmNotificationNotificationRoute =
   CrmNotificationNotificationRouteImport.update({
     id: '/_notification/notification',
@@ -170,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/customer': typeof CrmCustomerCustomerRoute
   '/error505': typeof CrmErrorError505Route
   '/notification': typeof CrmNotificationNotificationRoute
+  '/opportunity': typeof CrmOpportunityOpportunityRoute
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/resource': typeof CrmResourceResourceRoute
@@ -195,6 +203,7 @@ export interface FileRoutesByTo {
   '/customer': typeof CrmCustomerCustomerRoute
   '/error505': typeof CrmErrorError505Route
   '/notification': typeof CrmNotificationNotificationRoute
+  '/opportunity': typeof CrmOpportunityOpportunityRoute
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/resource': typeof CrmResourceResourceRoute
@@ -221,6 +230,7 @@ export interface FileRoutesById {
   '/_crm/_customer/customer': typeof CrmCustomerCustomerRoute
   '/_crm/_error/error505': typeof CrmErrorError505Route
   '/_crm/_notification/notification': typeof CrmNotificationNotificationRoute
+  '/_crm/_opportunity/opportunity': typeof CrmOpportunityOpportunityRoute
   '/_crm/_product/product': typeof CrmProductProductRoute
   '/_crm/_profile-settings/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/_crm/_resource/resource': typeof CrmResourceResourceRoute
@@ -248,6 +258,7 @@ export interface FileRouteTypes {
     | '/customer'
     | '/error505'
     | '/notification'
+    | '/opportunity'
     | '/product'
     | '/profile-settings'
     | '/resource'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/customer'
     | '/error505'
     | '/notification'
+    | '/opportunity'
     | '/product'
     | '/profile-settings'
     | '/resource'
@@ -298,6 +310,7 @@ export interface FileRouteTypes {
     | '/_crm/_customer/customer'
     | '/_crm/_error/error505'
     | '/_crm/_notification/notification'
+    | '/_crm/_opportunity/opportunity'
     | '/_crm/_product/product'
     | '/_crm/_profile-settings/profile-settings'
     | '/_crm/_resource/resource'
@@ -409,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmProductProductRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/_opportunity/opportunity': {
+      id: '/_crm/_opportunity/opportunity'
+      path: '/opportunity'
+      fullPath: '/opportunity'
+      preLoaderRoute: typeof CrmOpportunityOpportunityRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/_crm/_notification/notification': {
       id: '/_crm/_notification/notification'
       path: '/notification'
@@ -493,6 +513,7 @@ interface CrmRouteChildren {
   CrmCustomerCustomerRoute: typeof CrmCustomerCustomerRoute
   CrmErrorError505Route: typeof CrmErrorError505Route
   CrmNotificationNotificationRoute: typeof CrmNotificationNotificationRoute
+  CrmOpportunityOpportunityRoute: typeof CrmOpportunityOpportunityRoute
   CrmProductProductRoute: typeof CrmProductProductRoute
   CrmProfileSettingsProfileSettingsRoute: typeof CrmProfileSettingsProfileSettingsRoute
   CrmResourceResourceRoute: typeof CrmResourceResourceRoute
@@ -516,6 +537,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmCustomerCustomerRoute: CrmCustomerCustomerRoute,
   CrmErrorError505Route: CrmErrorError505Route,
   CrmNotificationNotificationRoute: CrmNotificationNotificationRoute,
+  CrmOpportunityOpportunityRoute: CrmOpportunityOpportunityRoute,
   CrmProductProductRoute: CrmProductProductRoute,
   CrmProfileSettingsProfileSettingsRoute:
     CrmProfileSettingsProfileSettingsRoute,

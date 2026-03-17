@@ -43,6 +43,7 @@ export default function Sidebar() {
     "/roles-permissions": "roles-permissions",
     "/profile-settings": "profile-settings",
     "/customer": "customers",
+    "/opportunity": "opportunitys",
     "/customer-source": "customerSource",
     "/invoice": "invoice",
     "/voucher": "voucher",
@@ -205,6 +206,16 @@ export default function Sidebar() {
                   >
                     <i className="ti ti-user-up"></i>
                     <span>Khách hàng</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/opportunity"
+                    className={activeTab === "opportunitys" ? "active" : ""}
+                    onClick={() => handleTabClick("opportunitys")}
+                  >
+                    <i className="ti ti-user-up"></i>
+                    <span>Cơ hội</span>
                   </Link>
                 </li>
 
