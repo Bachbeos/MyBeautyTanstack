@@ -32,7 +32,7 @@ export const authMutations = {
       },
       meta: {
         successMessage: "Đăng nhập thành công",
-        redirectTo: "/"
+        redirectTo: "/resource"
       }
     })
 };

@@ -1,23 +1,29 @@
 import { useEffect, useRef, useState } from "react";
-// Thay đổi import từ react-router-dom/redux sang TanStack và Zustand
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuthStore } from "@/lib/stores/auth";
 import "./header.scss";
+import "@/assets/css/notification-shared.css";
 
-// Cập nhật đường dẫn assets theo alias dự án
 import logo from "@assets/img/logo.svg";
 import logoSmall from "@assets/img/logo-small.svg";
 import logoWhite from "@assets/img/logo-white.svg";
+import { cn } from "@/lib/utils";
+import { notificationMutations, notificationQueries } from "@/lib/tanstack/options/notification";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
+import type { NotificationDto } from "@/lib/types/notification";
 
 export default function Header() {
   const navigate = useNavigate();
-  const { clear } = useAuthStore();
+  const { clear, userId } = useAuthStore();
 
   const [theme, setTheme] = useState<"light" | "dark">(
     (localStorage.getItem("theme") as "light" | "dark") ?? "light"
   );
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [dismissedNotifIds, setDismissedNotifIds] = useState<number[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   // Tạm thời giữ giả lập user để không nát giao diện vì bạn muốn "có gì giữ nguyên"
   const user = { name: "Admin User", roleName: "Quản trị viên", avatar: "" };
@@ -25,16 +31,6 @@ export default function Header() {
   const hasAvatar = !!user?.avatar?.trim();
   const avatarSrc = user?.avatar || "";
   const fallbackName = user?.name ? user.name.substring(0, 2).toUpperCase() : "US";
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -61,14 +57,14 @@ export default function Header() {
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    clear(); // Dùng hàm clear từ auth store
+    clear();
     localStorage.clear();
     document.cookie.split(";").forEach((c) => {
       document.cookie = c
         .replace(/^ +/, "")
         .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
     });
-    navigate({ to: "/login" }); // Điều hướng theo chuẩn TanStack
+    navigate({ to: "/login" });
   };
 
   const toggleFullscreen = () => {
@@ -80,6 +76,38 @@ export default function Header() {
       }
     }
   };
+
+  const { data: notifyPages } = useInfiniteQuery(notificationQueries.infinite({ size: 10 }));
+  const allNotifications = notifyPages?.pages.flatMap((page) => page.result?.items ?? []) ?? [];
+  const notifications = (
+    notifyPages?.pages.flatMap((page) => page.result?.items ?? []) ?? []
+  ).filter((item) => !dismissedNotifIds.includes(item.id));
+  const unreadCount = allNotifications.filter((n) => n.isRead === 0).length;
+  const markRead = useMutation(notificationMutations.markRead());
+  const markAllRead = useMutation(notificationMutations.markAllRead());
+
+  const handleNotifyClick = (n: NotificationDto) => {
+    if (n.isRead === 0) markRead.mutate(n.id);
+    if (n.refType === "APPOINTMENT") navigate({ to: "/appointment" });
+    setNotifOpen(false);
+  };
+
+  const handleDismissNotification = (id: number) => {
+    setDismissedNotifIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setNotifOpen(false);
+      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <header className="navbar-header">
@@ -138,7 +166,6 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Giữ nguyên các dropdown Page, FAQ, Report dù chưa dùng cho đẹp */}
           <div className="header-item d-none d-sm-flex">
             <div className="dropdown me-2">
               <a href="#" className="btn topbar-link topbar-teal-link" data-bs-toggle="dropdown">
@@ -174,22 +201,112 @@ export default function Header() {
             </div>
           </div>
 
-          <div className="header-item">
-            <div className="dropdown me-2">
-              <button
-                className="topbar-link btn dropdown-toggle drop-arrow-none"
-                data-bs-toggle="dropdown"
-              >
-                <i className="ti ti-bell-check fs-16 animate-ring"></i>
-                <span className="badge rounded-pill">10</span>
-              </button>
-              <div
-                className="dropdown-menu p-0 dropdown-menu-end dropdown-menu-lg"
-                style={{ minHeight: 300 }}
-              >
-                <div className="p-2 border-bottom">
-                  <h6 className="m-0 fs-16 fw-semibold"> Notifications</h6>
-                </div>
+          <div className="header-item dropdown mr-7" ref={notifRef}>
+            <button
+              className={cn("topbar-link btn dropdown-toggle drop-arrow-none", notifOpen && "show")}
+              type="button"
+              onClick={() => setNotifOpen(!notifOpen)}
+            >
+              <i className="ti ti-bell-check fs-16 animate-ring"></i>
+              <span className="badge rounded-pill">
+                {unreadCount > 0 ? unreadCount : allNotifications.length}
+              </span>
+            </button>
+
+            <div
+              className={cn(
+                "dropdown-menu dropdown-menu-end dropdown-menu-lg p-0 shadow-lg border-0",
+                notifOpen && "show"
+              )}
+              style={{ minHeight: 300, display: notifOpen ? "block" : "none" }}
+            >
+              <div className="p-2 border-bottom bg-white rounded-top d-flex align-items-center justify-content-between">
+                <h6 className="m-0 fs-16 fw-semibold">Thông báo</h6>
+                <button
+                  className="btn btn-sm btn-light"
+                  type="button"
+                  onClick={() => userId && markAllRead.mutate(Number(userId))}
+                >
+                  Đánh dấu đã đọc
+                </button>
+              </div>
+
+              <div className="notification-body" style={{ maxHeight: "350px", overflowY: "auto" }}>
+                {notifications.map((notif) => {
+                  const notifFallbackName = notif.title
+                    ? notif.title.substring(0, 2).toUpperCase()
+                    : "NT";
+
+                  const hasNotifAvatar = !!notif.image && notif.image.trim() !== "";
+
+                  return (
+                    <div
+                      key={notif.id}
+                      className="dropdown-item notification-item py-3 text-wrap border-bottom cursor-pointer"
+                      onClick={() => handleNotifyClick(notif)}
+                    >
+                      <div className="d-flex">
+                        <div className="me-2 position-relative flex-shrink-0">
+                          {hasNotifAvatar ? (
+                            <img
+                              src={notif.image || ""}
+                              className="avatar-md rounded-circle"
+                              alt="Notification"
+                            />
+                          ) : (
+                            <div
+                              className="avatar-md rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle text-primary fw-bold fs-12"
+                              style={{ width: 40, height: 40 }}
+                            >
+                              {notifFallbackName}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-grow-1">
+                          <p className="mb-0 fw-medium text-dark">{notif.title}</p>
+                          <p className="mb-1 text-wrap fs-13">{notif.content}</p>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <span className="fs-12 text-muted">
+                              <i className="ti ti-clock me-1"></i>
+                              {new Date(notif.createdTime).toLocaleString("vi-VN")}
+                            </span>
+                            <div className="notification-action d-flex align-items-center float-end gap-2">
+                              {notif.isRead === 0 && (
+                                <a
+                                  href="#"
+                                  className="notification-read rounded-circle bg-danger"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    markRead.mutate(notif.id);
+                                  }}
+                                ></a>
+                              )}
+                              <button
+                                className="btn rounded-circle p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDismissNotification(notif.id);
+                                }}
+                              >
+                                <i className="ti ti-x"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="p-2 rounded-bottom border-top text-center bg-white">
+                <Link
+                  to="/notification"
+                  className="text-primary text-decoration-underline fs-14 mb-0"
+                >
+                  Xem tất cả thông báo
+                </Link>
               </div>
             </div>
           </div>

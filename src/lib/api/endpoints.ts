@@ -12,6 +12,7 @@ import type { BranchId } from "../types/branch";
 import type { ServiceId } from "../types/service";
 import type { CustomerAttributeId } from "../types/customer-attribute";
 import type { AppointmentId } from "../types/appointment";
+import type { NotificationId } from "../types/notification";
 
 export const ENDPOINTS = {
   auth: {
@@ -140,5 +141,13 @@ export const ENDPOINTS = {
     update: "/schedule/update",
     delete: (id: AppointmentId) => `/schedule/delete/${id}`,
     detail: "/schedule/get"
+  },
+  notification: {
+    list: "/notification/list",
+    detail: "/notification/get",
+    update: "/notification/update",
+    markRead: "/notification/mark-read",
+    markAllRead: "/notification/mark-all-read",
+    delete: (id: NotificationId) => `/notification/delete/${id}`
   }
 } as const;

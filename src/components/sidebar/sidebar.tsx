@@ -7,6 +7,7 @@ import SubMenuMotion from "./SubMenuMotion";
 import logo from "@assets/img/logo.svg";
 import logoSmall from "@assets/img/logo-small.svg";
 import logoWhite from "@assets/img/logo-white.svg";
+import { no } from "zod/v4/locales";
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<string>("");
@@ -30,6 +31,8 @@ export default function Sidebar() {
     "profile-settings": "settings_general",
     appointment: "application",
     "call-history": "application",
+    chat: "application",
+    notification: "application",
     "customer-attribute": "system_settings"
   };
 
@@ -164,6 +167,24 @@ export default function Sidebar() {
                         onClick={() => handleTabClick("appointment")}
                       >
                         Lịch hẹn
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/chat"
+                        className={activeTab === "chat" ? "active" : ""}
+                        onClick={() => handleTabClick("chat")}
+                      >
+                        Chat
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/notification"
+                        className={activeTab === "notification" ? "active" : ""}
+                        onClick={() => handleTabClick("notification")}
+                      >
+                        Thông báo
                       </Link>
                     </li>
                   </SubMenuMotion>
