@@ -22,10 +22,13 @@ import { Route as CrmRolesPermissionsPermissionRouteImport } from './routes/_crm
 import { Route as CrmResourceResourceRouteImport } from './routes/_crm/_resource/resource'
 import { Route as CrmProfileSettingsProfileSettingsRouteImport } from './routes/_crm/_profile-settings/profile-settings'
 import { Route as CrmProductProductRouteImport } from './routes/_crm/_product/product'
+import { Route as CrmOpportunityOpportunityRouteImport } from './routes/_crm/_opportunity/opportunity'
+import { Route as CrmNotificationNotificationRouteImport } from './routes/_crm/_notification/notification'
 import { Route as CrmErrorError505RouteImport } from './routes/_crm/_error/error505'
 import { Route as CrmCustomerCustomerRouteImport } from './routes/_crm/_customer/customer'
 import { Route as CrmCustomerSourceCustomerSourceRouteImport } from './routes/_crm/_customer-source/customer-source'
 import { Route as CrmCustomerSettingsCustomerAttributeRouteImport } from './routes/_crm/_customer-settings/customer-attribute'
+import { Route as CrmChatChatRouteImport } from './routes/_crm/_chat/chat'
 import { Route as CrmCategoryCategoryRouteImport } from './routes/_crm/_category/category'
 import { Route as CrmCallHistoryCallHistoryRouteImport } from './routes/_crm/_call-history/call-history'
 import { Route as CrmBranchBranchRouteImport } from './routes/_crm/_branch/branch'
@@ -97,6 +100,18 @@ const CrmProductProductRoute = CrmProductProductRouteImport.update({
   path: '/product',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmOpportunityOpportunityRoute =
+  CrmOpportunityOpportunityRouteImport.update({
+    id: '/_opportunity/opportunity',
+    path: '/opportunity',
+    getParentRoute: () => CrmRoute,
+  } as any)
+const CrmNotificationNotificationRoute =
+  CrmNotificationNotificationRouteImport.update({
+    id: '/_notification/notification',
+    path: '/notification',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmErrorError505Route = CrmErrorError505RouteImport.update({
   id: '/_error/error505',
   path: '/error505',
@@ -119,6 +134,11 @@ const CrmCustomerSettingsCustomerAttributeRoute =
     path: '/customer-attribute',
     getParentRoute: () => CrmRoute,
   } as any)
+const CrmChatChatRoute = CrmChatChatRouteImport.update({
+  id: '/_chat/chat',
+  path: '/chat',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmCategoryCategoryRoute = CrmCategoryCategoryRouteImport.update({
   id: '/_category/category',
   path: '/category',
@@ -151,10 +171,13 @@ export interface FileRoutesByFullPath {
   '/branch': typeof CrmBranchBranchRoute
   '/call-history': typeof CrmCallHistoryCallHistoryRoute
   '/category': typeof CrmCategoryCategoryRoute
+  '/chat': typeof CrmChatChatRoute
   '/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/customer': typeof CrmCustomerCustomerRoute
   '/error505': typeof CrmErrorError505Route
+  '/notification': typeof CrmNotificationNotificationRoute
+  '/opportunity': typeof CrmOpportunityOpportunityRoute
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/resource': typeof CrmResourceResourceRoute
@@ -174,10 +197,13 @@ export interface FileRoutesByTo {
   '/branch': typeof CrmBranchBranchRoute
   '/call-history': typeof CrmCallHistoryCallHistoryRoute
   '/category': typeof CrmCategoryCategoryRoute
+  '/chat': typeof CrmChatChatRoute
   '/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/customer': typeof CrmCustomerCustomerRoute
   '/error505': typeof CrmErrorError505Route
+  '/notification': typeof CrmNotificationNotificationRoute
+  '/opportunity': typeof CrmOpportunityOpportunityRoute
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/resource': typeof CrmResourceResourceRoute
@@ -198,10 +224,13 @@ export interface FileRoutesById {
   '/_crm/_branch/branch': typeof CrmBranchBranchRoute
   '/_crm/_call-history/call-history': typeof CrmCallHistoryCallHistoryRoute
   '/_crm/_category/category': typeof CrmCategoryCategoryRoute
+  '/_crm/_chat/chat': typeof CrmChatChatRoute
   '/_crm/_customer-settings/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/_crm/_customer-source/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/_crm/_customer/customer': typeof CrmCustomerCustomerRoute
   '/_crm/_error/error505': typeof CrmErrorError505Route
+  '/_crm/_notification/notification': typeof CrmNotificationNotificationRoute
+  '/_crm/_opportunity/opportunity': typeof CrmOpportunityOpportunityRoute
   '/_crm/_product/product': typeof CrmProductProductRoute
   '/_crm/_profile-settings/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
   '/_crm/_resource/resource': typeof CrmResourceResourceRoute
@@ -223,10 +252,13 @@ export interface FileRouteTypes {
     | '/branch'
     | '/call-history'
     | '/category'
+    | '/chat'
     | '/customer-attribute'
     | '/customer-source'
     | '/customer'
     | '/error505'
+    | '/notification'
+    | '/opportunity'
     | '/product'
     | '/profile-settings'
     | '/resource'
@@ -246,10 +278,13 @@ export interface FileRouteTypes {
     | '/branch'
     | '/call-history'
     | '/category'
+    | '/chat'
     | '/customer-attribute'
     | '/customer-source'
     | '/customer'
     | '/error505'
+    | '/notification'
+    | '/opportunity'
     | '/product'
     | '/profile-settings'
     | '/resource'
@@ -269,10 +304,13 @@ export interface FileRouteTypes {
     | '/_crm/_branch/branch'
     | '/_crm/_call-history/call-history'
     | '/_crm/_category/category'
+    | '/_crm/_chat/chat'
     | '/_crm/_customer-settings/customer-attribute'
     | '/_crm/_customer-source/customer-source'
     | '/_crm/_customer/customer'
     | '/_crm/_error/error505'
+    | '/_crm/_notification/notification'
+    | '/_crm/_opportunity/opportunity'
     | '/_crm/_product/product'
     | '/_crm/_profile-settings/profile-settings'
     | '/_crm/_resource/resource'
@@ -384,6 +422,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmProductProductRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/_opportunity/opportunity': {
+      id: '/_crm/_opportunity/opportunity'
+      path: '/opportunity'
+      fullPath: '/opportunity'
+      preLoaderRoute: typeof CrmOpportunityOpportunityRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_notification/notification': {
+      id: '/_crm/_notification/notification'
+      path: '/notification'
+      fullPath: '/notification'
+      preLoaderRoute: typeof CrmNotificationNotificationRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/_crm/_error/error505': {
       id: '/_crm/_error/error505'
       path: '/error505'
@@ -410,6 +462,13 @@ declare module '@tanstack/react-router' {
       path: '/customer-attribute'
       fullPath: '/customer-attribute'
       preLoaderRoute: typeof CrmCustomerSettingsCustomerAttributeRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_chat/chat': {
+      id: '/_crm/_chat/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof CrmChatChatRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/_category/category': {
@@ -448,10 +507,13 @@ interface CrmRouteChildren {
   CrmBranchBranchRoute: typeof CrmBranchBranchRoute
   CrmCallHistoryCallHistoryRoute: typeof CrmCallHistoryCallHistoryRoute
   CrmCategoryCategoryRoute: typeof CrmCategoryCategoryRoute
+  CrmChatChatRoute: typeof CrmChatChatRoute
   CrmCustomerSettingsCustomerAttributeRoute: typeof CrmCustomerSettingsCustomerAttributeRoute
   CrmCustomerSourceCustomerSourceRoute: typeof CrmCustomerSourceCustomerSourceRoute
   CrmCustomerCustomerRoute: typeof CrmCustomerCustomerRoute
   CrmErrorError505Route: typeof CrmErrorError505Route
+  CrmNotificationNotificationRoute: typeof CrmNotificationNotificationRoute
+  CrmOpportunityOpportunityRoute: typeof CrmOpportunityOpportunityRoute
   CrmProductProductRoute: typeof CrmProductProductRoute
   CrmProfileSettingsProfileSettingsRoute: typeof CrmProfileSettingsProfileSettingsRoute
   CrmResourceResourceRoute: typeof CrmResourceResourceRoute
@@ -468,11 +530,14 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmBranchBranchRoute: CrmBranchBranchRoute,
   CrmCallHistoryCallHistoryRoute: CrmCallHistoryCallHistoryRoute,
   CrmCategoryCategoryRoute: CrmCategoryCategoryRoute,
+  CrmChatChatRoute: CrmChatChatRoute,
   CrmCustomerSettingsCustomerAttributeRoute:
     CrmCustomerSettingsCustomerAttributeRoute,
   CrmCustomerSourceCustomerSourceRoute: CrmCustomerSourceCustomerSourceRoute,
   CrmCustomerCustomerRoute: CrmCustomerCustomerRoute,
   CrmErrorError505Route: CrmErrorError505Route,
+  CrmNotificationNotificationRoute: CrmNotificationNotificationRoute,
+  CrmOpportunityOpportunityRoute: CrmOpportunityOpportunityRoute,
   CrmProductProductRoute: CrmProductProductRoute,
   CrmProfileSettingsProfileSettingsRoute:
     CrmProfileSettingsProfileSettingsRoute,

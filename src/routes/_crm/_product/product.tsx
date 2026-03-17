@@ -22,6 +22,8 @@ import { useModalFade, useCloseModal } from "@/hooks/use-modal-animation";
 import CollapseButton from "@/components/collapse/collapse-button";
 import { unitQueries } from "@/lib/tanstack/options/unit";
 import { categoryQueries } from "@/lib/tanstack/options/category";
+import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
+import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
 
 const columnHelper = createColumnHelper<ProductDto>();
 
@@ -280,7 +282,18 @@ function RouteComponent() {
             <div className="text-muted small">Sản phẩm / Danh sách sản phẩm</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
-            <ExportButton onExport={() => {}} />
+            <ExportButton
+              onExport={(format) => {
+                switch (format) {
+                  case "xls":
+                    exportVisibleTableToXLSX(table);
+                    break;
+                  case "pdf":
+                    exportVisibleTableToPDF(table);
+                    break;
+                }
+              }}
+            />
             <RefreshButton onRefresh={() => query.refetch()} />
             <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>

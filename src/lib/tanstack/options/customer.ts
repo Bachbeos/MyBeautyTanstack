@@ -22,9 +22,6 @@ import type {
 import type { ApiResponse } from "@/lib/types/common";
 import { createKeys } from "@/lib/tanstack/query-key";
 
-/**
- * 1. Key Factory (Queries + Mutations)
- */
 export const customerKeys = createKeys("customer", {
   list: (params: CustomerListRequest) => ["list", params] as const,
   detail: (id: CustomerId) => ["detail", id] as const,
@@ -34,9 +31,6 @@ export const customerKeys = createKeys("customer", {
   infinite: (params: Omit<CustomerListRequest, "page">) => ["infinite", params] as const
 });
 
-/**
- * 2. Query Options
- */
 export const customerQueries = {
   list: (params: CustomerListRequest) =>
     queryOptions<ApiResponse<CustomerListResponse>>({
@@ -76,13 +70,9 @@ export const customerQueries = {
     })
 };
 
-/**
- * 3. Mutation Options
- */
 export const customerMutations = {
   create: () =>
     mutationOptions<ApiResponse<CustomerDto>, Error, CustomerCreateRequest>({
-      // Using factory for mutationKey
       mutationKey: customerKeys.create(),
       mutationFn: (body) => upsertCustomer(body),
       meta: {
@@ -93,7 +83,6 @@ export const customerMutations = {
 
   update: () =>
     mutationOptions<ApiResponse<CustomerDto>, Error, CustomerUpdateRequest>({
-      // Using factory for mutationKey
       mutationKey: customerKeys.update(),
       mutationFn: (body) => upsertCustomer(body),
       meta: {
@@ -104,7 +93,6 @@ export const customerMutations = {
 
   delete: () =>
     mutationOptions<ApiResponse<void>, Error, CustomerId>({
-      // Using factory for mutationKey
       mutationKey: customerKeys.delete(),
       mutationFn: (id) => deleteCustomer(id),
       meta: {

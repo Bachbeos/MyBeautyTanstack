@@ -1,7 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { z } from "zod";
 import { useAppForm } from "@/components/form/hooks";
 import type { CategoryDto } from "@/lib/types/category";
+import { uploadFile } from "@/lib/api/upload-image";
+import "./formCategory.scss";
 
 const categorySchema = z.object({
   id: z.number().optional(),
@@ -32,6 +34,7 @@ export function CategoryForm({
   onLoadMoreParents
 }: CategoryFormProps) {
   const isReadOnly = mode === "detail";
+  const [uploading, setUploading] = useState(false);
 
   const typeOptions = [
     { label: "Dịch vụ", value: 1 },
@@ -75,6 +78,27 @@ export function CategoryForm({
     }
   }, [category]);
 
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      e.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await uploadFile(file);
+      if (response?.result) {
+        form.setFieldValue("avatar", response.result);
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
   return (
     <form
       id="category-form"
@@ -84,28 +108,62 @@ export function CategoryForm({
       }}
     >
       <div className="row">
-        <div className="col-lg-4 text-center">
-          <label className="form-label fw-bold">Ảnh đại diện</label>
-          <div
-            className="border rounded d-flex align-items-center justify-content-center bg-light position-relative overflow-hidden mx-auto"
-            style={{
-              width: "100%",
-              aspectRatio: "1/1",
-              cursor: isReadOnly ? "default" : "pointer"
-            }}
-          >
-            {form.getFieldValue("avatar") ? (
-              <img src={form.getFieldValue("avatar")} className="w-100 h-100 object-fit-cover" />
-            ) : (
-              <div className="text-muted">
-                <i className="ti ti-photo fs-1"></i>
-                <p className="small mb-0">Tải ảnh lên</p>
+        <div className="col-12 mb-3 ml-12">
+          <form.AppField name="avatar">
+            {(f) => (
+              <div className="profile-upload d-flex align-items-center">
+                <div className="profile-upload-img avatar avatar-xxl border border-dashed rounded position-relative flex-shrink-0">
+                  {form.getFieldValue("avatar") ? (
+                    <img
+                      src={form.getFieldValue("avatar") as string}
+                      alt="avatar"
+                      style={{
+                        width: 80,
+                        height: 80,
+                        objectFit: "cover",
+                        borderRadius: 8
+                      }}
+                    />
+                  ) : (
+                    <div className="d-flex align-items-center justify-content-center h-100">
+                      <i className="ti ti-photo text-dark fs-16"></i>
+                    </div>
+                  )}
+                  {form.getFieldValue("avatar") && (
+                    <button
+                      type="button"
+                      className="profile-remove btn btn-sm position-absolute"
+                      style={{ top: 6, right: 6 }}
+                      onClick={() => form.setFieldValue("avatar", "")}
+                    >
+                      <i className="ti ti-x" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="profile-upload-content ms-3">
+                  <label
+                    className="d-inline-flex align-items-center position-relative btn btn-primary btn-sm mb-2"
+                    style={{ cursor: "pointer" }}
+                  >
+                    <i className="ti ti-file-broken me-1" />
+                    {uploading ? "Đang tải..." : "Tải ảnh lên"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="position-absolute w-100 h-100 opacity-0 top-0 start-0"
+                      onChange={handleFileChange}
+                      disabled={uploading || isReadOnly}
+                    />
+                  </label>
+                  <p className="mb-0">JPG, GIF hoặc PNG. Tối đa 5MB</p>
+                </div>
               </div>
             )}
-          </div>
+          </form.AppField>
         </div>
 
-        <div className="col-lg-8">
+        <div className="col-12">
           <div className="row">
             <div className="col-12 mb-3">
               <form.AppField name="name">

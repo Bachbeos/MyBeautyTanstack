@@ -1,4 +1,9 @@
-import { queryOptions, mutationOptions } from "@tanstack/react-query";
+import {
+  queryOptions,
+  mutationOptions,
+  infiniteQueryOptions,
+  type InfiniteData
+} from "@tanstack/react-query";
 import {
   getCustomerSources,
   getCustomerSourceDetail,
@@ -22,7 +27,8 @@ export const customerSourceKeys = createKeys("customerSource", {
   detail: (id: CustomerSourceId) => ["detail", id] as const,
   create: () => ["create"] as const,
   update: () => ["update"] as const,
-  delete: () => ["delete"] as const
+  delete: () => ["delete"] as const,
+  infinite: (params: Omit<CustomerSourceListRequest, "page">) => ["infinite", params] as const
 });
 
 export const customerSourceQueries = {
@@ -30,6 +36,30 @@ export const customerSourceQueries = {
     queryOptions<ApiResponse<CustomerSourceListResponse>>({
       queryKey: customerSourceKeys.list(params),
       queryFn: ({ signal }) => getCustomerSources(params, signal)
+    }),
+
+  infinite: (params: Omit<CustomerSourceListRequest, "page">) =>
+    infiniteQueryOptions<
+      ApiResponse<CustomerSourceListResponse>,
+      Error,
+      InfiniteData<ApiResponse<CustomerSourceListResponse>>,
+      ReturnType<typeof customerSourceKeys.infinite>,
+      number
+    >({
+      queryKey: customerSourceKeys.infinite(params),
+      initialPageParam: 1,
+      queryFn: ({ signal, pageParam }) =>
+        getCustomerSources({ ...(params as any), page: pageParam }, signal),
+      getNextPageParam: (lastPage, _pages, lastPageParam) => {
+        const items = lastPage?.result?.items ?? [];
+        const total = lastPage?.result?.total ?? 0;
+        const limit = (params as any).limit ?? items.length ?? 0;
+
+        const loadedSoFar = lastPageParam * (limit || 0);
+        if (!limit) return items.length > 0 ? lastPageParam + 1 : undefined;
+
+        return loadedSoFar < total ? lastPageParam + 1 : undefined;
+      }
     }),
 
   detail: (id: CustomerSourceId) =>

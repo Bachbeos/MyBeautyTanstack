@@ -56,8 +56,8 @@ export function DataTable<TData>({
         </div>
 
         <div className="d-flex align-items-center gap-2">
-          {toolbarRight}
           <DataTableViewOptions table={table} />
+          {toolbarRight}
         </div>
       </div>
 

@@ -6,6 +6,8 @@ import ActionsTable from "@/components/table/actions-table";
 import { DataTable } from "@/components/table/data-table";
 import AddButton from "@/components/ui/add-button";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
+import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
+import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
 import { categoryQueries } from "@/lib/tanstack/options/category";
 import { serviceMutations, serviceQueries } from "@/lib/tanstack/options/service";
 import type { ServiceDto } from "@/lib/types/service";
@@ -255,7 +257,18 @@ function RouteComponent() {
             <div className="text-muted small">Dịch vụ / Danh sách</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
-            <ExportButton onExport={() => {}} />
+            <ExportButton
+              onExport={(format) => {
+                switch (format) {
+                  case "xls":
+                    exportVisibleTableToXLSX(table);
+                    break;
+                  case "pdf":
+                    exportVisibleTableToPDF(table);
+                    break;
+                }
+              }}
+            />
             <RefreshButton onRefresh={() => query.refetch()} />
           </div>
         </div>

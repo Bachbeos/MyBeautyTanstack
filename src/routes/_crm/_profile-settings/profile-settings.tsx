@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 
-import { userQueries, userMutations, userKeys } from "@/lib/tanstack/options/user";
+import { userQueries, userMutations } from "@/lib/tanstack/options/user";
 import { useAppForm } from "@/components/form/hooks";
 import { AsyncBoundary } from "@/components/async-boundary";
 import { useVietnamLocations } from "@/hooks/use-vietnam-locations";
+import { uploadFile } from "@/lib/api/upload-image";
 
 const profileSchema = z.object({
   id: z.any(),
@@ -73,36 +74,36 @@ function RouteComponent() {
     }
   }, [user, location.provinces]);
 
-  // Logic upload file giữ nguyên từ bản cũ của Bách
-  // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (!file) return;
-  //   setUploading(true);
-  //   try {
-  //     const response = await uploadFile(file); // Call API upload
-  //     if (response && response.code === 200) {
-  //       form.setFieldValue("avatar", response.result);
-  //     }
-  //   } catch (err) {
-  //     console.error("Upload error:", err);
-  //   } finally {
-  //     setUploading(false);
-  //   }
-  // };
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      e.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await uploadFile(file);
+      if (response?.result) {
+        form.setFieldValue("avatar", response.result);
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
 
   return (
     <div className="page-wrapper">
       <div className="content">
-        {/* Header Breadcrumb giữ nguyên từ Profile.tsx cũ */}
         <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
           <div>
             <h4 className="mb-1">Cài đặt chung</h4>
             <nav aria-label="breadcrumb">
               <ol className="breadcrumb mb-0 p-0">
-                <li className="breadcrumb-item">
-                  <a href="/">Trang chủ</a>
-                </li>
-                <li className="breadcrumb-item active">Cài đặt chung</li>
+                <div className="text-muted small">Cài đặt chung / Hồ sơ cá nhân</div>
               </ol>
             </nav>
           </div>
@@ -189,7 +190,13 @@ function RouteComponent() {
                             >
                               <i className="ti ti-file-broken me-1" />
                               {uploading ? "Đang tải..." : "Tải ảnh lên"}
-                              {/* <input type="file" accept="image/*" className="position-absolute w-100 h-100 opacity-0 top-0 start-0" onChange={handleFileChange} disabled={uploading} /> */}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="position-absolute w-100 h-100 opacity-0 top-0 start-0"
+                                onChange={handleFileChange}
+                                disabled={uploading}
+                              />
                             </label>
                             <p className="mb-0">JPG, GIF hoặc PNG. Tối đa 5MB</p>
                           </div>

@@ -11,6 +11,9 @@ import type { VoucherId } from "../types/voucher";
 import type { BranchId } from "../types/branch";
 import type { ServiceId } from "../types/service";
 import type { CustomerAttributeId } from "../types/customer-attribute";
+import type { AppointmentId } from "../types/appointment";
+import type { NotificationId } from "../types/notification";
+import type { OpportunityId } from "../types/opportunity";
 
 export const ENDPOINTS = {
   auth: {
@@ -133,5 +136,25 @@ export const ENDPOINTS = {
     update: "/customerAttribute/update",
     delete: (id: CustomerAttributeId) => `/customerAttribute/delete/${id}`,
     detail: "/customerAttribute/get"
+  },
+  appointment: {
+    list: "/schedule/list",
+    update: "/schedule/update",
+    delete: (id: AppointmentId) => `/schedule/delete/${id}`,
+    detail: "/schedule/get"
+  },
+  notification: {
+    list: "/notification/list",
+    detail: "/notification/get",
+    update: "/notification/update",
+    markRead: "/notification/mark-read",
+    markAllRead: "/notification/mark-all-read",
+    delete: (id: NotificationId) => `/notification/delete/${id}`
+  },
+  opportunity: {
+    list: "/opportunity/list",
+    update: "/opportunity/update",
+    delete: (id: OpportunityId) => `/opportunity/delete/${id}`,
+    detail: "/opportunity/get"
   }
 } as const;

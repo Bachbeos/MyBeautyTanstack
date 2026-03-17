@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { z } from "zod";
 import { useAppForm } from "@/components/form/hooks";
 import { useCollapse } from "@/hooks/use-collapse";
 import type { BranchDto } from "@/lib/types/branch";
+import { uploadFile } from "@/lib/api/upload-image";
 
 const branchSchema = z.object({
   id: z.number().optional(),
@@ -50,6 +51,7 @@ export function BranchForm({
   const isReadOnly = mode === "detail";
   const basic = useCollapse(true);
   const contact = useCollapse(false);
+  const [uploading, setUploading] = useState(false);
 
   const form = useAppForm({
     defaultValues: {
@@ -98,6 +100,27 @@ export function BranchForm({
       parentId: branch?.parentId || 0
     });
   }, [branch]);
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      e.target.value = "";
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const response = await uploadFile(file);
+      if (response?.result) {
+        form.setFieldValue("avatar", response.result);
+      }
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
 
   return (
     <form
@@ -165,8 +188,14 @@ export function BranchForm({
                           style={{ cursor: "pointer" }}
                         >
                           <i className="ti ti-file-broken me-1" />
-                          {/* {uploading ? "Đang tải..." : "Tải ảnh lên"} */}
-                          {/* <input type="file" accept="image/*" className="position-absolute w-100 h-100 opacity-0 top-0 start-0" onChange={handleFileChange} disabled={uploading} /> */}
+                          {uploading ? "Đang tải..." : "Tải ảnh lên"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="position-absolute w-100 h-100 opacity-0 top-0 start-0"
+                            onChange={handleFileChange}
+                            disabled={uploading || isReadOnly}
+                          />
                         </label>
                         <p className="mb-0">JPG, GIF hoặc PNG. Tối đa 5MB</p>
                       </div>

@@ -17,8 +17,11 @@ export function FormCheckbox({
   ...baseProps
 }: FormCheckboxProps) {
   const field = useFieldContext<boolean | number>();
-
   const id = `${field.name}-${label.replace(/\s+/g, "-").toLowerCase()}`;
+
+  const current = field.state.value;
+
+  const checked = typeof current === "number" ? current === 1 : !!current;
 
   return (
     <FormBase {...baseProps} label={fieldLabel ?? ""}>
@@ -28,8 +31,14 @@ export function FormCheckbox({
           label={label}
           className={className}
           disabled={disabled}
-          checked={!!field.state.value}
-          onChange={(checked) => field.handleChange(checked)}
+          checked={checked}
+          onChange={(nextChecked) => {
+            if (typeof current === "number") {
+              field.handleChange(nextChecked ? 1 : 0);
+            } else {
+              field.handleChange(nextChecked);
+            }
+          }}
         />
       </div>
     </FormBase>
