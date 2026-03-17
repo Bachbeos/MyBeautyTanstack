@@ -82,21 +82,29 @@ function RouteComponent() {
                       <p className="mb-0">Tham gia hệ thống My Beauty ngay hôm nay.</p>
                     </div>
 
-                    <form.AppField name="fullName">
-                      {(f) => <f.Input label="Họ và tên" />}
-                    </form.AppField>
+                    <div className="mb-3">
+                      <form.AppField name="fullName">
+                        {(f) => <f.Input label="Họ và tên" />}
+                      </form.AppField>
+                    </div>
 
-                    <form.AppField name="phone">
-                      {(f) => <f.Phone label="Số điện thoại" />}
-                    </form.AppField>
+                    <div className="mb-3">
+                      <form.AppField name="phone">
+                        {(f) => <f.Phone label="Số điện thoại" />}
+                      </form.AppField>
+                    </div>
 
-                    <form.AppField name="password">
-                      {(f) => <f.Password label="Mật khẩu" />}
-                    </form.AppField>
+                    <div className="mb-3">
+                      <form.AppField name="password">
+                        {(f) => <f.Password label="Mật khẩu" />}
+                      </form.AppField>
+                    </div>
 
-                    <form.AppField name="confirmPassword">
-                      {(f) => <f.Password label="Nhập lại mật khẩu" />}
-                    </form.AppField>
+                    <div className="mb-3">
+                      <form.AppField name="confirmPassword">
+                        {(f) => <f.Password label="Nhập lại mật khẩu" />}
+                      </form.AppField>
+                    </div>
 
                     <form.Field name="agree">
                       {(field) => (

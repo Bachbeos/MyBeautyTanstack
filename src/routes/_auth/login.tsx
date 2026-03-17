@@ -71,14 +71,19 @@ function RouteComponent() {
                     </div>
 
                     {/* Phone */}
-                    <form.AppField name="phone">
-                      {(f) => <f.Phone label="Số điện thoại" />}
-                    </form.AppField>
+                    <div className="mb-3">
+                      <form.AppField name="phone">
+                        {(f) => <f.Phone label="Số điện thoại" />}
+                      </form.AppField>
+                    </div>
 
                     {/* Password */}
-                    <form.AppField name="password">
-                      {(f) => <f.Password label="Mật khẩu" />}
-                    </form.AppField>
+                    <div className="mb-3">
+                      {" "}
+                      <form.AppField name="password">
+                        {(f) => <f.Password label="Mật khẩu" />}
+                      </form.AppField>
+                    </div>
 
                     {/* Remember */}
                     <form.Field name="remember">
