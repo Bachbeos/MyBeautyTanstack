@@ -7,7 +7,6 @@ import SubMenuMotion from "./SubMenuMotion";
 import logo from "@assets/img/logo.svg";
 import logoSmall from "@assets/img/logo-small.svg";
 import logoWhite from "@assets/img/logo-white.svg";
-import { no } from "zod/v4/locales";
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<string>("");
