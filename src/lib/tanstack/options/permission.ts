@@ -15,9 +15,6 @@ import type {
   ResourcePermissionDto
 } from "@/lib/types/permission";
 
-/**
- * Key Factory
- */
 export const permissionKeys = createKeys("permission", {
   all: () => [] as const,
   info: (params: PermissionInfoRequest) => ["info", params] as const,
@@ -27,9 +24,6 @@ export const permissionKeys = createKeys("permission", {
   remove: () => ["remove"] as const
 });
 
-/**
- * Query Options
- */
 export const permissionQueries = {
   info: (params: PermissionInfoRequest) =>
     queryOptions<ApiResponse<PermissionInfoResponse>>({
@@ -45,9 +39,6 @@ export const permissionQueries = {
     })
 };
 
-/**
- * Mutation Options
- */
 export const permissionMutations = {
   add: () =>
     mutationOptions<ApiResponse<void>, Error, PermissionCreateRequest>({

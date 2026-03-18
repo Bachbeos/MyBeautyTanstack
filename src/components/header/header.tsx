@@ -77,7 +77,9 @@ export default function Header() {
     }
   };
 
-  const { data: notifyPages } = useInfiniteQuery(notificationQueries.infinite({ size: 10 }));
+  const { data: notifyPages, refetch: refetchNotifications } = useInfiniteQuery(
+    notificationQueries.infinite({ size: 10 })
+  );
   const allNotifications = notifyPages?.pages.flatMap((page) => page.result?.items ?? []) ?? [];
   const notifications = (
     notifyPages?.pages.flatMap((page) => page.result?.items ?? []) ?? []
@@ -85,6 +87,11 @@ export default function Header() {
   const unreadCount = allNotifications.filter((n) => n.isRead === 0).length;
   const markRead = useMutation(notificationMutations.markRead());
   const markAllRead = useMutation(notificationMutations.markAllRead());
+
+  const handleBellClick = () => {
+    refetchNotifications();
+    setNotifOpen(!notifOpen);
+  };
 
   const handleNotifyClick = (n: NotificationDto) => {
     if (n.isRead === 0) markRead.mutate(n.id);
@@ -205,7 +212,7 @@ export default function Header() {
             <button
               className={cn("topbar-link btn dropdown-toggle drop-arrow-none", notifOpen && "show")}
               type="button"
-              onClick={() => setNotifOpen(!notifOpen)}
+              onClick={handleBellClick}
             >
               <i className="ti ti-bell-check fs-16 animate-ring"></i>
               <span className="badge rounded-pill">

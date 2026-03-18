@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import image_error500 from "@/assets/img/authentication/error-500.png";
+import image_error404 from "@/assets/img/authentication/error-404.png";
 
-export const Route = createFileRoute("/_crm/_error/error505")({
+export const Route = createFileRoute("/_crm/_error/error404")({
   component: RouteComponent
 });
 
@@ -12,20 +12,17 @@ function RouteComponent() {
         <div className="row justify-content-center align-items-center vh-100">
           <div className="col-md-8 d-flex align-items-center justify-content-center mx-auto">
             <div>
-              <div className="error-img mb-4">
-                <img src={image_error500} className="img-fluid" alt="Error 505" />
+              <div className="error-img p-4">
+                <img src={image_error404} className="img-fluid" alt="Img" />
               </div>
-
               <div className="text-center">
-                <h2 className="mb-3">Không có quyền truy cập</h2>
-
+                <h2 className="mb-3">Rất tiếc, có lỗi xảy ra</h2>
                 <p className="mb-3">
-                  Bạn không có quyền xem trang này. <br />
-                  Vui lòng liên hệ quản trị viên.
+                  Lỗi 404 Không tìm thấy trang. Rất tiếc, trang bạn đang tìm kiếm không tồn tại{" "}
+                  <br /> hoặc đã bị di chuyển.
                 </p>
-
                 <div className="pb-4">
-                  <Link to="/resource" className="btn btn-primary">
+                  <Link to="/resource" className="btn btn-primary d-inline-flex align-items-center">
                     <i className="ti ti-chevron-left me-1"></i>
                     Trở về trang chủ
                   </Link>
@@ -38,3 +35,5 @@ function RouteComponent() {
     </div>
   );
 }
+
+export default RouteComponent;
