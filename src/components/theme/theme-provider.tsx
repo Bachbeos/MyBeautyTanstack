@@ -16,13 +16,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.setAttribute("data-bs-theme", theme);
 
     // 2. Màu sắc Sidebar
-    // document.documentElement.setAttribute("data-sidebar", DEFAULT_SIDEBAR);
+    document.documentElement.setAttribute("data-sidebar", DEFAULT_SIDEBAR);
 
     // 3. Màu sắc Topbar
-    // document.documentElement.setAttribute("data-topbar", DEFAULT_TOPBAR);
+    document.documentElement.setAttribute("data-topbar", DEFAULT_TOPBAR);
 
     // 4. Màu chủ đạo hệ thống
-    // document.documentElement.setAttribute("data-color", DEFAULT_PRIMARY_COLOR);
+    document.documentElement.setAttribute("data-color", DEFAULT_PRIMARY_COLOR);
 
     localStorage.setItem("theme", theme);
   }, [theme]);
