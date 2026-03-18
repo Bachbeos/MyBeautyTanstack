@@ -46,7 +46,7 @@ function ChatComponent() {
                 </div>
               </div>
 
-              <div className="sidebar-body chat-body">
+              <div className="sidebar-body chat-body" id="chatsidebar">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="chat-title mb-0">All Chats</h5>
                 </div>
@@ -70,6 +70,7 @@ function ChatComponent() {
                               is typing<span className="dot"></span>
                               <span className="dot"></span>
                               <span className="dot"></span>
+                              <span className="dot"></span>
                             </span>
                           </p>
                         </div>
@@ -80,6 +81,38 @@ function ChatComponent() {
                           </div>
                         </div>
                       </div>
+                    </div>
+                    <div className="chat-dropdown">
+                      <a className="#" href="#" data-bs-toggle="dropdown">
+                        <i className="ti ti-dots-vertical"></i>
+                      </a>
+                      <ul className="dropdown-menu dropdown-menu-end">
+                        <li>
+                          <a className="dropdown-item" href="#">
+                            <i className="ti ti-box-align-right me-2"></i>Archive Chat
+                          </a>
+                        </li>
+                        <li>
+                          <a className="dropdown-item" href="#">
+                            <i className="ti ti-heart me-2"></i>Mark as Favourite
+                          </a>
+                        </li>
+                        <li>
+                          <a className="dropdown-item" href="#">
+                            <i className="ti ti-check me-2"></i>Mark as Unread
+                          </a>
+                        </li>
+                        <li>
+                          <a className="dropdown-item" href="#">
+                            <i className="ti ti-pinned me-2"></i>Pin Chats
+                          </a>
+                        </li>
+                        <li>
+                          <a className="dropdown-item" href="#">
+                            <i className="ti ti-trash me-2"></i>Delete
+                          </a>
+                        </li>
+                      </ul>
                     </div>
                   </div>
 
@@ -108,6 +141,38 @@ function ChatComponent() {
                         </div>
                       </div>
                     </div>
+                    <div className="chat-dropdown">
+                      <a className="#" href="#" data-bs-toggle="dropdown">
+                        <i className="ti ti-dots-vertical"></i>
+                      </a>
+                      <ul className="dropdown-menu dropdown-menu-end">
+                        <li>
+                          <a className="dropdown-item" href="#">
+                            <i className="ti ti-box-align-right me-2"></i>Archive Chat
+                          </a>
+                        </li>
+                        <li>
+                          <a className="dropdown-item" href="#">
+                            <i className="ti ti-heart me-2"></i>Mark as Favourite
+                          </a>
+                        </li>
+                        <li>
+                          <a className="dropdown-item" href="#">
+                            <i className="ti ti-check me-2"></i>Mark as Unread
+                          </a>
+                        </li>
+                        <li>
+                          <a className="dropdown-item" href="#">
+                            <i className="ti ti-pinned me-2"></i>Pin Chats
+                          </a>
+                        </li>
+                        <li>
+                          <a className="dropdown-item" href="#">
+                            <i className="ti ti-trash me-2"></i>Delete
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -118,6 +183,11 @@ function ChatComponent() {
           <div className="chat chat-messages show" id="middle">
             <div className="chat-header">
               <div className="user-details">
+                <div className="d-xl-none">
+                  <a className="text-muted chat-close me-1" href="#">
+                    <i className="ti ti-circle-arrow-left"></i>
+                  </a>
+                </div>
                 <div className="avatar online flex-shrink-0">
                   <img
                     src="assets/img/profiles/avatar-01.jpg"
@@ -126,12 +196,23 @@ function ChatComponent() {
                   />
                 </div>
                 <div className="ms-2 overflow-hidden">
-                  <h6 className="fw-medium mb-1">Anthony Lewis</h6>
+                  <h6 className="fw-medium mb-1 text-dark">Anthony Lewis</h6>
                   <p className="fs-13 mb-0">Online</p>
                 </div>
               </div>
               <div className="chat-options">
                 <ul className="list-unstyled d-flex gap-2">
+                  <li>
+                    <a
+                      href="javascript:void(0)"
+                      className="btn chat-search-btn"
+                      data-bs-toggle="tooltip"
+                      data-bs-placement="bottom"
+                      title="Search"
+                    >
+                      <i className="ti ti-search text-muted"></i>
+                    </a>
+                  </li>
                   <li>
                     <button className="btn no-bg">
                       <i className="ti ti-search text-muted"></i>

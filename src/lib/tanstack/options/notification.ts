@@ -57,7 +57,8 @@ export const notificationQueries = {
 
         const loadedSoFar = lastPageParam * limit;
         return loadedSoFar < total ? lastPageParam + 1 : undefined;
-      }
+      },
+      staleTime: Infinity
     }),
 
   detail: (id: NotificationId) =>

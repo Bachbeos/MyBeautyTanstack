@@ -25,7 +25,7 @@ type ResourceFormValues = z.infer<typeof resourceSchema>;
 
 const action_options = [
   { label: "Xem", value: "VIEW" },
-  { label: "Thêm", value: "CREATE" },
+  { label: "Thêm", value: "ADD" },
   { label: "Sửa", value: "UPDATE" },
   { label: "Xóa", value: "DELETE" }
 ];
