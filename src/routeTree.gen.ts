@@ -8,516 +8,541 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as CrmRouteImport } from "./routes/_crm";
-import { Route as AuthRegisterRouteImport } from "./routes/_auth/register";
-import { Route as AuthLoginRouteImport } from "./routes/_auth/login";
-import { Route as AuthForgotPasswordRouteImport } from "./routes/_auth/forgot-password";
-import { Route as CrmVoucherVoucherRouteImport } from "./routes/_crm/_voucher/voucher";
-import { Route as CrmUserUserRouteImport } from "./routes/_crm/_user/user";
-import { Route as CrmUnitUnitRouteImport } from "./routes/_crm/_unit/unit";
-import { Route as CrmServiceServiceRouteImport } from "./routes/_crm/_service/service";
-import { Route as CrmRolesPermissionsRoleRouteImport } from "./routes/_crm/_roles-permissions/role";
-import { Route as CrmRolesPermissionsPermissionRouteImport } from "./routes/_crm/_roles-permissions/permission";
-import { Route as CrmResourceResourceRouteImport } from "./routes/_crm/_resource/resource";
-import { Route as CrmProfileSettingsProfileSettingsRouteImport } from "./routes/_crm/_profile-settings/profile-settings";
-import { Route as CrmProductProductRouteImport } from "./routes/_crm/_product/product";
-import { Route as CrmOpportunityOpportunityRouteImport } from "./routes/_crm/_opportunity/opportunity";
-import { Route as CrmNotificationNotificationRouteImport } from "./routes/_crm/_notification/notification";
-import { Route as CrmErrorError505RouteImport } from "./routes/_crm/_error/error505";
-import { Route as CrmErrorError404RouteImport } from "./routes/_crm/_error/error404";
-import { Route as CrmEmailEmailRouteImport } from "./routes/_crm/_email/email";
-import { Route as CrmCustomerCustomerRouteImport } from "./routes/_crm/_customer/customer";
-import { Route as CrmCustomerSourceCustomerSourceRouteImport } from "./routes/_crm/_customer-source/customer-source";
-import { Route as CrmCustomerSettingsCustomerAttributeRouteImport } from "./routes/_crm/_customer-settings/customer-attribute";
-import { Route as CrmChatChatRouteImport } from "./routes/_crm/_chat/chat";
-import { Route as CrmCategoryCategoryRouteImport } from "./routes/_crm/_category/category";
-import { Route as CrmCallHistoryCallHistoryRouteImport } from "./routes/_crm/_call-history/call-history";
-import { Route as CrmBranchBranchRouteImport } from "./routes/_crm/_branch/branch";
-import { Route as CrmAppointmentAppointmentRouteImport } from "./routes/_crm/_appointment/appointment";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as CrmRouteImport } from './routes/_crm'
+import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
+import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
+import { Route as CrmVoucherVoucherRouteImport } from './routes/_crm/_voucher/voucher'
+import { Route as CrmUserUserRouteImport } from './routes/_crm/_user/user'
+import { Route as CrmUnitUnitRouteImport } from './routes/_crm/_unit/unit'
+import { Route as CrmServiceServiceRouteImport } from './routes/_crm/_service/service'
+import { Route as CrmRolesPermissionsRoleRouteImport } from './routes/_crm/_roles-permissions/role'
+import { Route as CrmRolesPermissionsPermissionRouteImport } from './routes/_crm/_roles-permissions/permission'
+import { Route as CrmResourceResourceRouteImport } from './routes/_crm/_resource/resource'
+import { Route as CrmProfileSettingsProfileSettingsRouteImport } from './routes/_crm/_profile-settings/profile-settings'
+import { Route as CrmProductProductRouteImport } from './routes/_crm/_product/product'
+import { Route as CrmOpportunityOpportunityRouteImport } from './routes/_crm/_opportunity/opportunity'
+import { Route as CrmNotificationNotificationRouteImport } from './routes/_crm/_notification/notification'
+import { Route as CrmErrorError505RouteImport } from './routes/_crm/_error/error505'
+import { Route as CrmEmailEmailRouteImport } from './routes/_crm/_email/email'
+import { Route as CrmCustomerCustomerRouteImport } from './routes/_crm/_customer/customer'
+import { Route as CrmCustomerSourceCustomerSourceRouteImport } from './routes/_crm/_customer-source/customer-source'
+import { Route as CrmCustomerSettingsCustomerAttributeRouteImport } from './routes/_crm/_customer-settings/customer-attribute'
+import { Route as CrmChatChatRouteImport } from './routes/_crm/_chat/chat'
+import { Route as CrmCategoryCategoryRouteImport } from './routes/_crm/_category/category'
+import { Route as CrmCallHistoryCallHistoryRouteImport } from './routes/_crm/_call-history/call-history'
+import { Route as CrmBranchBranchRouteImport } from './routes/_crm/_branch/branch'
+import { Route as CrmAppointmentAppointmentRouteImport } from './routes/_crm/_appointment/appointment'
 
 const CrmRoute = CrmRouteImport.update({
-  id: "/_crm",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/_crm',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
-  id: "/_auth/register",
-  path: "/register",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/_auth/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: "/_auth/login",
-  path: "/login",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/_auth/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
-  id: "/_auth/forgot-password",
-  path: "/forgot-password",
-  getParentRoute: () => rootRouteImport
-} as any);
+  id: '/_auth/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CrmVoucherVoucherRoute = CrmVoucherVoucherRouteImport.update({
-  id: "/_voucher/voucher",
-  path: "/voucher",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_voucher/voucher',
+  path: '/voucher',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmUserUserRoute = CrmUserUserRouteImport.update({
-  id: "/_user/user",
-  path: "/user",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_user/user',
+  path: '/user',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmUnitUnitRoute = CrmUnitUnitRouteImport.update({
-  id: "/_unit/unit",
-  path: "/unit",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_unit/unit',
+  path: '/unit',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmServiceServiceRoute = CrmServiceServiceRouteImport.update({
-  id: "/_service/service",
-  path: "/service",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_service/service',
+  path: '/service',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmRolesPermissionsRoleRoute = CrmRolesPermissionsRoleRouteImport.update({
-  id: "/_roles-permissions/role",
-  path: "/role",
-  getParentRoute: () => CrmRoute
-} as any);
-const CrmRolesPermissionsPermissionRoute = CrmRolesPermissionsPermissionRouteImport.update({
-  id: "/_roles-permissions/permission",
-  path: "/permission",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_roles-permissions/role',
+  path: '/role',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmRolesPermissionsPermissionRoute =
+  CrmRolesPermissionsPermissionRouteImport.update({
+    id: '/_roles-permissions/permission',
+    path: '/permission',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmResourceResourceRoute = CrmResourceResourceRouteImport.update({
-  id: "/_resource/resource",
-  path: "/resource",
-  getParentRoute: () => CrmRoute
-} as any);
-const CrmProfileSettingsProfileSettingsRoute = CrmProfileSettingsProfileSettingsRouteImport.update({
-  id: "/_profile-settings/profile-settings",
-  path: "/profile-settings",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_resource/resource',
+  path: '/resource',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmProfileSettingsProfileSettingsRoute =
+  CrmProfileSettingsProfileSettingsRouteImport.update({
+    id: '/_profile-settings/profile-settings',
+    path: '/profile-settings',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmProductProductRoute = CrmProductProductRouteImport.update({
-  id: "/_product/product",
-  path: "/product",
-  getParentRoute: () => CrmRoute
-} as any);
-const CrmOpportunityOpportunityRoute = CrmOpportunityOpportunityRouteImport.update({
-  id: "/_opportunity/opportunity",
-  path: "/opportunity",
-  getParentRoute: () => CrmRoute
-} as any);
-const CrmNotificationNotificationRoute = CrmNotificationNotificationRouteImport.update({
-  id: "/_notification/notification",
-  path: "/notification",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_product/product',
+  path: '/product',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmOpportunityOpportunityRoute =
+  CrmOpportunityOpportunityRouteImport.update({
+    id: '/_opportunity/opportunity',
+    path: '/opportunity',
+    getParentRoute: () => CrmRoute,
+  } as any)
+const CrmNotificationNotificationRoute =
+  CrmNotificationNotificationRouteImport.update({
+    id: '/_notification/notification',
+    path: '/notification',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmErrorError505Route = CrmErrorError505RouteImport.update({
-  id: "/_error/error505",
-  path: "/error505",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_error/error505',
+  path: '/error505',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmEmailEmailRoute = CrmEmailEmailRouteImport.update({
+  id: '/_email/email',
+  path: '/email',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmCustomerCustomerRoute = CrmCustomerCustomerRouteImport.update({
-  id: "/_customer/customer",
-  path: "/customer",
-  getParentRoute: () => CrmRoute
-} as any);
-const CrmCustomerSourceCustomerSourceRoute = CrmCustomerSourceCustomerSourceRouteImport.update({
-  id: "/_customer-source/customer-source",
-  path: "/customer-source",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_customer/customer',
+  path: '/customer',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmCustomerSourceCustomerSourceRoute =
+  CrmCustomerSourceCustomerSourceRouteImport.update({
+    id: '/_customer-source/customer-source',
+    path: '/customer-source',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmCustomerSettingsCustomerAttributeRoute =
   CrmCustomerSettingsCustomerAttributeRouteImport.update({
-    id: "/_customer-settings/customer-attribute",
-    path: "/customer-attribute",
-    getParentRoute: () => CrmRoute
-  } as any);
+    id: '/_customer-settings/customer-attribute',
+    path: '/customer-attribute',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmChatChatRoute = CrmChatChatRouteImport.update({
-  id: "/_chat/chat",
-  path: "/chat",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_chat/chat',
+  path: '/chat',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmCategoryCategoryRoute = CrmCategoryCategoryRouteImport.update({
-  id: "/_category/category",
-  path: "/category",
-  getParentRoute: () => CrmRoute
-} as any);
-const CrmCallHistoryCallHistoryRoute = CrmCallHistoryCallHistoryRouteImport.update({
-  id: "/_call-history/call-history",
-  path: "/call-history",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_category/category',
+  path: '/category',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmCallHistoryCallHistoryRoute =
+  CrmCallHistoryCallHistoryRouteImport.update({
+    id: '/_call-history/call-history',
+    path: '/call-history',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmBranchBranchRoute = CrmBranchBranchRouteImport.update({
-  id: "/_branch/branch",
-  path: "/branch",
-  getParentRoute: () => CrmRoute
-} as any);
-const CrmAppointmentAppointmentRoute = CrmAppointmentAppointmentRouteImport.update({
-  id: "/_appointment/appointment",
-  path: "/appointment",
-  getParentRoute: () => CrmRoute
-} as any);
+  id: '/_branch/branch',
+  path: '/branch',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmAppointmentAppointmentRoute =
+  CrmAppointmentAppointmentRouteImport.update({
+    id: '/_appointment/appointment',
+    path: '/appointment',
+    getParentRoute: () => CrmRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof CrmRouteWithChildren;
-  "/forgot-password": typeof AuthForgotPasswordRoute;
-  "/login": typeof AuthLoginRoute;
-  "/register": typeof AuthRegisterRoute;
-  "/appointment": typeof CrmAppointmentAppointmentRoute;
-  "/branch": typeof CrmBranchBranchRoute;
-  "/call-history": typeof CrmCallHistoryCallHistoryRoute;
-  "/category": typeof CrmCategoryCategoryRoute;
-  "/chat": typeof CrmChatChatRoute;
-  "/customer-attribute": typeof CrmCustomerSettingsCustomerAttributeRoute;
-  "/customer-source": typeof CrmCustomerSourceCustomerSourceRoute;
-  "/customer": typeof CrmCustomerCustomerRoute;
-  "/error505": typeof CrmErrorError505Route;
-  "/notification": typeof CrmNotificationNotificationRoute;
-  "/opportunity": typeof CrmOpportunityOpportunityRoute;
-  "/product": typeof CrmProductProductRoute;
-  "/profile-settings": typeof CrmProfileSettingsProfileSettingsRoute;
-  "/resource": typeof CrmResourceResourceRoute;
-  "/permission": typeof CrmRolesPermissionsPermissionRoute;
-  "/role": typeof CrmRolesPermissionsRoleRoute;
-  "/service": typeof CrmServiceServiceRoute;
-  "/unit": typeof CrmUnitUnitRoute;
-  "/user": typeof CrmUserUserRoute;
-  "/voucher": typeof CrmVoucherVoucherRoute;
+  '/': typeof CrmRouteWithChildren
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/register': typeof AuthRegisterRoute
+  '/appointment': typeof CrmAppointmentAppointmentRoute
+  '/branch': typeof CrmBranchBranchRoute
+  '/call-history': typeof CrmCallHistoryCallHistoryRoute
+  '/category': typeof CrmCategoryCategoryRoute
+  '/chat': typeof CrmChatChatRoute
+  '/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
+  '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
+  '/customer': typeof CrmCustomerCustomerRoute
+  '/email': typeof CrmEmailEmailRoute
+  '/error505': typeof CrmErrorError505Route
+  '/notification': typeof CrmNotificationNotificationRoute
+  '/opportunity': typeof CrmOpportunityOpportunityRoute
+  '/product': typeof CrmProductProductRoute
+  '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
+  '/resource': typeof CrmResourceResourceRoute
+  '/permission': typeof CrmRolesPermissionsPermissionRoute
+  '/role': typeof CrmRolesPermissionsRoleRoute
+  '/service': typeof CrmServiceServiceRoute
+  '/unit': typeof CrmUnitUnitRoute
+  '/user': typeof CrmUserUserRoute
+  '/voucher': typeof CrmVoucherVoucherRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof CrmRouteWithChildren;
-  "/forgot-password": typeof AuthForgotPasswordRoute;
-  "/login": typeof AuthLoginRoute;
-  "/register": typeof AuthRegisterRoute;
-  "/appointment": typeof CrmAppointmentAppointmentRoute;
-  "/branch": typeof CrmBranchBranchRoute;
-  "/call-history": typeof CrmCallHistoryCallHistoryRoute;
-  "/category": typeof CrmCategoryCategoryRoute;
-  "/chat": typeof CrmChatChatRoute;
-  "/customer-attribute": typeof CrmCustomerSettingsCustomerAttributeRoute;
-  "/customer-source": typeof CrmCustomerSourceCustomerSourceRoute;
-  "/customer": typeof CrmCustomerCustomerRoute;
-  "/error505": typeof CrmErrorError505Route;
-  "/notification": typeof CrmNotificationNotificationRoute;
-  "/opportunity": typeof CrmOpportunityOpportunityRoute;
-  "/product": typeof CrmProductProductRoute;
-  "/profile-settings": typeof CrmProfileSettingsProfileSettingsRoute;
-  "/resource": typeof CrmResourceResourceRoute;
-  "/permission": typeof CrmRolesPermissionsPermissionRoute;
-  "/role": typeof CrmRolesPermissionsRoleRoute;
-  "/service": typeof CrmServiceServiceRoute;
-  "/unit": typeof CrmUnitUnitRoute;
-  "/user": typeof CrmUserUserRoute;
-  "/voucher": typeof CrmVoucherVoucherRoute;
+  '/': typeof CrmRouteWithChildren
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/register': typeof AuthRegisterRoute
+  '/appointment': typeof CrmAppointmentAppointmentRoute
+  '/branch': typeof CrmBranchBranchRoute
+  '/call-history': typeof CrmCallHistoryCallHistoryRoute
+  '/category': typeof CrmCategoryCategoryRoute
+  '/chat': typeof CrmChatChatRoute
+  '/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
+  '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
+  '/customer': typeof CrmCustomerCustomerRoute
+  '/email': typeof CrmEmailEmailRoute
+  '/error505': typeof CrmErrorError505Route
+  '/notification': typeof CrmNotificationNotificationRoute
+  '/opportunity': typeof CrmOpportunityOpportunityRoute
+  '/product': typeof CrmProductProductRoute
+  '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
+  '/resource': typeof CrmResourceResourceRoute
+  '/permission': typeof CrmRolesPermissionsPermissionRoute
+  '/role': typeof CrmRolesPermissionsRoleRoute
+  '/service': typeof CrmServiceServiceRoute
+  '/unit': typeof CrmUnitUnitRoute
+  '/user': typeof CrmUserUserRoute
+  '/voucher': typeof CrmVoucherVoucherRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/_crm": typeof CrmRouteWithChildren;
-  "/_auth/forgot-password": typeof AuthForgotPasswordRoute;
-  "/_auth/login": typeof AuthLoginRoute;
-  "/_auth/register": typeof AuthRegisterRoute;
-  "/_crm/_appointment/appointment": typeof CrmAppointmentAppointmentRoute;
-  "/_crm/_branch/branch": typeof CrmBranchBranchRoute;
-  "/_crm/_call-history/call-history": typeof CrmCallHistoryCallHistoryRoute;
-  "/_crm/_category/category": typeof CrmCategoryCategoryRoute;
-  "/_crm/_chat/chat": typeof CrmChatChatRoute;
-  "/_crm/_customer-settings/customer-attribute": typeof CrmCustomerSettingsCustomerAttributeRoute;
-  "/_crm/_customer-source/customer-source": typeof CrmCustomerSourceCustomerSourceRoute;
-  "/_crm/_customer/customer": typeof CrmCustomerCustomerRoute;
-  "/_crm/_error/error505": typeof CrmErrorError505Route;
-  "/_crm/_notification/notification": typeof CrmNotificationNotificationRoute;
-  "/_crm/_opportunity/opportunity": typeof CrmOpportunityOpportunityRoute;
-  "/_crm/_product/product": typeof CrmProductProductRoute;
-  "/_crm/_profile-settings/profile-settings": typeof CrmProfileSettingsProfileSettingsRoute;
-  "/_crm/_resource/resource": typeof CrmResourceResourceRoute;
-  "/_crm/_roles-permissions/permission": typeof CrmRolesPermissionsPermissionRoute;
-  "/_crm/_roles-permissions/role": typeof CrmRolesPermissionsRoleRoute;
-  "/_crm/_service/service": typeof CrmServiceServiceRoute;
-  "/_crm/_unit/unit": typeof CrmUnitUnitRoute;
-  "/_crm/_user/user": typeof CrmUserUserRoute;
-  "/_crm/_voucher/voucher": typeof CrmVoucherVoucherRoute;
+  __root__: typeof rootRouteImport
+  '/_crm': typeof CrmRouteWithChildren
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/register': typeof AuthRegisterRoute
+  '/_crm/_appointment/appointment': typeof CrmAppointmentAppointmentRoute
+  '/_crm/_branch/branch': typeof CrmBranchBranchRoute
+  '/_crm/_call-history/call-history': typeof CrmCallHistoryCallHistoryRoute
+  '/_crm/_category/category': typeof CrmCategoryCategoryRoute
+  '/_crm/_chat/chat': typeof CrmChatChatRoute
+  '/_crm/_customer-settings/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
+  '/_crm/_customer-source/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
+  '/_crm/_customer/customer': typeof CrmCustomerCustomerRoute
+  '/_crm/_email/email': typeof CrmEmailEmailRoute
+  '/_crm/_error/error505': typeof CrmErrorError505Route
+  '/_crm/_notification/notification': typeof CrmNotificationNotificationRoute
+  '/_crm/_opportunity/opportunity': typeof CrmOpportunityOpportunityRoute
+  '/_crm/_product/product': typeof CrmProductProductRoute
+  '/_crm/_profile-settings/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
+  '/_crm/_resource/resource': typeof CrmResourceResourceRoute
+  '/_crm/_roles-permissions/permission': typeof CrmRolesPermissionsPermissionRoute
+  '/_crm/_roles-permissions/role': typeof CrmRolesPermissionsRoleRoute
+  '/_crm/_service/service': typeof CrmServiceServiceRoute
+  '/_crm/_unit/unit': typeof CrmUnitUnitRoute
+  '/_crm/_user/user': typeof CrmUserUserRoute
+  '/_crm/_voucher/voucher': typeof CrmVoucherVoucherRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
+  fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/forgot-password"
-    | "/login"
-    | "/register"
-    | "/appointment"
-    | "/branch"
-    | "/call-history"
-    | "/category"
-    | "/chat"
-    | "/customer-attribute"
-    | "/customer-source"
-    | "/customer"
-    | "/error505"
-    | "/notification"
-    | "/opportunity"
-    | "/product"
-    | "/profile-settings"
-    | "/resource"
-    | "/permission"
-    | "/role"
-    | "/service"
-    | "/unit"
-    | "/user"
-    | "/voucher";
-  fileRoutesByTo: FileRoutesByTo;
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/appointment'
+    | '/branch'
+    | '/call-history'
+    | '/category'
+    | '/chat'
+    | '/customer-attribute'
+    | '/customer-source'
+    | '/customer'
+    | '/email'
+    | '/error505'
+    | '/notification'
+    | '/opportunity'
+    | '/product'
+    | '/profile-settings'
+    | '/resource'
+    | '/permission'
+    | '/role'
+    | '/service'
+    | '/unit'
+    | '/user'
+    | '/voucher'
+  fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/forgot-password"
-    | "/login"
-    | "/register"
-    | "/appointment"
-    | "/branch"
-    | "/call-history"
-    | "/category"
-    | "/chat"
-    | "/customer-attribute"
-    | "/customer-source"
-    | "/customer"
-    | "/error505"
-    | "/notification"
-    | "/opportunity"
-    | "/product"
-    | "/profile-settings"
-    | "/resource"
-    | "/permission"
-    | "/role"
-    | "/service"
-    | "/unit"
-    | "/user"
-    | "/voucher";
+    | '/'
+    | '/forgot-password'
+    | '/login'
+    | '/register'
+    | '/appointment'
+    | '/branch'
+    | '/call-history'
+    | '/category'
+    | '/chat'
+    | '/customer-attribute'
+    | '/customer-source'
+    | '/customer'
+    | '/email'
+    | '/error505'
+    | '/notification'
+    | '/opportunity'
+    | '/product'
+    | '/profile-settings'
+    | '/resource'
+    | '/permission'
+    | '/role'
+    | '/service'
+    | '/unit'
+    | '/user'
+    | '/voucher'
   id:
-    | "__root__"
-    | "/_crm"
-    | "/_auth/forgot-password"
-    | "/_auth/login"
-    | "/_auth/register"
-    | "/_crm/_appointment/appointment"
-    | "/_crm/_branch/branch"
-    | "/_crm/_call-history/call-history"
-    | "/_crm/_category/category"
-    | "/_crm/_chat/chat"
-    | "/_crm/_customer-settings/customer-attribute"
-    | "/_crm/_customer-source/customer-source"
-    | "/_crm/_customer/customer"
-    | "/_crm/_error/error505"
-    | "/_crm/_notification/notification"
-    | "/_crm/_opportunity/opportunity"
-    | "/_crm/_product/product"
-    | "/_crm/_profile-settings/profile-settings"
-    | "/_crm/_resource/resource"
-    | "/_crm/_roles-permissions/permission"
-    | "/_crm/_roles-permissions/role"
-    | "/_crm/_service/service"
-    | "/_crm/_unit/unit"
-    | "/_crm/_user/user"
-    | "/_crm/_voucher/voucher";
-  fileRoutesById: FileRoutesById;
+    | '__root__'
+    | '/_crm'
+    | '/_auth/forgot-password'
+    | '/_auth/login'
+    | '/_auth/register'
+    | '/_crm/_appointment/appointment'
+    | '/_crm/_branch/branch'
+    | '/_crm/_call-history/call-history'
+    | '/_crm/_category/category'
+    | '/_crm/_chat/chat'
+    | '/_crm/_customer-settings/customer-attribute'
+    | '/_crm/_customer-source/customer-source'
+    | '/_crm/_customer/customer'
+    | '/_crm/_email/email'
+    | '/_crm/_error/error505'
+    | '/_crm/_notification/notification'
+    | '/_crm/_opportunity/opportunity'
+    | '/_crm/_product/product'
+    | '/_crm/_profile-settings/profile-settings'
+    | '/_crm/_resource/resource'
+    | '/_crm/_roles-permissions/permission'
+    | '/_crm/_roles-permissions/role'
+    | '/_crm/_service/service'
+    | '/_crm/_unit/unit'
+    | '/_crm/_user/user'
+    | '/_crm/_voucher/voucher'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  CrmRoute: typeof CrmRouteWithChildren;
-  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute;
-  AuthLoginRoute: typeof AuthLoginRoute;
-  AuthRegisterRoute: typeof AuthRegisterRoute;
+  CrmRoute: typeof CrmRouteWithChildren
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/_crm": {
-      id: "/_crm";
-      path: "";
-      fullPath: "/";
-      preLoaderRoute: typeof CrmRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/_auth/register": {
-      id: "/_auth/register";
-      path: "/register";
-      fullPath: "/register";
-      preLoaderRoute: typeof AuthRegisterRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/_auth/login": {
-      id: "/_auth/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof AuthLoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/_auth/forgot-password": {
-      id: "/_auth/forgot-password";
-      path: "/forgot-password";
-      fullPath: "/forgot-password";
-      preLoaderRoute: typeof AuthForgotPasswordRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/_crm/_voucher/voucher": {
-      id: "/_crm/_voucher/voucher";
-      path: "/voucher";
-      fullPath: "/voucher";
-      preLoaderRoute: typeof CrmVoucherVoucherRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_user/user": {
-      id: "/_crm/_user/user";
-      path: "/user";
-      fullPath: "/user";
-      preLoaderRoute: typeof CrmUserUserRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_unit/unit": {
-      id: "/_crm/_unit/unit";
-      path: "/unit";
-      fullPath: "/unit";
-      preLoaderRoute: typeof CrmUnitUnitRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_service/service": {
-      id: "/_crm/_service/service";
-      path: "/service";
-      fullPath: "/service";
-      preLoaderRoute: typeof CrmServiceServiceRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_roles-permissions/role": {
-      id: "/_crm/_roles-permissions/role";
-      path: "/role";
-      fullPath: "/role";
-      preLoaderRoute: typeof CrmRolesPermissionsRoleRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_roles-permissions/permission": {
-      id: "/_crm/_roles-permissions/permission";
-      path: "/permission";
-      fullPath: "/permission";
-      preLoaderRoute: typeof CrmRolesPermissionsPermissionRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_resource/resource": {
-      id: "/_crm/_resource/resource";
-      path: "/resource";
-      fullPath: "/resource";
-      preLoaderRoute: typeof CrmResourceResourceRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_profile-settings/profile-settings": {
-      id: "/_crm/_profile-settings/profile-settings";
-      path: "/profile-settings";
-      fullPath: "/profile-settings";
-      preLoaderRoute: typeof CrmProfileSettingsProfileSettingsRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_product/product": {
-      id: "/_crm/_product/product";
-      path: "/product";
-      fullPath: "/product";
-      preLoaderRoute: typeof CrmProductProductRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_opportunity/opportunity": {
-      id: "/_crm/_opportunity/opportunity";
-      path: "/opportunity";
-      fullPath: "/opportunity";
-      preLoaderRoute: typeof CrmOpportunityOpportunityRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_notification/notification": {
-      id: "/_crm/_notification/notification";
-      path: "/notification";
-      fullPath: "/notification";
-      preLoaderRoute: typeof CrmNotificationNotificationRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_error/error505": {
-      id: "/_crm/_error/error505";
-      path: "/error505";
-      fullPath: "/error505";
-      preLoaderRoute: typeof CrmErrorError505RouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_customer/customer": {
-      id: "/_crm/_customer/customer";
-      path: "/customer";
-      fullPath: "/customer";
-      preLoaderRoute: typeof CrmCustomerCustomerRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_customer-source/customer-source": {
-      id: "/_crm/_customer-source/customer-source";
-      path: "/customer-source";
-      fullPath: "/customer-source";
-      preLoaderRoute: typeof CrmCustomerSourceCustomerSourceRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_customer-settings/customer-attribute": {
-      id: "/_crm/_customer-settings/customer-attribute";
-      path: "/customer-attribute";
-      fullPath: "/customer-attribute";
-      preLoaderRoute: typeof CrmCustomerSettingsCustomerAttributeRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_chat/chat": {
-      id: "/_crm/_chat/chat";
-      path: "/chat";
-      fullPath: "/chat";
-      preLoaderRoute: typeof CrmChatChatRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_category/category": {
-      id: "/_crm/_category/category";
-      path: "/category";
-      fullPath: "/category";
-      preLoaderRoute: typeof CrmCategoryCategoryRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_call-history/call-history": {
-      id: "/_crm/_call-history/call-history";
-      path: "/call-history";
-      fullPath: "/call-history";
-      preLoaderRoute: typeof CrmCallHistoryCallHistoryRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_branch/branch": {
-      id: "/_crm/_branch/branch";
-      path: "/branch";
-      fullPath: "/branch";
-      preLoaderRoute: typeof CrmBranchBranchRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
-    "/_crm/_appointment/appointment": {
-      id: "/_crm/_appointment/appointment";
-      path: "/appointment";
-      fullPath: "/appointment";
-      preLoaderRoute: typeof CrmAppointmentAppointmentRouteImport;
-      parentRoute: typeof CrmRoute;
-    };
+    '/_crm': {
+      id: '/_crm'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof CrmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/register': {
+      id: '/_auth/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_crm/_voucher/voucher': {
+      id: '/_crm/_voucher/voucher'
+      path: '/voucher'
+      fullPath: '/voucher'
+      preLoaderRoute: typeof CrmVoucherVoucherRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_user/user': {
+      id: '/_crm/_user/user'
+      path: '/user'
+      fullPath: '/user'
+      preLoaderRoute: typeof CrmUserUserRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_unit/unit': {
+      id: '/_crm/_unit/unit'
+      path: '/unit'
+      fullPath: '/unit'
+      preLoaderRoute: typeof CrmUnitUnitRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_service/service': {
+      id: '/_crm/_service/service'
+      path: '/service'
+      fullPath: '/service'
+      preLoaderRoute: typeof CrmServiceServiceRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_roles-permissions/role': {
+      id: '/_crm/_roles-permissions/role'
+      path: '/role'
+      fullPath: '/role'
+      preLoaderRoute: typeof CrmRolesPermissionsRoleRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_roles-permissions/permission': {
+      id: '/_crm/_roles-permissions/permission'
+      path: '/permission'
+      fullPath: '/permission'
+      preLoaderRoute: typeof CrmRolesPermissionsPermissionRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_resource/resource': {
+      id: '/_crm/_resource/resource'
+      path: '/resource'
+      fullPath: '/resource'
+      preLoaderRoute: typeof CrmResourceResourceRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_profile-settings/profile-settings': {
+      id: '/_crm/_profile-settings/profile-settings'
+      path: '/profile-settings'
+      fullPath: '/profile-settings'
+      preLoaderRoute: typeof CrmProfileSettingsProfileSettingsRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_product/product': {
+      id: '/_crm/_product/product'
+      path: '/product'
+      fullPath: '/product'
+      preLoaderRoute: typeof CrmProductProductRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_opportunity/opportunity': {
+      id: '/_crm/_opportunity/opportunity'
+      path: '/opportunity'
+      fullPath: '/opportunity'
+      preLoaderRoute: typeof CrmOpportunityOpportunityRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_notification/notification': {
+      id: '/_crm/_notification/notification'
+      path: '/notification'
+      fullPath: '/notification'
+      preLoaderRoute: typeof CrmNotificationNotificationRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_error/error505': {
+      id: '/_crm/_error/error505'
+      path: '/error505'
+      fullPath: '/error505'
+      preLoaderRoute: typeof CrmErrorError505RouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_email/email': {
+      id: '/_crm/_email/email'
+      path: '/email'
+      fullPath: '/email'
+      preLoaderRoute: typeof CrmEmailEmailRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_customer/customer': {
+      id: '/_crm/_customer/customer'
+      path: '/customer'
+      fullPath: '/customer'
+      preLoaderRoute: typeof CrmCustomerCustomerRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_customer-source/customer-source': {
+      id: '/_crm/_customer-source/customer-source'
+      path: '/customer-source'
+      fullPath: '/customer-source'
+      preLoaderRoute: typeof CrmCustomerSourceCustomerSourceRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_customer-settings/customer-attribute': {
+      id: '/_crm/_customer-settings/customer-attribute'
+      path: '/customer-attribute'
+      fullPath: '/customer-attribute'
+      preLoaderRoute: typeof CrmCustomerSettingsCustomerAttributeRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_chat/chat': {
+      id: '/_crm/_chat/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof CrmChatChatRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_category/category': {
+      id: '/_crm/_category/category'
+      path: '/category'
+      fullPath: '/category'
+      preLoaderRoute: typeof CrmCategoryCategoryRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_call-history/call-history': {
+      id: '/_crm/_call-history/call-history'
+      path: '/call-history'
+      fullPath: '/call-history'
+      preLoaderRoute: typeof CrmCallHistoryCallHistoryRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_branch/branch': {
+      id: '/_crm/_branch/branch'
+      path: '/branch'
+      fullPath: '/branch'
+      preLoaderRoute: typeof CrmBranchBranchRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_appointment/appointment': {
+      id: '/_crm/_appointment/appointment'
+      path: '/appointment'
+      fullPath: '/appointment'
+      preLoaderRoute: typeof CrmAppointmentAppointmentRouteImport
+      parentRoute: typeof CrmRoute
+    }
   }
 }
 
 interface CrmRouteChildren {
-  CrmAppointmentAppointmentRoute: typeof CrmAppointmentAppointmentRoute;
-  CrmBranchBranchRoute: typeof CrmBranchBranchRoute;
-  CrmCallHistoryCallHistoryRoute: typeof CrmCallHistoryCallHistoryRoute;
-  CrmCategoryCategoryRoute: typeof CrmCategoryCategoryRoute;
-  CrmChatChatRoute: typeof CrmChatChatRoute;
-  CrmCustomerSettingsCustomerAttributeRoute: typeof CrmCustomerSettingsCustomerAttributeRoute;
-  CrmCustomerSourceCustomerSourceRoute: typeof CrmCustomerSourceCustomerSourceRoute;
-  CrmCustomerCustomerRoute: typeof CrmCustomerCustomerRoute;
-  CrmErrorError505Route: typeof CrmErrorError505Route;
-  CrmNotificationNotificationRoute: typeof CrmNotificationNotificationRoute;
-  CrmOpportunityOpportunityRoute: typeof CrmOpportunityOpportunityRoute;
-  CrmProductProductRoute: typeof CrmProductProductRoute;
-  CrmProfileSettingsProfileSettingsRoute: typeof CrmProfileSettingsProfileSettingsRoute;
-  CrmResourceResourceRoute: typeof CrmResourceResourceRoute;
-  CrmRolesPermissionsPermissionRoute: typeof CrmRolesPermissionsPermissionRoute;
-  CrmRolesPermissionsRoleRoute: typeof CrmRolesPermissionsRoleRoute;
-  CrmServiceServiceRoute: typeof CrmServiceServiceRoute;
-  CrmUnitUnitRoute: typeof CrmUnitUnitRoute;
-  CrmUserUserRoute: typeof CrmUserUserRoute;
-  CrmVoucherVoucherRoute: typeof CrmVoucherVoucherRoute;
+  CrmAppointmentAppointmentRoute: typeof CrmAppointmentAppointmentRoute
+  CrmBranchBranchRoute: typeof CrmBranchBranchRoute
+  CrmCallHistoryCallHistoryRoute: typeof CrmCallHistoryCallHistoryRoute
+  CrmCategoryCategoryRoute: typeof CrmCategoryCategoryRoute
+  CrmChatChatRoute: typeof CrmChatChatRoute
+  CrmCustomerSettingsCustomerAttributeRoute: typeof CrmCustomerSettingsCustomerAttributeRoute
+  CrmCustomerSourceCustomerSourceRoute: typeof CrmCustomerSourceCustomerSourceRoute
+  CrmCustomerCustomerRoute: typeof CrmCustomerCustomerRoute
+  CrmEmailEmailRoute: typeof CrmEmailEmailRoute
+  CrmErrorError505Route: typeof CrmErrorError505Route
+  CrmNotificationNotificationRoute: typeof CrmNotificationNotificationRoute
+  CrmOpportunityOpportunityRoute: typeof CrmOpportunityOpportunityRoute
+  CrmProductProductRoute: typeof CrmProductProductRoute
+  CrmProfileSettingsProfileSettingsRoute: typeof CrmProfileSettingsProfileSettingsRoute
+  CrmResourceResourceRoute: typeof CrmResourceResourceRoute
+  CrmRolesPermissionsPermissionRoute: typeof CrmRolesPermissionsPermissionRoute
+  CrmRolesPermissionsRoleRoute: typeof CrmRolesPermissionsRoleRoute
+  CrmServiceServiceRoute: typeof CrmServiceServiceRoute
+  CrmUnitUnitRoute: typeof CrmUnitUnitRoute
+  CrmUserUserRoute: typeof CrmUserUserRoute
+  CrmVoucherVoucherRoute: typeof CrmVoucherVoucherRoute
 }
 
 const CrmRouteChildren: CrmRouteChildren = {
@@ -526,31 +551,34 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmCallHistoryCallHistoryRoute: CrmCallHistoryCallHistoryRoute,
   CrmCategoryCategoryRoute: CrmCategoryCategoryRoute,
   CrmChatChatRoute: CrmChatChatRoute,
-  CrmCustomerSettingsCustomerAttributeRoute: CrmCustomerSettingsCustomerAttributeRoute,
+  CrmCustomerSettingsCustomerAttributeRoute:
+    CrmCustomerSettingsCustomerAttributeRoute,
   CrmCustomerSourceCustomerSourceRoute: CrmCustomerSourceCustomerSourceRoute,
   CrmCustomerCustomerRoute: CrmCustomerCustomerRoute,
+  CrmEmailEmailRoute: CrmEmailEmailRoute,
   CrmErrorError505Route: CrmErrorError505Route,
   CrmNotificationNotificationRoute: CrmNotificationNotificationRoute,
   CrmOpportunityOpportunityRoute: CrmOpportunityOpportunityRoute,
   CrmProductProductRoute: CrmProductProductRoute,
-  CrmProfileSettingsProfileSettingsRoute: CrmProfileSettingsProfileSettingsRoute,
+  CrmProfileSettingsProfileSettingsRoute:
+    CrmProfileSettingsProfileSettingsRoute,
   CrmResourceResourceRoute: CrmResourceResourceRoute,
   CrmRolesPermissionsPermissionRoute: CrmRolesPermissionsPermissionRoute,
   CrmRolesPermissionsRoleRoute: CrmRolesPermissionsRoleRoute,
   CrmServiceServiceRoute: CrmServiceServiceRoute,
   CrmUnitUnitRoute: CrmUnitUnitRoute,
   CrmUserUserRoute: CrmUserUserRoute,
-  CrmVoucherVoucherRoute: CrmVoucherVoucherRoute
-};
+  CrmVoucherVoucherRoute: CrmVoucherVoucherRoute,
+}
 
-const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren);
+const CrmRouteWithChildren = CrmRoute._addFileChildren(CrmRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   CrmRoute: CrmRouteWithChildren,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
-  AuthRegisterRoute: AuthRegisterRoute
-};
+  AuthRegisterRoute: AuthRegisterRoute,
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
