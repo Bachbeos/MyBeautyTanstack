@@ -21,6 +21,8 @@ type FormSelectProps = Omit<FormControlProps, "label"> & {
   disabled?: boolean;
   onLoadMore?: () => void;
   isClearable?: boolean;
+  isMulti?: boolean;
+  multiValueSeparator?: string;
 };
 
 export function FormSelect({
@@ -31,16 +33,55 @@ export function FormSelect({
   disabled,
   onLoadMore,
   isClearable = true,
+  isMulti = false,
+  multiValueSeparator = ",",
   ...baseProps
 }: FormSelectProps) {
-  const field = useFieldContext<string | number>();
+  const field = useFieldContext<any>();
   const isInvalid = useFieldInvalid();
 
   const selectOptions = groups
     ? groups.map((g) => ({ label: g.label, options: g.options }))
     : options;
 
+  const getFlatOptions = (): SelectOption[] => {
+    if (groups) return groups.flatMap((g) => g.options);
+    return options ?? [];
+  };
+
+  const parseMultiValue = (raw: unknown): string[] => {
+    if (Array.isArray(raw)) {
+      return raw.map((x) => String(x)).filter(Boolean);
+    }
+
+    if (typeof raw === "string") {
+      const trimmed = raw.trim();
+      if (!trimmed) return [];
+
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map((x) => String(x)).filter(Boolean);
+        }
+      } catch {}
+
+      return trimmed
+        .split(multiValueSeparator)
+        .map((x) => x.trim())
+        .filter(Boolean);
+    }
+
+    if (raw == null) return [];
+    return [String(raw)].filter(Boolean);
+  };
+
   const getValue = () => {
+    if (isMulti) {
+      const flatOptions = getFlatOptions();
+      const selectedValues = new Set(parseMultiValue(field.state.value));
+      return flatOptions.filter((opt) => selectedValues.has(String(opt.value)));
+    }
+
     if (groups) {
       for (const group of groups) {
         const found = group.options.find((opt) => opt.value === field.state.value);
@@ -55,12 +96,23 @@ export function FormSelect({
       <Select
         instanceId={field.name}
         value={getValue()}
-        onChange={(option: any) => field.handleChange(option ? option.value : "")}
+        onChange={(option: any) => {
+          if (isMulti) {
+            const selectedValues = Array.isArray(option)
+              ? option.map((opt) => String(opt?.value ?? "")).filter(Boolean)
+              : [];
+            field.handleChange(selectedValues.join(multiValueSeparator));
+            return;
+          }
+
+          field.handleChange(option ? option.value : "");
+        }}
         options={selectOptions}
         onBlur={field.handleBlur}
         placeholder={placeholder}
         isDisabled={disabled}
         isClearable={isClearable}
+        isMulti={isMulti}
         onMenuScrollToBottom={onLoadMore}
         menuPortalTarget={typeof document !== "undefined" ? document.body : null}
         menuPosition="fixed"
@@ -88,7 +140,12 @@ export function FormSelect({
           }),
           placeholder: (base) => ({ ...base, fontSize: 14 }),
           option: (base) => ({ ...base, fontSize: 14 }),
-          singleValue: (base) => ({ ...base, fontSize: 14, color: "#707070" })
+          singleValue: (base) => ({ ...base, fontSize: 14, color: "#707070" }),
+          multiValueLabel: (base) => ({ ...base, fontSize: 13 }),
+          multiValueRemove: (base) => ({
+            ...base,
+            cursor: "pointer"
+          })
         }}
         noOptionsMessage={({ inputValue }) =>
           inputValue ? `Không tìm thấy "${inputValue}"` : "Không có lựa chọn"

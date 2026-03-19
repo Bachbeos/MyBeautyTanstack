@@ -74,6 +74,15 @@ function RouteComponent() {
   const attributes = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
 
+  const selectedAttributeId = modal.item?.id as any;
+  const detailQuery = useQuery({
+    ...customerAttributeQueries.detail(selectedAttributeId),
+    enabled:
+      !!selectedAttributeId && modalShown && (modal.type === "edit" || modal.type === "detail")
+  });
+
+  const modalItem = (detailQuery.data?.result as CustomerAttributeDto | undefined) ?? modal.item;
+
   const allAttributesQuery = useQuery(customerAttributeQueries.list({ page: 1, limit: 1000 }));
 
   const parentOptions = useMemo(() => {
@@ -224,7 +233,7 @@ function RouteComponent() {
       <ModalAttribute
         type={modal.type}
         shown={modalShown}
-        item={modal.item}
+        item={modalItem}
         onClose={closeModal}
         onSubmit={handleSubmit}
         onDelete={handleDelete}

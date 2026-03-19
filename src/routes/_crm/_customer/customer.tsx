@@ -73,6 +73,29 @@ function RouteComponent() {
   const customers = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
 
+  const selectedCustomerId = modal.item?.id as any;
+  const detailQuery = useQuery({
+    ...customerQueries.detail(selectedCustomerId),
+    enabled:
+      !!selectedCustomerId && modalShown && (modal.type === "edit" || modal.type === "detail")
+  });
+
+  const detailItem = detailQuery.data?.result as CustomerDto | undefined;
+  const listExtraInfos = ((modal.item as any)?.customerExtraInfos ??
+    (modal.item as any)?.customerExtraInfoDtos ??
+    []) as any[];
+  const detailExtraInfos = ((detailItem as any)?.customerExtraInfos ??
+    (detailItem as any)?.customerExtraInfoDtos ??
+    []) as any[];
+
+  const modalItem = detailItem
+    ? ({
+        ...(modal.item as any),
+        ...(detailItem as any),
+        customerExtraInfos: detailExtraInfos.length ? detailExtraInfos : listExtraInfos
+      } as CustomerDto)
+    : modal.item;
+
   const attrQuery = useQuery(customerAttributeQueries.list({}));
   const dynamicAttributes = attrQuery.data?.result?.items ?? [];
 
@@ -270,7 +293,7 @@ function RouteComponent() {
       <ModalCustomer
         type={modal.type}
         shown={modalShown}
-        item={modal.item}
+        item={modalItem}
         onClose={closeModal}
         onSubmit={handleSubmit}
         onDelete={handleDelete}

@@ -16,12 +16,17 @@ export function FormCheckbox({
   disabled,
   ...baseProps
 }: FormCheckboxProps) {
-  const field = useFieldContext<boolean | number>();
+  const field = useFieldContext<boolean | number | string>();
   const id = `${field.name}-${label.replace(/\s+/g, "-").toLowerCase()}`;
 
   const current = field.state.value;
 
-  const checked = typeof current === "number" ? current === 1 : !!current;
+  const checked =
+    typeof current === "number"
+      ? current === 1
+      : typeof current === "string"
+        ? current === "1" || current.toLowerCase() === "true"
+        : !!current;
 
   return (
     <FormBase {...baseProps} label={fieldLabel ?? ""}>
