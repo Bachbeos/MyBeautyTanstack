@@ -5,13 +5,21 @@ import { useCollapse } from "@/hooks/use-collapse";
 import type { BranchDto } from "@/lib/types/branch";
 import { uploadFile } from "@/lib/api/upload-image";
 
+const optionalNumberField = (schema: z.ZodNumber) =>
+  z.preprocess((value) => {
+    if (value === "" || value === null || value === undefined) {
+      return undefined;
+    }
+    return Number(value);
+  }, schema.optional());
+
 const branchSchema = z.object({
   id: z.number().optional(),
   name: z.string().min(1, "Vui lòng nhập tên chi nhánh"),
   avatar: z.string(),
-  foundingDay: z.number().min(1).max(31).optional(),
-  foundingMonth: z.number().min(1).max(12).optional(),
-  foundingYear: z.number().optional(),
+  foundingDay: optionalNumberField(z.number().min(1).max(31)),
+  foundingMonth: optionalNumberField(z.number().min(1).max(12)),
+  foundingYear: optionalNumberField(z.number()),
   status: z.number().default(1),
   description: z.string(),
   address: z.string().min(1, "Vui lòng nhập địa chỉ"),
