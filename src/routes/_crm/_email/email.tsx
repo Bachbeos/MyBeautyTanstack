@@ -53,7 +53,7 @@ function EmailPage() {
     onSubmit: async ({ value }) => {
       const unlayer = emailEditorRef.current?.editor;
 
-      unlayer?.exportHtml(({ html }) => {
+      unlayer?.exportHtml(({ html }: { html: string }) => {
         sendMailMutation.mutate({
           to: value.to,
           subject: value.subject,
@@ -66,7 +66,7 @@ function EmailPage() {
   const saveTemplate = () => {
     const unlayer = emailEditorRef.current?.editor;
 
-    unlayer?.saveDesign((designData) => {
+    unlayer?.saveDesign((designData: Record<string, unknown>) => {
       const payload = {
         name: name || "Template chưa đặt tên",
         designJson: JSON.stringify(designData)
@@ -93,7 +93,7 @@ function EmailPage() {
   const saveAsNewTemplate = () => {
     const unlayer = emailEditorRef.current?.editor;
 
-    unlayer?.saveDesign((designData) => {
+    unlayer?.saveDesign((designData: Record<string, unknown>) => {
       const payload = {
         name: name || "Template mới",
         designJson: JSON.stringify(designData)
