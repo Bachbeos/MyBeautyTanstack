@@ -213,7 +213,7 @@ export default function Sidebar() {
                     className={activeTab === "opportunitys" ? "active" : ""}
                     onClick={() => handleTabClick("opportunitys")}
                   >
-                    <i className="ti ti-user-up"></i>
+                    <i className="ti ti-checkup-list"></i>
                     <span>Cơ hội</span>
                   </Link>
                 </li>
