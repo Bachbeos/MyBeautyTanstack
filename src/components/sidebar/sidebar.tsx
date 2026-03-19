@@ -32,7 +32,8 @@ export default function Sidebar() {
     "call-history": "application",
     chat: "application",
     notification: "application",
-    "customer-attribute": "system_settings"
+    "customer-attribute": "system_settings",
+    email: "system_settings"
   };
 
   const pathToTabKey: Record<string, string> = {
@@ -52,7 +53,8 @@ export default function Sidebar() {
     "/service": "service",
     "/call-history": "call-history",
     "/appointment": "appointment",
-    "/customer-attribute": "customer-attribute"
+    "/customer-attribute": "customer-attribute",
+    "/email": "email"
   };
 
   const location = useLocation();
@@ -392,6 +394,16 @@ export default function Sidebar() {
                         style={{ background: "none" }}
                       >
                         Cài đặt khách hàng
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/email"
+                        className={activeTab === "email" ? "active" : ""}
+                        onClick={() => handleTabClick("email")}
+                        style={{ background: "none" }}
+                      >
+                        Cài đặt email
                       </Link>
                     </li>
                   </SubMenuMotion>
