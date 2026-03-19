@@ -156,5 +156,16 @@ export const ENDPOINTS = {
     update: "/opportunity/update",
     delete: (id: OpportunityId) => `/opportunity/delete/${id}`,
     detail: "/opportunity/get"
+  },
+  emailTemplate: {
+    list: "/email-templates",
+    detail: (id: number) => `/email-templates/${id}`,
+    all: "/email-templates/list",
+    create: "/email-templates",
+    update: (id: number) => `/email-templates/${id}`,
+    delete: (id: number) => `/email-templates/${id}`
+  },
+  mail: {
+    send: "/mail/send"
   }
 } as const;
