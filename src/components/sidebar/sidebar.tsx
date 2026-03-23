@@ -310,6 +310,17 @@ export default function Sidebar() {
                     <span>Bán hàng</span>
                   </Link>
                 </li>
+
+                <li>
+                  <Link
+                    to="/invoice"
+                    className={activeTab === "invoice" ? "active" : ""}
+                    onClick={() => handleTabClick("invoice")}
+                  >
+                    <i className="ti ti-file-invoice"></i>
+                    <span>Hóa đơn</span>
+                  </Link>
+                </li>
               </ul>
             </li>
 
