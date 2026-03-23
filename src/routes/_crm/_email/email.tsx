@@ -4,6 +4,8 @@ import EmailEditor, { type EditorRef, type EmailEditorProps } from "react-email-
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 
+import "@/assets/css/email-builder.css";
+
 import { EmailTemplateId, type EmailTemplateDto } from "@/lib/types/email-template";
 import { emailTemplateMutations } from "@/lib/tanstack/options/email-template";
 import { emailTemplateQueries } from "@/lib/tanstack/options/email-template";
@@ -122,7 +124,13 @@ function EmailPage() {
 
   const loadTemplateFromServer = (template: EmailTemplateDto) => {
     const unlayer = emailEditorRef.current?.editor;
-    const parsed = JSON.parse(template.designJson);
+    let parsed: Record<string, unknown> = {};
+
+    try {
+      parsed = JSON.parse(template.designJson) as Record<string, unknown>;
+    } catch {
+      parsed = {};
+    }
 
     setCurrentId(template.id as unknown as number);
     setName(template.name);
@@ -140,112 +148,162 @@ function EmailPage() {
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
-        <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
+        <div className="d-flex align-items-center justify-content-between gap-3 mb-3 flex-wrap">
           <div>
             <h4 className="mb-1 fw-bold">
-              Email Templates
+              Cài đặt email
               <span className="badge badge-soft-primary ms-2">{templates.length}</span>
             </h4>
-            <div className="text-muted small">Email / Quản lý template</div>
+            <div className="text-muted small">Thiết kế, lưu và gửi email từ template</div>
           </div>
 
-          <div className="gap-2 d-flex align-items-center flex-wrap">
-            <button
-              className="btn btn-primary"
-              onClick={saveTemplate}
-              disabled={createMutation.isPending || updateMutation.isPending}
-            >
-              {currentId ? "Cập nhật Template" : "Lưu Template"}
-            </button>
-
-            <button
-              className="btn btn-outline-primary"
-              onClick={saveAsNewTemplate}
-              disabled={createMutation.isPending}
-            >
-              Lưu thành Template mới
-            </button>
-
-            <button
-              className="btn btn-outline-danger"
-              onClick={clearCurrentTemplate}
-              disabled={!currentId && !design}
-            >
-              Bỏ chọn Template
-            </button>
+          <div className="d-flex align-items-center gap-2 flex-wrap">
+            <span className="badge bg-light text-dark border">
+              {currentId ? `Đang chọn ID: ${currentId}` : "Chưa chọn template"}
+            </span>
+            <span className={cn("badge", design ? "bg-success" : "bg-secondary")}>
+              {design ? "Đã có nội dung" : "Mẫu trống"}
+            </span>
           </div>
         </div>
 
-        <div className="card border-0 rounded-0 shadow-sm">
+        <div className="card border-0 rounded-0 shadow-sm email-builder-shell">
+          <div className="card-header border-0 bg-white py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div className="small text-muted">Trình soạn email trực quan</div>
+
+            <div className="gap-2 d-flex align-items-center flex-wrap">
+              <button
+                className="btn btn-primary"
+                onClick={saveTemplate}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {currentId ? "Cập nhật Template" : "Lưu Template"}
+              </button>
+
+              <button
+                className="btn btn-outline-primary"
+                onClick={saveAsNewTemplate}
+                disabled={createMutation.isPending}
+              >
+                Lưu Template mới
+              </button>
+
+              <button
+                className="btn btn-outline-danger"
+                onClick={clearCurrentTemplate}
+                disabled={!currentId && !design}
+              >
+                Bỏ chọn
+              </button>
+            </div>
+          </div>
+
           <div className="card-body p-0">
-            <div className="row g-0" style={{ height: "calc(100vh - 180px)" }}>
-              <div className="col-3 border-end p-3 overflow-auto">
-                <h6 className="fw-bold mb-3">Danh sách Template</h6>
-
-                {templates.map((t) => (
-                  <div
-                    key={t.id as unknown as number}
-                    onClick={() => loadTemplateFromServer(t)}
-                    className={cn(
-                      "p-2 mb-2 border rounded cursor-pointer",
-                      (t.id as unknown as number) === currentId
-                        ? "bg-light border-primary"
-                        : "bg-white"
-                    )}
-                  >
-                    <div className="fw-semibold">{t.name}</div>
-                    <div className="text-muted small">ID: {t.id as unknown as number}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="col-6 border-end">
-                <EmailEditor ref={emailEditorRef} onReady={onReady} />
-              </div>
-
-              <div className="col-3 p-3">
-                <div className="mb-3">
-                  <label className="form-label">Tên Template</label>
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="form-control"
-                    placeholder="Nhập tên template"
-                  />
+            <div className="row g-0 email-builder-layout">
+              <div className="col-12 col-xl-2 email-builder-panel border-end">
+                <div className="p-3 border-bottom bg-light">
+                  <h6 className="fw-bold mb-1">Danh sách Template</h6>
+                  {/* <div className="small text-muted">Nhấn để tải và chỉnh sửa nhanh</div> */}
                 </div>
 
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    form.handleSubmit();
-                  }}
-                >
-                  <div className="mb-3">
-                    <form.AppField name="to">
-                      {(field) => (
-                        <field.Input label="Email nhận" required placeholder="example@gmail.com" />
-                      )}
-                    </form.AppField>
-                  </div>
+                <div className="p-3 email-template-list">
+                  {templates.length === 0 ? (
+                    <div className="text-center text-muted small py-4 border rounded bg-light">
+                      Chưa có template nào. Hãy tạo mẫu mới để bắt đầu.
+                    </div>
+                  ) : (
+                    templates.map((t) => {
+                      const isActive = (t.id as unknown as number) === currentId;
+
+                      return (
+                        <button
+                          key={t.id as unknown as number}
+                          type="button"
+                          onClick={() => loadTemplateFromServer(t)}
+                          className={cn(
+                            "email-template-item text-start w-100 mb-2",
+                            isActive && "active"
+                          )}
+                        >
+                          <div className="fw-semibold text-truncate">{t.name}</div>
+                          <div className="d-flex align-items-center justify-content-between mt-1">
+                            <span className="text-muted small">
+                              ID: {t.id as unknown as number}
+                            </span>
+                            {isActive && (
+                              <span className="badge bg-primary-subtle text-primary">
+                                Đang chọn
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              <div className="col-12 col-xl-7 border-end email-builder-panel">
+                <div className="email-editor-wrap">
+                  <EmailEditor ref={emailEditorRef} onReady={onReady} />
+                </div>
+              </div>
+
+              <div className="col-12 col-xl-3 email-builder-panel bg-light">
+                <div className="p-3">
+                  <h6 className="fw-bold mb-3">Thông tin gửi email</h6>
 
                   <div className="mb-3">
-                    <form.AppField name="subject">
-                      {(field) => (
-                        <field.Input label="Tiêu đề" required placeholder="Nhập tiêu đề email" />
-                      )}
-                    </form.AppField>
+                    <label className="form-label">Tên Template</label>
+                    <input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="form-control"
+                      placeholder="Ví dụ: Chăm sóc khách hàng"
+                    />
                   </div>
 
-                  <div className="d-grid gap-2">
-                    <button
-                      type="submit"
-                      className="btn btn-success"
-                      disabled={sendMailMutation.isPending}
-                    >
-                      Gửi Email
-                    </button>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      form.handleSubmit();
+                    }}
+                  >
+                    <div className="mb-3">
+                      <form.AppField name="to">
+                        {(field) => (
+                          <field.Input
+                            label="Email nhận"
+                            required
+                            placeholder="example@gmail.com"
+                          />
+                        )}
+                      </form.AppField>
+                    </div>
+
+                    <div className="mb-3">
+                      <form.AppField name="subject">
+                        {(field) => (
+                          <field.Input label="Tiêu đề" required placeholder="Nhập tiêu đề email" />
+                        )}
+                      </form.AppField>
+                    </div>
+
+                    <div className="d-grid gap-2">
+                      <button
+                        type="submit"
+                        className="btn btn-success"
+                        disabled={sendMailMutation.isPending}
+                      >
+                        {sendMailMutation.isPending ? "Đang gửi..." : "Gửi Email"}
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className="small text-muted mt-3">
+                    Mẹo: lưu template trước khi gửi để có thể tái sử dụng và chỉnh sửa nhanh.
                   </div>
-                </form>
+                </div>
               </div>
             </div>
           </div>

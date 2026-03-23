@@ -183,7 +183,7 @@ function RouteComponent() {
         <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
           <div>
             <h4 className="mb-1 fw-bold">
-              Thuộc tính tin khách hàng
+              Thuộc tính khách hàng
               <span className="badge badge-soft-primary ms-2">{total}</span>
             </h4>
             <div className="text-muted small">Cài đặt khách hàng / Thuộc tính khách hàng</div>

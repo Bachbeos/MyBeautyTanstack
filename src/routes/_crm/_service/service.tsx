@@ -55,7 +55,7 @@ function RouteComponent() {
   };
 
   const closeModal = () => {
-    setModal((prev) => ({ ...prev, shown: false }));
+    setModal({ type: null, item: undefined, shown: false });
   };
 
   const params = useMemo(

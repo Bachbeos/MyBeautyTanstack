@@ -54,7 +54,10 @@ export default function Sidebar() {
     "/call-history": "call-history",
     "/appointment": "appointment",
     "/customer-attribute": "customer-attribute",
-    "/email": "email"
+    "/email": "email",
+    "/chat": "chat",
+    "/notification": "notification",
+    "/sale": "sale"
   };
 
   const location = useLocation();
@@ -294,6 +297,17 @@ export default function Sidebar() {
                   >
                     <i className="ti ti-briefcase"></i>
                     <span>Dịch vụ</span>
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/sale"
+                    className={activeTab === "sale" ? "active" : ""}
+                    onClick={() => handleTabClick("sale")}
+                  >
+                    <i className="ti ti-report-money"></i>
+                    <span>Bán hàng</span>
                   </Link>
                 </li>
               </ul>
