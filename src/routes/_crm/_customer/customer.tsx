@@ -25,9 +25,7 @@ import {
   useReactTable,
   type ColumnFiltersState
 } from "@tanstack/react-table";
-import { co } from "node_modules/@fullcalendar/core/internal-common";
 import { useEffect, useMemo, useState } from "react";
-import { meta } from "zod/v4/core";
 
 const columnHelper = createColumnHelper<CustomerDto>();
 
