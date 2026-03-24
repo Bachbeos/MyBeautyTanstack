@@ -89,34 +89,7 @@ function RouteComponent() {
   const customers = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
 
-<<<<<<< HEAD
-  const attrQuery = useQuery(customerAttributeQueries.list({isParent: 2}));
-=======
-  const selectedCustomerId = modal.item?.id as any;
-  const detailQuery = useQuery({
-    ...customerQueries.detail(selectedCustomerId),
-    enabled:
-      !!selectedCustomerId && modalShown && (modal.type === "edit" || modal.type === "detail")
-  });
-
-  const detailItem = detailQuery.data?.result as CustomerDto | undefined;
-  const listExtraInfos = ((modal.item as any)?.customerExtraInfos ??
-    (modal.item as any)?.customerExtraInfoDtos ??
-    []) as any[];
-  const detailExtraInfos = ((detailItem as any)?.customerExtraInfos ??
-    (detailItem as any)?.customerExtraInfoDtos ??
-    []) as any[];
-
-  const modalItem = detailItem
-    ? ({
-        ...(modal.item as any),
-        ...(detailItem as any),
-        customerExtraInfos: detailExtraInfos.length ? detailExtraInfos : listExtraInfos
-      } as CustomerDto)
-    : modal.item;
-
-  const attrQuery = useQuery(customerAttributeQueries.list({}));
->>>>>>> c185a880ea3e0a63617a04d50fbedb1c96dea77b
+  const attrQuery = useQuery(customerAttributeQueries.list({ isParent: 2 }));
   const dynamicAttributes = attrQuery.data?.result?.items ?? [];
 
   const createMutation = useMutation(customerMutations.create());
@@ -161,33 +134,33 @@ function RouteComponent() {
     ];
 
     const dynamicCols = dynamicAttributes.map((attr: any) =>
-  columnHelper.accessor(
-    (row: any) => {
-      const extraInfos = row.customerExtraInfos || [];
-      const found = extraInfos.find((ei: any) => ei.attributeId === attr.id);
-      return found?.attributeValue ?? null;
-    },
-    {
-      id: `attr_${attr.id}`,
-      header: attr.name,
-      cell: (info) => {
-        const value = info.getValue();
+      columnHelper.accessor(
+        (row: any) => {
+          const extraInfos = row.customerExtraInfos || [];
+          const found = extraInfos.find((ei: any) => ei.attributeId === attr.id);
+          return found?.attributeValue ?? null;
+        },
+        {
+          id: `attr_${attr.id}`,
+          header: attr.name,
+          cell: (info) => {
+            const value = info.getValue();
 
-        if (!value) return "-";
+            if (!value) return "-";
 
-        if (attr.datatype === "attachment") {
-          return (
-            <a href={value} target="_blank" className="text-primary">
-              <i className="ti ti-paperclip" />
-            </a>
-          );
+            if (attr.datatype === "attachment") {
+              return (
+                <a href={value} target="_blank" className="text-primary">
+                  <i className="ti ti-paperclip" />
+                </a>
+              );
+            }
+
+            return value;
+          }
         }
-
-        return value;
-      }
-    }
-  )
-);
+      )
+    );
 
     return [
       ...staticCols,
@@ -374,7 +347,7 @@ function RouteComponent() {
       <ModalCustomer
         type={modal.type}
         shown={modalShown}
-        item={modalItem}
+        item={modal.item}
         onClose={closeModal}
         onSubmit={handleSubmit}
         onDelete={handleDelete}
