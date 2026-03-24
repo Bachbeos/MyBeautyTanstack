@@ -14,6 +14,7 @@ import type { CustomerAttributeId } from "../types/customer-attribute";
 import type { AppointmentId } from "../types/appointment";
 import type { NotificationId } from "../types/notification";
 import type { OpportunityId } from "../types/opportunity";
+import type { InvoiceId } from "../types/invoice";
 
 export const ENDPOINTS = {
   auth: {
@@ -103,7 +104,7 @@ export const ENDPOINTS = {
   invoice: {
     list: "/invoice/list",
     update: "/invoice/update",
-    delete: (id: string) => `/invoice/delete/${id}`,
+    delete: (id: InvoiceId) => `/invoice/delete/${id}`,
     detail: "/invoice/get",
     draft: "/invoice/draft",
     recalculate: "/invoice/recalculate"

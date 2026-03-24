@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { z } from "zod";
 import { useAppForm } from "@/components/form/hooks";
 import { useCollapse } from "@/hooks/use-collapse";
@@ -10,6 +10,7 @@ import { uploadFile } from "@/lib/api/upload-image";
 type DynamicAttribute = {
   id: number;
   name: string;
+  fieldName?: string;
   datatype: string;
   attributes?: unknown;
   data?: string;
@@ -29,6 +30,205 @@ type CustomerExtraInfo = {
   id?: number | null;
   attributeValue?: string;
 };
+
+type RawCustomerExtraInfo = {
+  id?: number | null;
+  attributeId?: number | string | null;
+  customerAttributeId?: number | string | null;
+  fieldId?: number | string | null;
+  attribute?: { id?: number | string | null } | null;
+  customerAttribute?: { id?: number | string | null } | null;
+  attributeValue?: string | null;
+  value?: string | null;
+};
+
+type NumberFormatConfig = {
+  maxFractionDigits: number;
+};
+
+const DEFAULT_NUMBER_FORMAT: NumberFormatConfig = {
+  maxFractionDigits: 0
+};
+
+function getNumberFormatConfig(attr: DynamicAttribute): NumberFormatConfig {
+  const jsonRaw = Array.isArray(attr.attributes) ? attr.attributes[0] : attr.attributes;
+  if (typeof jsonRaw === "string" && jsonRaw.trim()) {
+    try {
+      const parsed = JSON.parse(jsonRaw);
+      const preset =
+        parsed && typeof parsed === "object" && !Array.isArray(parsed)
+          ? (parsed as any).numberFormat
+          : undefined;
+
+      if (typeof preset === "string" && preset.includes(".")) {
+        const fraction = preset.split(".")[1] ?? "";
+        return { maxFractionDigits: fraction.length };
+      }
+
+      if (typeof preset === "string") {
+        return DEFAULT_NUMBER_FORMAT;
+      }
+    } catch {}
+  }
+
+  return DEFAULT_NUMBER_FORMAT;
+}
+
+function formatNumberDisplay(raw: string, maxFractionDigits: number): string {
+  const cleaned = String(raw ?? "")
+    .replace(/,/g, "")
+    .replace(/[^\d.]/g, "");
+  if (!cleaned) return "";
+
+  const firstDotIndex = cleaned.indexOf(".");
+  const hasDot = firstDotIndex >= 0;
+  const integerPartRaw = hasDot ? cleaned.slice(0, firstDotIndex) : cleaned;
+  const decimalRaw = hasDot ? cleaned.slice(firstDotIndex + 1).replace(/\./g, "") : "";
+
+  const integerPart = integerPartRaw.replace(/^0+(?=\d)/, "");
+  const formattedInt = (integerPart || "0").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  if (maxFractionDigits <= 0) return formattedInt;
+
+  const limitedDecimal = decimalRaw.slice(0, maxFractionDigits);
+  if (hasDot) {
+    return `${formattedInt}.${limitedDecimal}`;
+  }
+
+  return formattedInt;
+}
+
+function sanitizeNumberPayload(raw: string): string {
+  return String(raw ?? "")
+    .replace(/,/g, "")
+    .trim();
+}
+
+function getRawCustomerExtraInfos(customer?: CustomerDto): RawCustomerExtraInfo[] {
+  const source =
+    (customer as any)?.customerExtraInfos ??
+    (customer as any)?.customerExtraInfoDtos ??
+    (customer as any)?.extraInfos ??
+    (customer as any)?.extraValues;
+
+  if (!source) return [];
+
+  if (Array.isArray(source)) return source as RawCustomerExtraInfo[];
+
+  if (typeof source === "string") {
+    try {
+      const parsed = JSON.parse(source);
+      if (Array.isArray(parsed)) return parsed as RawCustomerExtraInfo[];
+      if (parsed && typeof parsed === "object" && Array.isArray((parsed as any).items)) {
+        return (parsed as any).items as RawCustomerExtraInfo[];
+      }
+    } catch {}
+  }
+
+  if (source && typeof source === "object") {
+    const sourceObj = source as any;
+
+    if (Array.isArray(sourceObj.items)) {
+      return sourceObj.items as RawCustomerExtraInfo[];
+    }
+
+    return Object.entries(sourceObj)
+      .map(([k, v]) => {
+        if (v && typeof v === "object") {
+          return {
+            attributeId: k,
+            id: (v as any).id ?? null,
+            attributeValue: (v as any).attributeValue ?? (v as any).value ?? ""
+          } as RawCustomerExtraInfo;
+        }
+
+        return {
+          attributeId: k,
+          id: null,
+          attributeValue: v == null ? "" : String(v)
+        } as RawCustomerExtraInfo;
+      })
+      .filter((x) => !!getExtraInfoAttributeId(x));
+  }
+
+  return [];
+}
+
+function getByKeyInsensitive(input: unknown, keys: string[]): unknown {
+  if (!input || typeof input !== "object") return undefined;
+
+  const normalizedTargets = keys.map((k) => k.toLowerCase().replace(/[_\s-]/g, ""));
+
+  for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
+    const nk = k.toLowerCase().replace(/[_\s-]/g, "");
+    if (normalizedTargets.includes(nk)) {
+      return v;
+    }
+  }
+
+  return undefined;
+}
+
+function getExtraInfoAttributeId(ei: RawCustomerExtraInfo): number {
+  const direct =
+    ei.attributeId ??
+    ei.customerAttributeId ??
+    ei.fieldId ??
+    ei.attribute?.id ??
+    ei.customerAttribute?.id ??
+    getByKeyInsensitive(ei, [
+      "attributeId",
+      "customerAttributeId",
+      "fieldId",
+      "attribute_id",
+      "customer_attribute_id",
+      "field_id"
+    ]);
+
+  const nestedAttribute = getByKeyInsensitive(ei, ["attribute", "customerAttribute", "field"]);
+  const nestedId =
+    getByKeyInsensitive(nestedAttribute, ["id", "attributeId", "customerAttributeId"]) ?? 0;
+
+  return Number(direct ?? nestedId ?? 0);
+}
+
+function getExtraInfoValue(ei: RawCustomerExtraInfo): string {
+  const direct =
+    ei.attributeValue ??
+    ei.value ??
+    getByKeyInsensitive(ei, [
+      "attributeValue",
+      "value",
+      "attribute_value",
+      "fieldValue",
+      "field_value",
+      "data",
+      "content"
+    ]);
+
+  if (Array.isArray(direct)) {
+    return direct.map((x) => String(x)).join(",");
+  }
+
+  if (direct && typeof direct === "object") {
+    const maybeValue = getByKeyInsensitive(direct, ["value", "attributeValue", "data"]);
+    if (maybeValue != null) return String(maybeValue);
+    return JSON.stringify(direct);
+  }
+
+  return String(direct ?? "");
+}
+
+function toExtraValueKey(attributeId: number): string {
+  return `attr_${attributeId}`;
+}
+
+function parseAttributeIdFromExtraKey(key: string): number {
+  if (key.startsWith("attr_")) {
+    return Number(key.slice(5));
+  }
+  return Number(key);
+}
 
 const getOptionsForAttribute = (attr: DynamicAttribute): DynamicOption[] => {
   const jsonRaw = Array.isArray(attr.attributes) ? attr.attributes[0] : attr.attributes;
@@ -92,6 +292,7 @@ export function CustomerForm({
   customerSourceOptions,
   onLoadMorecustomerSources
 }: CustomerFormProps) {
+  const hydrateSignatureRef = useRef<string>("");
   const isReadOnly = mode === "detail";
   const basic = useCollapse(true);
   const address = useCollapse(false);
@@ -120,12 +321,23 @@ export function CustomerForm({
     } as CustomerFormValues,
     validators: { onSubmit: customerSchema as any },
     onSubmit: async ({ value }) => {
+      const numberAttrIds = new Set(
+        attributes.filter((attr) => attr.datatype === "number").map((attr) => Number(attr.id))
+      );
+
       const customerExtraInfos = Object.entries(value.extraValues || {}).map(
-        ([attrId, v]: [string, CustomerExtraInfo]) => ({
-          attributeId: Number(attrId),
-          attributeValue: v.attributeValue || "",
-          id: v.id || null
-        })
+        ([attrId, v]: [string, CustomerExtraInfo]) => {
+          const numericAttrId = parseAttributeIdFromExtraKey(attrId);
+          const rawAttributeValue = v.attributeValue || "";
+
+          return {
+            attributeId: numericAttrId,
+            attributeValue: numberAttrIds.has(numericAttrId)
+              ? sanitizeNumberPayload(rawAttributeValue)
+              : rawAttributeValue,
+            id: v.id || null
+          };
+        }
       );
 
       await onSubmit({ ...value, customerExtraInfos });
@@ -134,21 +346,69 @@ export function CustomerForm({
 
   useEffect(() => {
     if (customer) {
-      const extraMap: Record<number, CustomerExtraInfo> = {};
-      const customerExtraInfos = (customer as any)?.customerExtraInfos as
-        | Array<{ attributeId: number; id?: number; attributeValue?: string }>
-        | undefined;
+      const extraMap: Record<string, CustomerExtraInfo> = {};
+      const customerExtraInfos = getRawCustomerExtraInfos(customer);
 
       customerExtraInfos?.forEach((ei) => {
-        extraMap[ei.attributeId] = { id: ei.id, attributeValue: ei.attributeValue };
+        const attrId = getExtraInfoAttributeId(ei);
+        if (!attrId) return;
+        extraMap[toExtraValueKey(attrId)] = {
+          id: ei.id ?? null,
+          attributeValue: getExtraInfoValue(ei)
+        };
       });
+
+      // Fallback for APIs that return dynamic values as flat keys by fieldName.
+      if (!Object.keys(extraMap).length) {
+        for (const attr of attributes) {
+          const attrId = Number(attr.id);
+          if (!attrId) continue;
+
+          const key = String(attr.fieldName ?? "").trim();
+          if (!key) continue;
+
+          const raw = (customer as any)?.[key];
+          if (raw == null) continue;
+
+          extraMap[toExtraValueKey(attrId)] = {
+            id: null,
+            attributeValue: String(raw)
+          };
+        }
+      }
+
+      const attrIdsSignature = attributes.map((a) => Number(a.id) || 0).join(",");
+      const signature = `${String((customer as any)?.id ?? "")}|${JSON.stringify(customerExtraInfos)}|${JSON.stringify(extraMap)}|${attrIdsSignature}`;
+
+      if (hydrateSignatureRef.current === signature) return;
+
+      const currentExtraValues =
+        (form.getFieldValue?.("extraValues" as any) as Record<string, CustomerExtraInfo>) ?? {};
+      const hasCurrentValues = Object.keys(currentExtraValues).length > 0;
+      const hasIncomingValues = Object.keys(extraMap).length > 0;
+
+      // Avoid wiping hydrated values when a later payload lacks dynamic fields.
+      if (!hasIncomingValues && hasCurrentValues) {
+        return;
+      }
 
       form.reset({
         ...customer,
         extraValues: extraMap
       } as any);
+
+      // Ensure dynamic nested fields are hydrated even if reset drops unknown nested keys.
+      Object.entries(extraMap).forEach(([key, value]) => {
+        form.setFieldValue(`extraValues.${key}.id` as any, (value?.id ?? null) as any);
+        form.setFieldValue(
+          `extraValues.${key}.attributeValue` as any,
+          (value?.attributeValue ?? "") as any
+        );
+      });
+
+      hydrateSignatureRef.current = signature;
     }
-  }, [customer]);
+  }, [customer, attributes]);
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -437,8 +697,14 @@ export function CustomerForm({
                         <p className="fw-semibold mb-2 mt-1 text-dark">{group.parentName}</p>
                       )}
                       <div className="row">
+<<<<<<< HEAD
                         {group.items.filter((g) => g.parentId !== 0).map((attr) => {
                           const baseName = `extraValues.${attr.id}` as const;
+=======
+                        {group.items.map((attr) => {
+                          const baseName =
+                            `extraValues.${toExtraValueKey(Number(attr.id))}` as const;
+>>>>>>> c185a880ea3e0a63617a04d50fbedb1c96dea77b
                           const opts = getOptionsForAttribute(attr);
                           const selectOptions = opts.map((o) => ({ value: o.id, label: o.name }));
                           const radioOptions = selectOptions;
@@ -476,13 +742,25 @@ export function CustomerForm({
                                   }
 
                                   if (attr.datatype === "number") {
+                                    const cfg = getNumberFormatConfig(attr);
+
                                     return (
                                       <f.Input
                                         label={label}
-                                        type="number"
+                                        type="text"
                                         required={isRequired}
                                         disabled={isDisabled}
                                         placeholder="Nhập..."
+                                        onChange={(e) => {
+                                          const formatted = formatNumberDisplay(
+                                            e.target.value,
+                                            cfg.maxFractionDigits
+                                          );
+                                          form.setFieldValue(
+                                            `${baseName}.attributeValue` as any,
+                                            formatted as any
+                                          );
+                                        }}
                                       />
                                     );
                                   }
@@ -534,10 +812,14 @@ export function CustomerForm({
 
                                   if (attr.datatype === "multiselect") {
                                     return (
-                                      <div className="text-muted small fst-italic">
-                                        multiselect: bạn chưa có component tương ứng (có thể bổ sung
-                                        sau)
-                                      </div>
+                                      <f.Select
+                                        label={label}
+                                        options={selectOptions}
+                                        required={isRequired}
+                                        disabled={isDisabled}
+                                        placeholder="Chọn nhiều"
+                                        isMulti
+                                      />
                                     );
                                   }
 

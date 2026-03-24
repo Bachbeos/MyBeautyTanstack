@@ -115,3 +115,107 @@ table th,
 .sidebar .sidebar-menu > ul > li ul > li.active a .menu-arrow::before {
   border-color: var(--crms-menu-item-active-color);
 }
+
+/* Sale page refinements to align with CRM design language */
+.sale-page .card {
+  border-radius: 12px;
+}
+
+.sale-page .card-header {
+  border-bottom: 1px solid #f1f2f4 !important;
+}
+
+.sale-page .sale-search-input {
+  min-width: 260px;
+}
+
+.sale-page .sale-item-card {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  border: 1px solid #f2f4f7 !important;
+}
+
+.sale-page .sale-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(145, 158, 171, 0.16) !important;
+}
+
+.sale-page .sale-item-cover {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.sale-page .sale-add-label {
+  opacity: 0.85;
+}
+
+.sale-page .sale-cart-body {
+  min-height: 540px;
+}
+
+.sale-page .sale-empty-icon {
+  width: 120px;
+  height: 120px;
+  background: #f3f6f9;
+  color: #5f6f86;
+}
+
+.sale-page .sale-cart-scroll {
+  max-height: 390px;
+}
+
+.sale-page .sale-qty-col {
+  width: 140px;
+}
+
+.sale-page .sale-qty-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #f8f9fa;
+  border: 1px solid #e3e6eb;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.sale-page .sale-qty-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: #fff;
+  color: #495057;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sale-page .sale-qty-btn:hover {
+  background: #e3e6eb;
+  color: #000;
+}
+
+.sale-page .sale-qty-btn:active {
+  background: #d8dce0;
+}
+
+.sale-page .sale-qty-value {
+  min-width: 36px;
+  text-align: center;
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 14px;
+}
+
+@media (max-width: 575.98px) {
+  .sale-page .sale-search-input {
+    min-width: 100%;
+    width: 100%;
+  }
+}

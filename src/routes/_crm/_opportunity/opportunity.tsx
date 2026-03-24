@@ -86,11 +86,11 @@ function RouteComponent() {
         cell: (info) => pageIndex * pageSize + info.row.index + 1,
         meta: { className: "w-1 text-center" }
       }),
-      columnHelper.accessor("code", {
-        header: "Mã cơ hội",
-        meta: { className: "text-center w-1" },
-        cell: (info) => <span className="fw-bold text-primary">{info.getValue()}</span>
-      }),
+      // columnHelper.accessor("code", {
+      //   header: "Mã cơ hội",
+      //   meta: { className: "text-center w-1" },
+      //   cell: (info) => <span className="fw-bold text-primary">{info.getValue()}</span>
+      // }),
       columnHelper.accessor("name", {
         header: "Cơ hội & Khách hàng",
         cell: (info) => {
@@ -120,7 +120,7 @@ function RouteComponent() {
       }),
       columnHelper.accessor("expectedValue", {
         header: "Giá trị dự kiến",
-        meta: { className: "text-end w-1" },
+        meta: { className: "text-center w-1" },
         cell: (info) => {
           const val = Number(info.getValue() || 0);
           return (
@@ -176,35 +176,10 @@ function RouteComponent() {
           const date = info.getValue();
           if (!date) return "-";
           return (
-            <div className="small">
+            <div className="fw-medium">
               <i className="ti ti-calendar-event me-1"></i>
               {new Date(date).toLocaleDateString("vi-VN")}
             </div>
-          );
-        }
-      }),
-      columnHelper.accessor("status", {
-        id: "status",
-        header: "Trạng thái",
-        meta: { className: "text-center w-1" },
-        cell: (info) => {
-          const row = info.row.original;
-          const isActive = Number(row.status) === 1;
-
-          return (
-            <span
-              className={cn(
-                "badge cursor-pointer",
-                isActive ? "badge-soft-success" : "badge-soft-danger"
-              )}
-              style={{ cursor: "pointer" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleToggleStatus(row);
-              }}
-            >
-              {isActive ? "Đang hoạt động" : "Ngưng hoạt động"}
-            </span>
           );
         }
       }),
@@ -277,20 +252,6 @@ function RouteComponent() {
     await deleteMutation.mutateAsync(modal.item.id);
     closeModal();
     query.refetch();
-  };
-
-  const handleToggleStatus = async (row: OpportunityDto) => {
-    const newStatus = Number(row.status) === 1 ? 0 : 1;
-
-    try {
-      await updateMutation.mutateAsync({
-        ...row,
-        status: newStatus
-      });
-      query.refetch();
-    } catch (error) {
-      console.error("Toggle status failed:", error);
-    }
   };
 
   const handleCollapse = () => {
