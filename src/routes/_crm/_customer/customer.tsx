@@ -73,7 +73,7 @@ function RouteComponent() {
   const customers = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
 
-  const attrQuery = useQuery(customerAttributeQueries.list({}));
+  const attrQuery = useQuery(customerAttributeQueries.list({isParent: 2}));
   const dynamicAttributes = attrQuery.data?.result?.items ?? [];
 
   const createMutation = useMutation(customerMutations.create());
@@ -117,25 +117,33 @@ function RouteComponent() {
     ];
 
     const dynamicCols = dynamicAttributes.map((attr: any) =>
-      columnHelper.display({
-        id: `attr_${attr.id}`,
-        header: attr.name,
-        cell: (info) => {
-          const extraInfos = (info.row.original.customerExtraInfos as any[]) || [];
-          const found = extraInfos.find((ei: any) => ei.attributeId === attr.id);
-          if (!found?.attributeValue) return "-";
+  columnHelper.accessor(
+    (row: any) => {
+      const extraInfos = row.customerExtraInfos || [];
+      const found = extraInfos.find((ei: any) => ei.attributeId === attr.id);
+      return found?.attributeValue ?? null;
+    },
+    {
+      id: `attr_${attr.id}`,
+      header: attr.name,
+      cell: (info) => {
+        const value = info.getValue();
 
-          if (attr.datatype === "attachment") {
-            return (
-              <a href={found.attributeValue} target="_blank" className="text-primary">
-                <i className="ti ti-paperclip" />
-              </a>
-            );
-          }
-          return found.attributeValue;
+        if (!value) return "-";
+
+        if (attr.datatype === "attachment") {
+          return (
+            <a href={value} target="_blank" className="text-primary">
+              <i className="ti ti-paperclip" />
+            </a>
+          );
         }
-      })
-    );
+
+        return value;
+      }
+    }
+  )
+);
 
     return [
       ...staticCols,

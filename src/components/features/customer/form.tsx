@@ -437,7 +437,7 @@ export function CustomerForm({
                         <p className="fw-semibold mb-2 mt-1 text-dark">{group.parentName}</p>
                       )}
                       <div className="row">
-                        {group.items.map((attr) => {
+                        {group.items.filter((g) => g.parentId !== 0).map((attr) => {
                           const baseName = `extraValues.${attr.id}` as const;
                           const opts = getOptionsForAttribute(attr);
                           const selectOptions = opts.map((o) => ({ value: o.id, label: o.name }));
