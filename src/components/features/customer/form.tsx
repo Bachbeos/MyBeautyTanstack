@@ -697,9 +697,14 @@ export function CustomerForm({
                         <p className="fw-semibold mb-2 mt-1 text-dark">{group.parentName}</p>
                       )}
                       <div className="row">
+<<<<<<< HEAD
+                        {group.items.filter((g) => g.parentId !== 0).map((attr) => {
+                          const baseName = `extraValues.${attr.id}` as const;
+=======
                         {group.items.map((attr) => {
                           const baseName =
                             `extraValues.${toExtraValueKey(Number(attr.id))}` as const;
+>>>>>>> c185a880ea3e0a63617a04d50fbedb1c96dea77b
                           const opts = getOptionsForAttribute(attr);
                           const selectOptions = opts.map((o) => ({ value: o.id, label: o.name }));
                           const radioOptions = selectOptions;

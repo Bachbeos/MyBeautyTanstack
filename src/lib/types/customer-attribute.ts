@@ -23,6 +23,7 @@ export type CustomerAttributeDto = {
 };
 
 export type CustomerAttributeListRequest = {
+  isParent?: 1 | 2;
   keyword?: string;
   active?: number;
   [key: string]: unknown;
