@@ -1,10 +1,12 @@
 import { useAppForm } from "@/components/form/hooks";
 import ModalSale from "@/components/features/sale/modal";
 import { createDraftInvoice, updateDraftInvoice } from "@/lib/api/invoice";
-import { upsertBoughtProduct } from "@/lib/api/bought-product";
+import { batchUpsertBoughtProducts } from "@/lib/api/bought-product";
 import { customerQueries } from "@/lib/tanstack/options/customer";
 import { productQueries } from "@/lib/tanstack/options/product";
 import { serviceQueries } from "@/lib/tanstack/options/service";
+import type { InvoiceDto } from "@/lib/types/invoice";
+import type { BoughtProductCreateRequest } from "@/lib/types/bought-product";
 import type { ProductDto } from "@/lib/types/product";
 import type { ServiceDto } from "@/lib/types/service";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -63,8 +65,10 @@ function RouteComponent() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [modalShown, setModalShown] = useState(false);
   const [draftInvoiceId, setDraftInvoiceId] = useState<number | null>(null);
+  const [draftInvoice, setDraftInvoice] = useState<InvoiceDto | null>(null);
   const [isLoadingCustomer, setIsLoadingCustomer] = useState(false);
-  const [isLoadingProduct, setIsLoadingProduct] = useState(false);
+
+  const isApiOk = (res: any) => res?.success === true || res?.code === 200;
 
   const customersInf = useInfiniteQuery(customerQueries.infinite({ limit: 10 }));
 
@@ -121,6 +125,7 @@ function RouteComponent() {
   const handleCustomerValueChange = async (value: string | number | "") => {
     if (value === "") {
       setDraftInvoiceId(null);
+      setDraftInvoice(null);
       setIsLoadingCustomer(false);
       return;
     }
@@ -128,15 +133,18 @@ function RouteComponent() {
     const customerId = Number(value);
     if (!Number.isFinite(customerId) || customerId < 0) {
       setDraftInvoiceId(null);
+      setDraftInvoice(null);
       return;
     }
 
     setIsLoadingCustomer(true);
     setDraftInvoiceId(null);
+    setDraftInvoice(null);
     try {
       const res = await createDraftInvoice(customerId);
-      if (res.success && res.result?.id) {
+      if (isApiOk(res) && res.result?.id) {
         setDraftInvoiceId(Number(res.result.id));
+        setDraftInvoice(res.result);
       }
     } catch (error) {
       console.error("Error creating draft invoice:", error);
@@ -145,7 +153,7 @@ function RouteComponent() {
     }
   };
 
-  const addToCart = async (item: MenuItem) => {
+  const addToCart = (item: MenuItem) => {
     if (item.type === "service") {
       // TODO: Handle services later
       console.log("Service will be handled later");
@@ -160,28 +168,6 @@ function RouteComponent() {
       next[index] = { ...next[index], quantity: next[index].quantity + 1 };
       return next;
     });
-
-    setIsLoadingProduct(true);
-
-    const invoiceIdForUpdate = draftInvoiceId ?? 0;
-
-    upsertBoughtProduct({
-      invoiceId: invoiceIdForUpdate,
-      productId: item.id,
-      unitId: 1,
-      qty: 1,
-      price: item.price,
-      fee: item.price,
-      customerId: selectedCustomerId || 0,
-      status: 0,
-      note: ""
-    } as any)
-      .catch((error) => {
-        console.error("Error adding product to invoice:", error);
-      })
-      .finally(() => {
-        setIsLoadingProduct(false);
-      });
   };
 
   const updateQuantity = (key: string, delta: number) => {
@@ -197,8 +183,62 @@ function RouteComponent() {
     setCart([]);
   };
 
-  const handleOpenModal = () => {
-    setModalShown(true);
+  const buildDraftUpdatePayload = (values?: {
+    discount?: number;
+    discountCode?: string;
+    fee?: number;
+    paymentMethod?: number;
+  }) => {
+    if (!draftInvoiceId || !draftInvoice) return null;
+
+    return {
+      ...draftInvoice,
+      id: draftInvoiceId as any,
+      amount: totalAmount,
+      discount: values?.discount ?? draftInvoice.discount ?? 0,
+      voucherCode: values?.discountCode ?? draftInvoice.voucherCode ?? "",
+      fee: values?.fee ?? totalAmount,
+      paymentType: values?.paymentMethod ?? draftInvoice.paymentType ?? 1
+    } as any;
+  };
+
+  const handleOpenModal = async () => {
+    const payload = buildDraftUpdatePayload();
+    const currentDraftInvoiceId = draftInvoiceId;
+
+    if (!payload || currentDraftInvoiceId == null) {
+      console.error("No draft invoice. Please select a customer first.");
+      return;
+    }
+
+    try {
+      const productPayload: BoughtProductCreateRequest[] = cart
+        .filter((item) => item.type === "product")
+        .map((item) => ({
+          invoiceId: currentDraftInvoiceId,
+          productId: item.id,
+          unitId: 1,
+          qty: item.quantity,
+          price: item.price,
+          fee: item.price * item.quantity,
+          customerId: selectedCustomerId || 0,
+          status: 0,
+          note: ""
+        }));
+
+      const batchRes = await batchUpsertBoughtProducts(productPayload);
+      if (!isApiOk(batchRes)) {
+        console.error("Batch upsert bought products failed:", batchRes);
+        return;
+      }
+
+      const draftRes = await updateDraftInvoice(payload);
+      if (isApiOk(draftRes)) {
+        setModalShown(true);
+      }
+    } catch (error) {
+      console.error("Error updating draft invoice before opening modal:", error);
+    }
   };
 
   const handleCloseModal = () => {
@@ -206,44 +246,21 @@ function RouteComponent() {
   };
 
   const handleSubmitModal = async (values: any) => {
-    if (!draftInvoiceId) {
+    const payload = buildDraftUpdatePayload(values);
+    if (!payload) {
       console.error("No draft invoice. Please select a customer first.");
       return;
     }
 
     try {
-      // Call API to update draft invoice
-      const res = await updateDraftInvoice({
-        id: draftInvoiceId as any,
-        amount: values.amount || totalAmount,
-        discount: values.discount || 0,
-        voucherCode: values.discountCode || "",
-        fee: values.fee || totalAmount,
-        paymentType: values.paymentMethod,
-        invoiceCode: "",
-        invoiceType: "",
-        vatAmount: 0,
-        amountCard: 0,
-        paid: 0,
-        debt: 0,
-        status: 0,
-        statusTemp: 0,
-        receiptImage: "",
-        receiptDate: "",
-        createdTime: new Date().toISOString(),
-        updatedTime: new Date().toISOString(),
-        userId: 0,
-        customerId: selectedCustomerId || 0,
-        branchId: 0,
-        customerName: "",
-        userName: ""
-      });
+      const res = await updateDraftInvoice(payload);
 
-      if (res.success) {
+      if (isApiOk(res)) {
         // Close modal and clear cart after successful update
         handleCloseModal();
         clearCart();
         setDraftInvoiceId(null);
+        setDraftInvoice(null);
         // TODO: Show success popup/toast
         console.log("Invoice created successfully:", res.result);
       }
@@ -325,7 +342,7 @@ function RouteComponent() {
                           type="button"
                           className="card border-0 shadow-sm text-start w-100 h-100 p-0 overflow-hidden sale-item-card"
                           onClick={() => void addToCart(item)}
-                          disabled={isLoadingProduct || isLoadingCustomer}
+                          disabled={isLoadingCustomer}
                         >
                           <div
                             className="d-flex align-items-center justify-content-center sale-item-cover"

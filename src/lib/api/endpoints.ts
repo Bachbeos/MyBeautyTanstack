@@ -17,6 +17,8 @@ import type { OpportunityId } from "../types/opportunity";
 import type { InvoiceId } from "../types/invoice";
 import type { BoughtProductId } from "../types/bought-product";
 import type { BoughtServiceId } from "../types/bought-service";
+import { create } from "zustand";
+import { getBy } from "@tanstack/react-form";
 
 export const ENDPOINTS = {
   auth: {
@@ -101,7 +103,8 @@ export const ENDPOINTS = {
     update: "/voucher/update",
     delete: (id: VoucherId) => `/voucher/delete/${id}`,
     detail: "/voucher/get",
-    apply: "/voucher/applyVoucher"
+    apply: "/voucher/applyVoucher",
+    getByCode: "/voucher/getByCode"
   },
   invoice: {
     list: "/invoice/list",
@@ -111,12 +114,14 @@ export const ENDPOINTS = {
     draft: "/invoice/draft",
     recalculate: "/invoice/recalculate",
     draftCreate: "/invoice/draft/create",
-    draftUpdate: "/invoice/draft/update"
+    draftUpdate: "/invoice/draft/update",
+    create: "/invoice/create"
   },
   boughtProduct: {
     list: "/boughtProduct/list",
     update: "/boughtProduct/update",
-    delete: (id: BoughtProductId) => `/boughtProduct/delete/${id}`
+    delete: (id: BoughtProductId) => `/boughtProduct/delete/${id}`,
+    batch: "/boughtProduct/batch-upsert"
   },
   boughtService: {
     list: "/boughtService/list",
