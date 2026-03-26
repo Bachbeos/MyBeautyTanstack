@@ -15,6 +15,8 @@ import type { AppointmentId } from "../types/appointment";
 import type { NotificationId } from "../types/notification";
 import type { OpportunityId } from "../types/opportunity";
 import type { InvoiceId } from "../types/invoice";
+import type { BoughtProductId } from "../types/bought-product";
+import type { BoughtServiceId } from "../types/bought-service";
 
 export const ENDPOINTS = {
   auth: {
@@ -107,17 +109,19 @@ export const ENDPOINTS = {
     delete: (id: InvoiceId) => `/invoice/delete/${id}`,
     detail: "/invoice/get",
     draft: "/invoice/draft",
-    recalculate: "/invoice/recalculate"
+    recalculate: "/invoice/recalculate",
+    draftCreate: "/invoice/draft/create",
+    draftUpdate: "/invoice/draft/update"
   },
   boughtProduct: {
     list: "/boughtProduct/list",
     update: "/boughtProduct/update",
-    delete: (id: string) => `/boughtProduct/delete/${id}`
+    delete: (id: BoughtProductId) => `/boughtProduct/delete/${id}`
   },
   boughtService: {
     list: "/boughtService/list",
     update: "/boughtService/update",
-    delete: (id: string) => `/boughtService/delete/${id}`
+    delete: (id: BoughtServiceId) => `/boughtService/delete/${id}`
   },
   branch: {
     list: "/branch/list",

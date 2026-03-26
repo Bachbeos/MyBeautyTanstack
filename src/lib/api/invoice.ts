@@ -43,3 +43,25 @@ export const deleteInvoice = async (id: InvoiceId): Promise<ApiResponse<void>> =
   const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.invoice.delete(id));
   return res.data;
 };
+
+export const createDraftInvoice = async (
+  customerId: number,
+  signal?: AbortSignal
+): Promise<ApiResponse<InvoiceDto>> => {
+  const params = { customerId };
+  const res = await axiosInstance.get<ApiResponse<InvoiceDto>>(ENDPOINTS.invoice.draftCreate, {
+    params,
+    signal
+  });
+  return res.data;
+};
+
+export const updateDraftInvoice = async (
+  body: InvoiceUpdateRequest
+): Promise<ApiResponse<InvoiceDto>> => {
+  const res = await axiosInstance.post<ApiResponse<InvoiceDto>>(
+    ENDPOINTS.invoice.draftUpdate,
+    body
+  );
+  return res.data;
+};
