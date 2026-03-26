@@ -65,3 +65,10 @@ export const updateDraftInvoice = async (
   );
   return res.data;
 };
+
+export const createInvoice = async (
+  body: InvoiceCreateRequest & { voucherId?: number }
+): Promise<ApiResponse<InvoiceDto>> => {
+  const res = await axiosInstance.post<ApiResponse<InvoiceDto>>(ENDPOINTS.invoice.create, body);
+  return res.data;
+};

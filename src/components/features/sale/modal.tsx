@@ -4,11 +4,18 @@ import { BaseModal } from "@/components/ui/modal";
 type ModalProps = {
   shown: boolean;
   initialAmount?: number;
+  invoiceId?: number;
   onClose: () => void;
   onSubmit: (values: any) => Promise<void>;
 };
 
-export default function ModalSale({ shown, initialAmount = 0, onClose, onSubmit }: ModalProps) {
+export default function ModalSale({
+  shown,
+  initialAmount = 0,
+  invoiceId,
+  onClose,
+  onSubmit
+}: ModalProps) {
   if (!shown) return null;
 
   const handleSubmit = async (values: any) => {
@@ -36,7 +43,12 @@ export default function ModalSale({ shown, initialAmount = 0, onClose, onSubmit 
         </>
       }
     >
-      <SaleForm mode="add" initialAmount={initialAmount} onSubmit={handleSubmit} />
+      <SaleForm
+        mode="add"
+        initialAmount={initialAmount}
+        invoiceId={invoiceId}
+        onSubmit={handleSubmit}
+      />
     </BaseModal>
   );
 }

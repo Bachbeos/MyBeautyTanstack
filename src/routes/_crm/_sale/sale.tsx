@@ -1,6 +1,6 @@
 import { useAppForm } from "@/components/form/hooks";
 import ModalSale from "@/components/features/sale/modal";
-import { createDraftInvoice, updateDraftInvoice } from "@/lib/api/invoice";
+import { createDraftInvoice, createInvoice, updateDraftInvoice } from "@/lib/api/invoice";
 import { batchUpsertBoughtProducts } from "@/lib/api/bought-product";
 import { customerQueries } from "@/lib/tanstack/options/customer";
 import { productQueries } from "@/lib/tanstack/options/product";
@@ -188,6 +188,7 @@ function RouteComponent() {
     discountCode?: string;
     fee?: number;
     paymentMethod?: number;
+    voucherId?: number;
   }) => {
     if (!draftInvoiceId || !draftInvoice) return null;
 
@@ -253,7 +254,12 @@ function RouteComponent() {
     }
 
     try {
-      const res = await updateDraftInvoice(payload);
+      const createPayload = {
+        ...(payload as any),
+        voucherId: values?.voucherId
+      };
+
+      const res = await createInvoice(createPayload);
 
       if (isApiOk(res)) {
         // Close modal and clear cart after successful update
@@ -505,6 +511,7 @@ function RouteComponent() {
       <ModalSale
         shown={modalShown}
         initialAmount={totalAmount}
+        invoiceId={draftInvoiceId || undefined}
         onClose={handleCloseModal}
         onSubmit={handleSubmitModal}
       />

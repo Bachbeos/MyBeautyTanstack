@@ -43,3 +43,22 @@ export const deleteVoucher = async (id: VoucherId): Promise<ApiResponse<void>> =
   const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.voucher.delete(id));
   return res.data;
 };
+
+export const getVoucherByCode = async (code: string): Promise<ApiResponse<VoucherDto>> => {
+  const res = await axiosInstance.get<ApiResponse<VoucherDto>>(ENDPOINTS.voucher.getByCode, {
+    params: { code }
+  });
+  return res.data;
+};
+
+export const applyVoucher = async (
+  invoiceId: number,
+  voucherCode: string
+): Promise<ApiResponse<{ discountAmount: number; totalAmount: number; fee: number }>> => {
+  const res = await axiosInstance.post<
+    ApiResponse<{ discountAmount: number; totalAmount: number; fee: number }>
+  >(ENDPOINTS.voucher.apply, null, {
+    params: { invoiceId, voucherCode }
+  });
+  return res.data;
+};
