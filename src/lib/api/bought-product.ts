@@ -35,7 +35,7 @@ export const upsertBoughtProduct = async (
 };
 
 export const batchUpsertBoughtProducts = async (
-  body: BoughtProductCreateRequest[]
+  body: (BoughtProductCreateRequest | BoughtProductUpdateRequest)[]
 ): Promise<ApiResponse<BoughtProductDto[]>> => {
   const res = await axiosInstance.post<ApiResponse<BoughtProductDto[]>>(
     ENDPOINTS.boughtProduct.batch,

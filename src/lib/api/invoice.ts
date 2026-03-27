@@ -48,7 +48,7 @@ export const createDraftInvoice = async (
   customerId: number,
   signal?: AbortSignal
 ): Promise<ApiResponse<InvoiceDto>> => {
-  const params = { customerId };
+  const params = { customerId: customerId != 0 ? customerId : undefined };
   const res = await axiosInstance.get<ApiResponse<InvoiceDto>>(ENDPOINTS.invoice.draftCreate, {
     params,
     signal

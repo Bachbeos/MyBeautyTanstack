@@ -6,12 +6,13 @@ import { customerQueries } from "@/lib/tanstack/options/customer";
 import { productQueries } from "@/lib/tanstack/options/product";
 import { serviceQueries } from "@/lib/tanstack/options/service";
 import type { InvoiceDto } from "@/lib/types/invoice";
-import type { BoughtProductCreateRequest } from "@/lib/types/bought-product";
+import type { BoughtProductCreateRequest, BoughtProductId, BoughtProductUpdateRequest } from "@/lib/types/bought-product";
 import type { ProductDto } from "@/lib/types/product";
 import type { ServiceDto } from "@/lib/types/service";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { set } from "zod";
 
 type MenuType = "product" | "service";
 
@@ -26,6 +27,7 @@ type MenuItem = {
 };
 
 type CartItem = MenuItem & {
+  boughtProductId?: BoughtProductId;
   quantity: number;
 };
 
@@ -213,7 +215,7 @@ function RouteComponent() {
     }
 
     try {
-      const productPayload: BoughtProductCreateRequest[] = cart
+      const productPayload: (BoughtProductCreateRequest| BoughtProductUpdateRequest)[] = cart
         .filter((item) => item.type === "product")
         .map((item) => ({
           invoiceId: currentDraftInvoiceId,
@@ -224,10 +226,27 @@ function RouteComponent() {
           fee: item.price * item.quantity,
           customerId: selectedCustomerId || 0,
           status: 0,
-          note: ""
+          note: "",
+          id: item.boughtProductId ? item.boughtProductId : undefined
         }));
 
       const batchRes = await batchUpsertBoughtProducts(productPayload);
+      const map = new Map(
+        batchRes.result?.map((p) => [p.productId, p.id])
+      );
+
+      setCart((prev) => {
+        return prev.map((item) => {
+          if (item.type === "product") {
+            return {
+              ...item,
+              boughtProductId: map.get(item.id),
+            };
+          }
+          return item;
+        });
+      });
+
       if (!isApiOk(batchRes)) {
         console.error("Batch upsert bought products failed:", batchRes);
         return;
