@@ -13,6 +13,7 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { set } from "zod";
+import { toast } from "sonner";
 
 type MenuType = "product" | "service";
 
@@ -286,6 +287,7 @@ function RouteComponent() {
         clearCart();
         setDraftInvoiceId(null);
         setDraftInvoice(null);
+        toast.success("Đơn hàng đã được tạo thành công!");
         // TODO: Show success popup/toast
         console.log("Invoice created successfully:", res.result);
       }
