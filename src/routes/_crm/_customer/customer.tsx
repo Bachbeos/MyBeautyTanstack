@@ -172,22 +172,18 @@ function RouteComponent() {
           const count = Number(info.getValue() ?? 0);
 
           return (
-            <div className="d-inline-flex align-items-center justify-content-center gap-2">
-              <span>{count}</span>
-              <button
-                type="button"
-                className="btn btn-icon btn-sm btn-soft-warning rounded-circle"
-                style={{ width: 26, height: 26 }}
-                title="Thêm cơ hội"
-                onClick={() =>
-                  openOpportunityModal("add", {
-                    customerId: Number(row.id),
-                    customerName: row.name
-                  })
-                }
-              >
-                <i className="ti ti-plus" />
-              </button>
+            <div
+              className="badge cursor-pointer badge-soft-danger custom-cursor-on-hover"
+              title="Thêm cơ hội"
+              onClick={() =>
+                openOpportunityModal("add", {
+                  customerId: Number(row.id),
+                  customerName: row.name
+                })
+              }
+            >
+              <span>{count} cơ hội</span>
+              <i className="ti ti-plus" />
             </div>
           );
         },
