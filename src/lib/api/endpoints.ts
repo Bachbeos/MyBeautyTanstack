@@ -115,6 +115,7 @@ export const ENDPOINTS = {
     recalculate: "/invoice/recalculate",
     draftCreate: "/invoice/draft/create",
     draftUpdate: "/invoice/draft/update",
+    draftDelete: (id: InvoiceId) => `/invoice/draft/delete/${id}`,
     create: "/invoice/create"
   },
   boughtProduct: {

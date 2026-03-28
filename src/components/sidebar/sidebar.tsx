@@ -57,7 +57,8 @@ export default function Sidebar() {
     "/email": "email",
     "/chat": "chat",
     "/notification": "notification",
-    "/sale": "sale"
+    "/sale": "sale",
+    "/draft-invoice": "draft-invoice"
   };
 
   const location = useLocation();
@@ -303,6 +304,7 @@ export default function Sidebar() {
                 <li>
                   <Link
                     to="/sale"
+                    search={{ invoiceId: undefined }}
                     className={activeTab === "sale" ? "active" : ""}
                     onClick={() => handleTabClick("sale")}
                   >
@@ -319,6 +321,16 @@ export default function Sidebar() {
                   >
                     <i className="ti ti-file-invoice"></i>
                     <span>Hóa đơn</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/draft-invoice"
+                    className={activeTab === "draft-invoice" ? "active" : ""}
+                    onClick={() => handleTabClick("draft-invoice")}
+                  >
+                    <i className="ti ti-file-invoice"></i>
+                    <span>Hóa đơn nháp</span>
                   </Link>
                 </li>
               </ul>

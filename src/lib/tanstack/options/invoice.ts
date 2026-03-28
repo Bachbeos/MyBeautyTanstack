@@ -23,7 +23,8 @@ export const invoiceKeys = createKeys("invoice", {
   create: () => ["create"] as const,
   update: () => ["update"] as const,
   delete: () => ["delete"] as const,
-  infinite: (params: Omit<InvoiceListRequest, "page">) => ["infinite", params] as const
+  infinite: (params: Omit<InvoiceListRequest, "page">) => ["infinite", params] as const,
+  deleteDraft: () => ["deleteDraft"] as const
 });
 
 export const invoiceQueries = {
@@ -92,6 +93,16 @@ export const invoiceMutations = {
       mutationFn: (id) => deleteInvoice(id),
       meta: {
         successMessage: "Xóa hóa đơn thành công",
+        invalidatesQuery: [invoiceKeys.list({})]
+      }
+    }),
+
+  deleteDraft: () =>
+    mutationOptions<ApiResponse<void>, Error, InvoiceId>({
+      mutationKey: invoiceKeys.deleteDraft(),
+      mutationFn: (id) => deleteInvoice(id),
+      meta: {
+        successMessage: "Xóa hóa đơn nháp thành công",
         invalidatesQuery: [invoiceKeys.list({})]
       }
     })

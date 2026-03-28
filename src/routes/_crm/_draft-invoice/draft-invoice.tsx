@@ -1,17 +1,15 @@
 import { AsyncBoundary } from "@/components/async-boundary";
 import CollapseButton from "@/components/collapse/collapse-button";
-import ExportButton from "@/components/export/export";
 import RefreshButton from "@/components/refresh/refresh";
 import { DataTable } from "@/components/table/data-table";
+import ActionsTable from "@/components/table/actions-table";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { useCloseModal, useModalFade } from "@/hooks/use-modal-animation";
-import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
-import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
+import { BaseModal } from "@/components/ui/modal";
 import { invoiceMutations, invoiceQueries } from "@/lib/tanstack/options/invoice";
 import type { InvoiceDto } from "@/lib/types/invoice";
-import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -19,10 +17,11 @@ import {
   type ColumnFiltersState
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 const columnHelper = createColumnHelper<InvoiceDto>();
 
-export const Route = createFileRoute("/_crm/_invoice/invoice")({
+export const Route = createFileRoute("/_crm/_draft-invoice/draft-invoice")({
   component: RouteComponent
 });
 
@@ -45,7 +44,6 @@ function RouteComponent() {
   const [modalShown, setModalShown] = useState(false);
 
   useModalFade(modal.type, setModalShown);
-
   const closeModal = useCloseModal(setModalShown, (state) => setModal(state as any));
 
   const openModal = (type: any, item: any) => {
@@ -56,7 +54,8 @@ function RouteComponent() {
     () => ({
       page: pageIndex + 1,
       limit: pageSize,
-      keyword: nameFilter || undefined
+      keyword: nameFilter || undefined,
+      status: 0 // Lấy các hóa đơn nháp
     }),
     [pageIndex, pageSize, nameFilter]
   );
@@ -69,9 +68,19 @@ function RouteComponent() {
   const invoices = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
 
-  const createMutation = useMutation(invoiceMutations.create());
-  const updateMutation = useMutation(invoiceMutations.update());
-  const deleteMutation = useMutation(invoiceMutations.delete());
+  const deleteMutation = useMutation(invoiceMutations.deleteDraft());
+
+  const handleDelete = async () => {
+    if (!modal.item?.id) return;
+    try {
+      await deleteMutation.mutateAsync(modal.item.id as any);
+      toast.success("Đã xóa hóa đơn nháp");
+      closeModal();
+      query.refetch();
+    } catch (error) {
+      toast.error("Xóa hóa đơn nháp thất bại");
+    }
+  };
 
   const columns = useMemo(
     () => [
@@ -137,32 +146,6 @@ function RouteComponent() {
         ),
         meta: { className: "align-middle text-end" }
       }),
-      columnHelper.accessor("paymentType", {
-        id: "payment_type",
-        header: "Thanh toán",
-        cell: (info) => {
-          const type = Number(info.getValue());
-          return type === 2 ? (
-            <span className="badge badge-soft-info">Chuyển khoản</span>
-          ) : (
-            <span className="badge badge-soft-success">Tiền mặt</span>
-          );
-        },
-        meta: { className: "text-center align-middle w-1" }
-      }),
-      columnHelper.accessor("status", {
-        id: "status",
-        header: "Trạng thái",
-        cell: (info) => {
-          const status = Number(info.getValue());
-          return status === 1 ? (
-            <span className="badge badge-soft-success">Hoàn tất</span>
-          ) : (
-            <span className="badge badge-soft-warning">Hóa đơn nháp</span>
-          );
-        },
-        meta: { className: "text-center align-middle w-1" }
-      }),
       columnHelper.accessor("createdTime", {
         id: "created_time",
         header: "Ngày tạo",
@@ -176,20 +159,31 @@ function RouteComponent() {
           );
         },
         meta: { className: "align-middle text-center" }
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Thao tác",
+        meta: { className: "text-center w-1" },
+        cell: (info) => (
+          <ActionsTable
+            row={info.row}
+            onDelete={(data) => openModal("delete", data)}
+            extra={(data) => (
+              <Link
+                to="/sale"
+                search={{ invoiceId: Number(data.id) } as any}
+                className="btn btn-sm btn-primary d-inline-flex align-items-center justify-content-center"
+                data-bs-toggle="tooltip"
+                data-bs-placement="top"
+                title="Tiếp tục làm việc"
+                style={{ width: "32px", height: "32px", padding: 0 }}
+              >
+                <i className="ti ti-arrow-right"></i>
+              </Link>
+            )}
+          />
+        )
       })
-      // columnHelper.display({
-      //   id: "actions",
-      //   header: "Thao tác",
-      //   meta: { className: "text-center w-1" },
-      //   cell: (info) => (
-      //     <ActionsTable
-      //       row={info.row}
-      //       onView={(data) => openModal("detail", data)}
-      //       onEdit={(data) => openModal("edit", data)}
-      //       onDelete={(data) => openModal("delete", data)}
-      //     />
-      //   )
-      // })
     ],
     [pageIndex, pageSize]
   );
@@ -215,20 +209,6 @@ function RouteComponent() {
     getCoreRowModel: getCoreRowModel()
   });
 
-  const handleSubmit = async (values: any) => {
-    if (modal.type === "add") await createMutation.mutateAsync(values);
-    if (modal.type === "edit") await updateMutation.mutateAsync(values);
-    closeModal();
-    query.refetch();
-  };
-
-  const handleDelete = async () => {
-    if (!modal.item?.id) return;
-    await deleteMutation.mutateAsync(modal.item.id);
-    closeModal();
-    query.refetch();
-  };
-
   const handleCollapse = () => {
     document.body.classList.toggle("header-collapse");
     setIsHeaderCollapsed(document.body.classList.contains("header-collapse"));
@@ -240,24 +220,12 @@ function RouteComponent() {
         <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
           <div>
             <h4 className="mb-1 fw-bold">
-              Danh sách hóa đơn
+              Danh sách hóa đơn nháp
               <span className="badge badge-soft-primary ms-2">{total}</span>
             </h4>
-            <div className="text-muted small">Hóa đơn / Danh sách hóa đơn</div>
+            <div className="text-muted small">Hóa đơn / Hóa đơn nháp</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
-            <ExportButton
-              onExport={(format) => {
-                switch (format) {
-                  case "xls":
-                    exportVisibleTableToXLSX(table);
-                    break;
-                  case "pdf":
-                    exportVisibleTableToPDF(table);
-                    break;
-                }
-              }}
-            />
             <RefreshButton onRefresh={() => query.refetch()} />
             <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>
@@ -276,10 +244,7 @@ function RouteComponent() {
                   table={table}
                   filterable={true}
                   filterKey="invoice_code"
-                  filterKeyPlaceholder="Tìm nhanh hóa đơn..."
-                  // toolbarRight={
-                  //   <AddButton label="Thêm sản phẩm" onClick={() => openModal("add", null)} />
-                  // }
+                  filterKeyPlaceholder="Tìm nhanh hóa đơn nháp..."
                   toolbarLeft={<div className="text-muted small d-none d-md-block"></div>}
                 />
               )}
@@ -287,6 +252,35 @@ function RouteComponent() {
           </div>
         </div>
       </div>
+
+      {modal.type === "delete" && (
+        <BaseModal
+          title="Xóa hóa đơn nháp?"
+          shown={modalShown}
+          size="sm"
+          onClose={closeModal}
+          footer={
+            <div className="d-flex justify-content-center w-100 gap-2">
+              <button className="btn btn-sm btn-light w-100" onClick={closeModal}>
+                Hủy
+              </button>
+              <button className="btn btn-sm btn-danger w-100" onClick={handleDelete}>
+                Đồng ý
+              </button>
+            </div>
+          }
+        >
+          <div className="text-center">
+            <span className="avatar avatar-xl badge-soft-danger border-0 text-danger rounded-circle mb-3">
+              <i className="ti ti-trash fs-24"></i>
+            </span>
+            <h5 className="mb-1">Xóa hóa đơn nháp</h5>
+            <p className="mb-3 text-muted">
+              Bạn có chắc muốn xóa hóa đơn nháp <strong>#{modal.item?.invoiceCode}</strong> không?
+            </p>
+          </div>
+        </BaseModal>
+      )}
     </div>
   );
 }

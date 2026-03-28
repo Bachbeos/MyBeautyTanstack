@@ -28,6 +28,7 @@ import { Route as CrmNotificationNotificationRouteImport } from './routes/_crm/_
 import { Route as CrmInvoiceInvoiceRouteImport } from './routes/_crm/_invoice/invoice'
 import { Route as CrmErrorError505RouteImport } from './routes/_crm/_error/error505'
 import { Route as CrmEmailEmailRouteImport } from './routes/_crm/_email/email'
+import { Route as CrmDraftInvoiceDraftInvoiceRouteImport } from './routes/_crm/_draft-invoice/draft-invoice'
 import { Route as CrmCustomerCustomerRouteImport } from './routes/_crm/_customer/customer'
 import { Route as CrmCustomerSourceCustomerSourceRouteImport } from './routes/_crm/_customer-source/customer-source'
 import { Route as CrmCustomerSettingsCustomerAttributeRouteImport } from './routes/_crm/_customer-settings/customer-attribute'
@@ -135,6 +136,12 @@ const CrmEmailEmailRoute = CrmEmailEmailRouteImport.update({
   path: '/email',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmDraftInvoiceDraftInvoiceRoute =
+  CrmDraftInvoiceDraftInvoiceRouteImport.update({
+    id: '/_draft-invoice/draft-invoice',
+    path: '/draft-invoice',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmCustomerCustomerRoute = CrmCustomerCustomerRouteImport.update({
   id: '/_customer/customer',
   path: '/customer',
@@ -193,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/customer': typeof CrmCustomerCustomerRoute
+  '/draft-invoice': typeof CrmDraftInvoiceDraftInvoiceRoute
   '/email': typeof CrmEmailEmailRoute
   '/error505': typeof CrmErrorError505Route
   '/invoice': typeof CrmInvoiceInvoiceRoute
@@ -222,6 +230,7 @@ export interface FileRoutesByTo {
   '/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/customer': typeof CrmCustomerCustomerRoute
+  '/draft-invoice': typeof CrmDraftInvoiceDraftInvoiceRoute
   '/email': typeof CrmEmailEmailRoute
   '/error505': typeof CrmErrorError505Route
   '/invoice': typeof CrmInvoiceInvoiceRoute
@@ -252,6 +261,7 @@ export interface FileRoutesById {
   '/_crm/_customer-settings/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/_crm/_customer-source/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/_crm/_customer/customer': typeof CrmCustomerCustomerRoute
+  '/_crm/_draft-invoice/draft-invoice': typeof CrmDraftInvoiceDraftInvoiceRoute
   '/_crm/_email/email': typeof CrmEmailEmailRoute
   '/_crm/_error/error505': typeof CrmErrorError505Route
   '/_crm/_invoice/invoice': typeof CrmInvoiceInvoiceRoute
@@ -283,6 +293,7 @@ export interface FileRouteTypes {
     | '/customer-attribute'
     | '/customer-source'
     | '/customer'
+    | '/draft-invoice'
     | '/email'
     | '/error505'
     | '/invoice'
@@ -312,6 +323,7 @@ export interface FileRouteTypes {
     | '/customer-attribute'
     | '/customer-source'
     | '/customer'
+    | '/draft-invoice'
     | '/email'
     | '/error505'
     | '/invoice'
@@ -341,6 +353,7 @@ export interface FileRouteTypes {
     | '/_crm/_customer-settings/customer-attribute'
     | '/_crm/_customer-source/customer-source'
     | '/_crm/_customer/customer'
+    | '/_crm/_draft-invoice/draft-invoice'
     | '/_crm/_email/email'
     | '/_crm/_error/error505'
     | '/_crm/_invoice/invoice'
@@ -500,6 +513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmEmailEmailRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/_draft-invoice/draft-invoice': {
+      id: '/_crm/_draft-invoice/draft-invoice'
+      path: '/draft-invoice'
+      fullPath: '/draft-invoice'
+      preLoaderRoute: typeof CrmDraftInvoiceDraftInvoiceRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/_crm/_customer/customer': {
       id: '/_crm/_customer/customer'
       path: '/customer'
@@ -568,6 +588,7 @@ interface CrmRouteChildren {
   CrmCustomerSettingsCustomerAttributeRoute: typeof CrmCustomerSettingsCustomerAttributeRoute
   CrmCustomerSourceCustomerSourceRoute: typeof CrmCustomerSourceCustomerSourceRoute
   CrmCustomerCustomerRoute: typeof CrmCustomerCustomerRoute
+  CrmDraftInvoiceDraftInvoiceRoute: typeof CrmDraftInvoiceDraftInvoiceRoute
   CrmEmailEmailRoute: typeof CrmEmailEmailRoute
   CrmErrorError505Route: typeof CrmErrorError505Route
   CrmInvoiceInvoiceRoute: typeof CrmInvoiceInvoiceRoute
@@ -595,6 +616,7 @@ const CrmRouteChildren: CrmRouteChildren = {
     CrmCustomerSettingsCustomerAttributeRoute,
   CrmCustomerSourceCustomerSourceRoute: CrmCustomerSourceCustomerSourceRoute,
   CrmCustomerCustomerRoute: CrmCustomerCustomerRoute,
+  CrmDraftInvoiceDraftInvoiceRoute: CrmDraftInvoiceDraftInvoiceRoute,
   CrmEmailEmailRoute: CrmEmailEmailRoute,
   CrmErrorError505Route: CrmErrorError505Route,
   CrmInvoiceInvoiceRoute: CrmInvoiceInvoiceRoute,

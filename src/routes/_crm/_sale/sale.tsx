@@ -5,13 +5,14 @@ import { batchUpsertBoughtProducts } from "@/lib/api/bought-product";
 import { customerQueries } from "@/lib/tanstack/options/customer";
 import { productQueries } from "@/lib/tanstack/options/product";
 import { serviceQueries } from "@/lib/tanstack/options/service";
+import { invoiceQueries } from "@/lib/tanstack/options/invoice";
 import type { InvoiceDto } from "@/lib/types/invoice";
 import type { BoughtProductCreateRequest, BoughtProductId, BoughtProductUpdateRequest } from "@/lib/types/bought-product";
 import type { ProductDto } from "@/lib/types/product";
 import type { ServiceDto } from "@/lib/types/service";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { set } from "zod";
 import { toast } from "sonner";
 
@@ -59,10 +60,18 @@ const formatPrice = (value: number) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
 
 export const Route = createFileRoute("/_crm/_sale/sale")({
-  component: RouteComponent
+  component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      invoiceId: Number(search.invoiceId) || undefined
+    };
+  }
 });
 
 function RouteComponent() {
+  const search = Route.useSearch();
+  const invoiceIdParam = search.invoiceId;
+
   const [activeTab, setActiveTab] = useState<MenuType>("product");
   const [keyword, setKeyword] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -110,6 +119,41 @@ function RouteComponent() {
       ...options.map((customer) => ({ label: customer.name, value: Number(customer.id) }))
     ];
   }, [customersInf.data]);
+
+  const invoiceDetailQuery = useQuery({
+    ...invoiceQueries.detail(invoiceIdParam as any),
+    enabled: !!invoiceIdParam
+  });
+
+  useEffect(() => {
+    const data = invoiceDetailQuery.data as any;
+    if (data?.result) {
+      const invoice = data.result;
+      
+      if (invoice.customerId) {
+        customerForm.setFieldValue("customerId", invoice.customerId);
+      }
+
+      setDraftInvoiceId(invoice.id);
+      setDraftInvoice(invoice);
+
+      const items: any[] = (invoice as any).boughtProducts || (invoice as any).items || (invoice as any).details || [];
+      
+      const newCart: CartItem[] = items.map((item: any) => ({
+        id: item.productId || item.id,
+        key: `product-${item.productId || item.id}`,
+        name: item.productName || item.name || "Sản phẩm (Draft)",
+        type: "product",
+        category: "Sản phẩm",
+        price: Number(item.price) || 0,
+        accent: PRODUCT_ACCENT,
+        quantity: item.qty || 1,
+        boughtProductId: item.id
+      }));
+
+      setCart(newCart);
+    }
+  }, [invoiceDetailQuery.data]);
 
   const handleLoadMoreCustomers = () => {
     if (!customersInf.hasNextPage || customersInf.isFetchingNextPage) return;
@@ -282,7 +326,6 @@ function RouteComponent() {
       const res = await createInvoice(createPayload);
 
       if (isApiOk(res)) {
-        // Close modal and clear cart after successful update
         handleCloseModal();
         clearCart();
         setDraftInvoiceId(null);
