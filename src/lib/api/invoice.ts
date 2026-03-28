@@ -32,6 +32,17 @@ export const getInvoiceDetail = async (
   return res.data;
 };
 
+export const getDraftInvoiceDetail = async (
+  id: InvoiceId,
+  signal?: AbortSignal
+): Promise<ApiResponse<InvoiceDto>> => {
+  const res = await axiosInstance.get<ApiResponse<InvoiceDto>>(ENDPOINTS.invoice.draftDetail, {
+    params: { id: id },
+    signal
+  });
+  return res.data;
+};
+
 export const upsertInvoice = async (
   body: InvoiceUpdateRequest | InvoiceCreateRequest
 ): Promise<ApiResponse<InvoiceDto>> => {

@@ -4,7 +4,7 @@ import {
   infiniteQueryOptions,
   type InfiniteData
 } from "@tanstack/react-query";
-import { getInvoices, getInvoiceDetail, upsertInvoice, deleteInvoice } from "@/lib/api/invoice";
+import { getInvoices, getInvoiceDetail, getDraftInvoiceDetail, upsertInvoice, deleteInvoice } from "@/lib/api/invoice";
 
 import type {
   InvoiceId,
@@ -20,6 +20,7 @@ import { createKeys } from "@/lib/tanstack/query-key";
 export const invoiceKeys = createKeys("invoice", {
   list: (params: InvoiceListRequest) => ["list", params] as const,
   detail: (id: InvoiceId) => ["detail", id] as const,
+  draftDetail: (id: InvoiceId) => ["draftDetail", id] as const,
   create: () => ["create"] as const,
   update: () => ["update"] as const,
   delete: () => ["delete"] as const,
@@ -62,6 +63,13 @@ export const invoiceQueries = {
     queryOptions<ApiResponse<InvoiceDto>>({
       queryKey: invoiceKeys.detail(id),
       queryFn: ({ signal }) => getInvoiceDetail(id, signal),
+      enabled: !!id
+    }),
+
+  draftDetail: (id: InvoiceId) =>
+    queryOptions<ApiResponse<InvoiceDto>>({
+      queryKey: invoiceKeys.draftDetail(id),
+      queryFn: ({ signal }) => getDraftInvoiceDetail(id, signal),
       enabled: !!id
     })
 };

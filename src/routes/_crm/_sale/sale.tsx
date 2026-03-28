@@ -6,7 +6,7 @@ import { customerQueries } from "@/lib/tanstack/options/customer";
 import { productQueries } from "@/lib/tanstack/options/product";
 import { serviceQueries } from "@/lib/tanstack/options/service";
 import { invoiceQueries } from "@/lib/tanstack/options/invoice";
-import type { InvoiceDto } from "@/lib/types/invoice";
+import type { InvoiceDto, InvoiceId } from "@/lib/types/invoice";
 import type { BoughtProductCreateRequest, BoughtProductId, BoughtProductUpdateRequest } from "@/lib/types/bought-product";
 import type { ProductDto } from "@/lib/types/product";
 import type { ServiceDto } from "@/lib/types/service";
@@ -121,37 +121,54 @@ function RouteComponent() {
   }, [customersInf.data]);
 
   const invoiceDetailQuery = useQuery({
-    ...invoiceQueries.detail(invoiceIdParam as any),
+    ...invoiceQueries.draftDetail((invoiceIdParam as unknown) as InvoiceId),
     enabled: !!invoiceIdParam
-  });
+  }) as any;
 
   useEffect(() => {
     const data = invoiceDetailQuery.data as any;
-    if (data?.result) {
-      const invoice = data.result;
+    if (data?.result?.invoice || data?.result) {
+      // Bóc tách theo cấu trúc mới
+      const invoice = data.result.invoice || data.result;
+      const products = data.result.products || [];
+      const services = data.result.services || [];
       
+      // Populate customer
       if (invoice.customerId) {
         customerForm.setFieldValue("customerId", invoice.customerId);
       }
 
+      // Populate draft invoice
       setDraftInvoiceId(invoice.id);
       setDraftInvoice(invoice);
 
-      const items: any[] = (invoice as any).boughtProducts || (invoice as any).items || (invoice as any).details || [];
-      
-      const newCart: CartItem[] = items.map((item: any) => ({
+      // Populate cart with products
+      const newProductsCart: CartItem[] = products.map((item: any) => ({
         id: item.productId || item.id,
         key: `product-${item.productId || item.id}`,
-        name: item.productName || item.name || "Sản phẩm (Draft)",
+        name: item.productName || item.name || "Sản phẩm",
         type: "product",
-        category: "Sản phẩm",
+        category: item.unitName || "Sản phẩm",
         price: Number(item.price) || 0,
         accent: PRODUCT_ACCENT,
         quantity: item.qty || 1,
         boughtProductId: item.id
       }));
 
-      setCart(newCart);
+      // Populate cart with services (giả lập cấu trúc tương tự products)
+      const newServicesCart: CartItem[] = services.map((item: any) => ({
+        id: item.serviceId || item.id,
+        key: `service-${item.serviceId || item.id}`,
+        name: item.serviceName || item.name || "Dịch vụ",
+        type: "service",
+        category: item.unitName || "Dịch vụ",
+        price: Number(item.price) || 0,
+        accent: SERVICE_ACCENT, // Dịch vụ sẽ dùng accent màu xanh lá
+        quantity: item.qty || 1,
+        boughtProductId: item.id // Dùng field này để update/delete (nếu FE tái sử dụng)
+      }));
+
+      setCart([...newProductsCart, ...newServicesCart]);
     }
   }, [invoiceDetailQuery.data]);
 
