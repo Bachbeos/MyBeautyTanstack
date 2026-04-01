@@ -190,5 +190,13 @@ export const ENDPOINTS = {
     send: "/message/send",
     edit: "/message/edit",
     delete: "/message/delete"
+  },
+  report: {
+    customerByMonth: "/report/customer/by-month",
+    customerBySource: "/report/customer/by-source",
+    revenueByMonth: "/report/invoice/monthly-revenue",
+    frequency: "/report/invoice/frequency",
+    callHistoryAvg: "/report/callHistory/avg-interest",
+    callHistoryInterest: "/report/callHistory/interest-bar",
   }
 } as const;

@@ -26,6 +26,7 @@ type MenuItem = {
   category: string;
   price: number;
   accent: string;
+  avatar?: string;
 };
 
 type CartItem = MenuItem & {
@@ -43,7 +44,8 @@ const mapProductToMenuItem = (item: ProductDto): MenuItem => ({
   type: "product",
   category: item.categoryName || "Sản phẩm",
   price: Number(item.price) || 0,
-  accent: PRODUCT_ACCENT
+  accent: PRODUCT_ACCENT,
+  avatar: item.avatar
 });
 
 const mapServiceToMenuItem = (item: ServiceDto): MenuItem => ({
@@ -53,7 +55,8 @@ const mapServiceToMenuItem = (item: ServiceDto): MenuItem => ({
   type: "service",
   category: item.categoryName || "Dịch vụ",
   price: Number(item.price) || 0,
-  accent: SERVICE_ACCENT
+  accent: SERVICE_ACCENT,
+  avatar: item.avatar
 });
 
 const formatPrice = (value: number) =>
@@ -128,21 +131,17 @@ function RouteComponent() {
   useEffect(() => {
     const data = invoiceDetailQuery.data as any;
     if (data?.result?.invoice || data?.result) {
-      // Bóc tách theo cấu trúc mới
       const invoice = data.result.invoice || data.result;
       const products = data.result.products || [];
       const services = data.result.services || [];
       
-      // Populate customer
       if (invoice.customerId) {
         customerForm.setFieldValue("customerId", invoice.customerId);
       }
 
-      // Populate draft invoice
       setDraftInvoiceId(invoice.id);
       setDraftInvoice(invoice);
 
-      // Populate cart with products
       const newProductsCart: CartItem[] = products.map((item: any) => ({
         id: item.productId || item.id,
         key: `product-${item.productId || item.id}`,
@@ -155,7 +154,6 @@ function RouteComponent() {
         boughtProductId: item.id
       }));
 
-      // Populate cart with services (giả lập cấu trúc tương tự products)
       const newServicesCart: CartItem[] = services.map((item: any) => ({
         id: item.serviceId || item.id,
         key: `service-${item.serviceId || item.id}`,
@@ -163,9 +161,9 @@ function RouteComponent() {
         type: "service",
         category: item.unitName || "Dịch vụ",
         price: Number(item.price) || 0,
-        accent: SERVICE_ACCENT, // Dịch vụ sẽ dùng accent màu xanh lá
+        accent: SERVICE_ACCENT,
         quantity: item.qty || 1,
-        boughtProductId: item.id // Dùng field này để update/delete (nếu FE tái sử dụng)
+        boughtProductId: item.id
       }));
 
       setCart([...newProductsCart, ...newServicesCart]);
@@ -179,7 +177,7 @@ function RouteComponent() {
 
   const customerForm = useAppForm({
     defaultValues: {
-      customerId: 0 as number
+      customerId: "" as string | number
     },
     onSubmit: async () => {}
   });
@@ -433,12 +431,21 @@ function RouteComponent() {
                         >
                           <div
                             className="d-flex align-items-center justify-content-center sale-item-cover"
-                            style={{ backgroundColor: item.avatar, height: 92 }}
+                            style={{ 
+                              backgroundColor: item.accent, 
+                              height: 92,
+                              backgroundImage: item.avatar ? `url(${item.avatar})` : 'none',
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                              backgroundRepeat: 'no-repeat'
+                            }}
                           >
-                            <i
-                              className={`ti ${item.type === "product" ? "ti-tools-kitchen-2" : "ti-user-star"} fs-28 text-primary`}
-                              aria-hidden="true"
-                            />
+                            {!item.avatar && (
+                              <i
+                                className={`ti ${item.type === "product" ? "ti-tools-kitchen-2" : "ti-user-star"} fs-28 text-primary`}
+                                aria-hidden="true"
+                              />
+                            )}
                           </div>
                           <div className="p-3">
                             <div className="d-flex align-items-start justify-content-between gap-2 mb-2">

@@ -21,6 +21,7 @@ import { Route as CrmSaleSaleRouteImport } from './routes/_crm/_sale/sale'
 import { Route as CrmRolesPermissionsRoleRouteImport } from './routes/_crm/_roles-permissions/role'
 import { Route as CrmRolesPermissionsPermissionRouteImport } from './routes/_crm/_roles-permissions/permission'
 import { Route as CrmResourceResourceRouteImport } from './routes/_crm/_resource/resource'
+import { Route as CrmReportReportRouteImport } from './routes/_crm/_report/report'
 import { Route as CrmProfileSettingsProfileSettingsRouteImport } from './routes/_crm/_profile-settings/profile-settings'
 import { Route as CrmProductProductRouteImport } from './routes/_crm/_product/product'
 import { Route as CrmOpportunityOpportunityRouteImport } from './routes/_crm/_opportunity/opportunity'
@@ -96,6 +97,11 @@ const CrmRolesPermissionsPermissionRoute =
 const CrmResourceResourceRoute = CrmResourceResourceRouteImport.update({
   id: '/_resource/resource',
   path: '/resource',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmReportReportRoute = CrmReportReportRouteImport.update({
+  id: '/_report/report',
+  path: '/report',
   getParentRoute: () => CrmRoute,
 } as any)
 const CrmProfileSettingsProfileSettingsRoute =
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/opportunity': typeof CrmOpportunityOpportunityRoute
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
+  '/report': typeof CrmReportReportRoute
   '/resource': typeof CrmResourceResourceRoute
   '/permission': typeof CrmRolesPermissionsPermissionRoute
   '/role': typeof CrmRolesPermissionsRoleRoute
@@ -238,6 +245,7 @@ export interface FileRoutesByTo {
   '/opportunity': typeof CrmOpportunityOpportunityRoute
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
+  '/report': typeof CrmReportReportRoute
   '/resource': typeof CrmResourceResourceRoute
   '/permission': typeof CrmRolesPermissionsPermissionRoute
   '/role': typeof CrmRolesPermissionsRoleRoute
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/_crm/_opportunity/opportunity': typeof CrmOpportunityOpportunityRoute
   '/_crm/_product/product': typeof CrmProductProductRoute
   '/_crm/_profile-settings/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
+  '/_crm/_report/report': typeof CrmReportReportRoute
   '/_crm/_resource/resource': typeof CrmResourceResourceRoute
   '/_crm/_roles-permissions/permission': typeof CrmRolesPermissionsPermissionRoute
   '/_crm/_roles-permissions/role': typeof CrmRolesPermissionsRoleRoute
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/opportunity'
     | '/product'
     | '/profile-settings'
+    | '/report'
     | '/resource'
     | '/permission'
     | '/role'
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/opportunity'
     | '/product'
     | '/profile-settings'
+    | '/report'
     | '/resource'
     | '/permission'
     | '/role'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/_crm/_opportunity/opportunity'
     | '/_crm/_product/product'
     | '/_crm/_profile-settings/profile-settings'
+    | '/_crm/_report/report'
     | '/_crm/_resource/resource'
     | '/_crm/_roles-permissions/permission'
     | '/_crm/_roles-permissions/role'
@@ -462,6 +474,13 @@ declare module '@tanstack/react-router' {
       path: '/resource'
       fullPath: '/resource'
       preLoaderRoute: typeof CrmResourceResourceRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_report/report': {
+      id: '/_crm/_report/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof CrmReportReportRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/_profile-settings/profile-settings': {
@@ -596,6 +615,7 @@ interface CrmRouteChildren {
   CrmOpportunityOpportunityRoute: typeof CrmOpportunityOpportunityRoute
   CrmProductProductRoute: typeof CrmProductProductRoute
   CrmProfileSettingsProfileSettingsRoute: typeof CrmProfileSettingsProfileSettingsRoute
+  CrmReportReportRoute: typeof CrmReportReportRoute
   CrmResourceResourceRoute: typeof CrmResourceResourceRoute
   CrmRolesPermissionsPermissionRoute: typeof CrmRolesPermissionsPermissionRoute
   CrmRolesPermissionsRoleRoute: typeof CrmRolesPermissionsRoleRoute
@@ -625,6 +645,7 @@ const CrmRouteChildren: CrmRouteChildren = {
   CrmProductProductRoute: CrmProductProductRoute,
   CrmProfileSettingsProfileSettingsRoute:
     CrmProfileSettingsProfileSettingsRoute,
+  CrmReportReportRoute: CrmReportReportRoute,
   CrmResourceResourceRoute: CrmResourceResourceRoute,
   CrmRolesPermissionsPermissionRoute: CrmRolesPermissionsPermissionRoute,
   CrmRolesPermissionsRoleRoute: CrmRolesPermissionsRoleRoute,
