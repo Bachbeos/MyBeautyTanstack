@@ -56,7 +56,8 @@ function RouteComponent() {
     () => ({
       page: pageIndex + 1,
       limit: pageSize,
-      keyword: nameFilter || undefined
+      keyword: nameFilter || undefined,
+      status:1
     }),
     [pageIndex, pageSize, nameFilter]
   );
@@ -94,7 +95,7 @@ function RouteComponent() {
           const row = info.row.original;
           return (
             <div className="d-flex flex-column">
-              <span className="fw-medium text-dark">{row.customerName || "Khách lẻ"}</span>
+              <span className="fw-medium text-dark">{row.customerName || "Khách vãng lai"}</span>
               {row.phone ? <small className="text-muted">{String(row.phone)}</small> : null}
             </div>
           );
@@ -171,7 +172,7 @@ function RouteComponent() {
           const date = row.createdTime || row.receiptDate;
           return (
             <span className="fs-13 text-muted">
-              {date ? new Date(date).toLocaleDateString("vi-VN") : "-"}
+              {date ? new Date(date).toLocaleString("vi-VN") : "-"}
             </span>
           );
         },

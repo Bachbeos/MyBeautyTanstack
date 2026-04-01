@@ -6,7 +6,7 @@ const envSchema = z.object({
   // VITE_API_URL: z.url().default("http://localhost:9100"),
   VITE_API_URL: z.url().default("https://be.aeoc.io.vn/api"),
   // VITE_SOCKET_URL: z.url().default("http://localhost:9090"),
-  VITE_SOCKET_URL: z.url().default("https://be.aeoc.io.vn/socket")
+  VITE_SOCKET_URL: z.url().default("https://be.aeoc.io.vn")
 });
 
 const env = envSchema.parse(import.meta.env);
