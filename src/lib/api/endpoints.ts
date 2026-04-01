@@ -17,8 +17,6 @@ import type { OpportunityId } from "../types/opportunity";
 import type { InvoiceId } from "../types/invoice";
 import type { BoughtProductId } from "../types/bought-product";
 import type { BoughtServiceId } from "../types/bought-service";
-import { create } from "zustand";
-import { getBy } from "@tanstack/react-form";
 
 export const ENDPOINTS = {
   auth: {
