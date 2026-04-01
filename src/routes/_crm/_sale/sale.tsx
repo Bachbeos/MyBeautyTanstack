@@ -433,7 +433,7 @@ function RouteComponent() {
                         >
                           <div
                             className="d-flex align-items-center justify-content-center sale-item-cover"
-                            style={{ backgroundColor: item.accent, height: 92 }}
+                            style={{ backgroundColor: item.avatar, height: 92 }}
                           >
                             <i
                               className={`ti ${item.type === "product" ? "ti-tools-kitchen-2" : "ti-user-star"} fs-28 text-primary`}

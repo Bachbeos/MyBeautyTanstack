@@ -2,6 +2,7 @@ import { login, register } from "@/lib/api/auth";
 import { useAuthStore } from "@/lib/stores/auth";
 import { createKeys } from "@/lib/tanstack/query-key";
 import type { LoginRequest, RegisterRequest } from "@/lib/types/auth";
+import { UserId } from "@/lib/types/user";
 import { mutationOptions } from "@tanstack/react-query";
 
 export const authKeys = createKeys("auth", {
@@ -27,7 +28,9 @@ export const authMutations = {
       mutationFn: (data: LoginRequest) => login(data),
       onSuccess: (data) => {
         if (data.result?.token) {
-          useAuthStore.getState().set({ accessToken: data.result.token });
+          useAuthStore
+            .getState()
+            .set({ accessToken: data.result.token, userId: UserId(data.result.userId) });
         }
       },
       meta: {

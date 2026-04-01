@@ -103,7 +103,7 @@ function RouteComponent() {
           const row = info.row.original;
           return (
             <div className="d-flex flex-column">
-              <span className="fw-medium text-dark">{row.customerName || "Khách lẻ"}</span>
+              <span className="fw-medium text-dark">{row.customerName || "Khách vãng lai"}</span>
               {row.phone ? <small className="text-muted">{String(row.phone)}</small> : null}
             </div>
           );

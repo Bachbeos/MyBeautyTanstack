@@ -1,329 +1,785 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+  type InfiniteData
+} from "@tanstack/react-query";
+import { useEffect, useRef, useState, useCallback, useMemo, useLayoutEffect } from "react";
+import { useDebounceValue } from "@/hooks/use-debounce-value";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
+import { chatQueries, chatMutations, chatKeys } from "@/lib/tanstack/options/chat";
+import { useTyping } from "@/hooks/use-typing";
+import { getSocket } from "@/lib/socket/socket";
+import { useAuthStore } from "@/lib/stores/auth";
+import { useChatStore } from "@/lib/stores/chat";
 import { cn } from "@/lib/utils";
+import type { ChatView, MessageDto, CursorResult } from "@/lib/types/chat";
+import type { ApiResponse } from "@/lib/types/common";
+import { MessageInput } from "@/components/chat/message-input";
+import { CreateChatModal } from "@/components/chat/create-chat-modal";
 
-export const Route = createFileRoute("/_crm/_chat/chat")({
-  component: ChatComponent
-});
+export const Route = createFileRoute("/_crm/_chat/chat")({ component: ChatPage });
 
-function ChatComponent() {
-  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
+// ─── Helpers (giữ nguyên) ─────────────────────────────────────────────────────
 
+const fmt = (iso: string | null, mode: "time" | "date" = "time") => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (mode === "time") return d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+  const today = new Date();
+  if (d.toDateString() === today.toDateString()) return "Hôm nay";
+  const yest = new Date(today);
+  yest.setDate(today.getDate() - 1);
+  if (d.toDateString() === yest.toDateString()) return "Hôm qua";
+  return d.toLocaleDateString("vi-VN");
+};
+
+const sameDay = (a: string, b: string) => new Date(a).toDateString() === new Date(b).toDateString();
+
+const avatar = (name: string) =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "?")}&background=random&color=fff`;
+
+const FILE_ICON: Record<number, string> = {
+  2: "ti ti-photo",
+  3: "ti ti-video",
+  4: "ti ti-microphone",
+  6: "ti ti-file"
+};
+
+interface MessageGroup {
+  senderId: number;
+  messages: MessageDto[];
+  isOwn: boolean;
+}
+
+function groupMessages(messages: MessageDto[], currentUserId: number): MessageGroup[] {
+  const groups: MessageGroup[] = [];
+  const GAP_MS = 2 * 60 * 1000;
+
+  for (const msg of messages) {
+    const last = groups[groups.length - 1];
+    const lastMsg = last?.messages[last.messages.length - 1];
+
+    const sameSender = last && last.senderId === msg.senderId;
+    const withinGap =
+      lastMsg &&
+      Math.abs(new Date(msg.createdAt).getTime() - new Date(lastMsg.createdAt).getTime()) < GAP_MS;
+    const noReply = !msg.replyToMessageId && !lastMsg?.replyToMessageId;
+
+    if (sameSender && withinGap && noReply) {
+      last.messages.push(msg);
+    } else {
+      groups.push({
+        senderId: msg.senderId,
+        isOwn: msg.senderId === currentUserId,
+        messages: [msg]
+      });
+    }
+  }
+  return groups;
+}
+
+// ─── ChatPage ─────────────────────────────────────────────────────────────────
+
+function ChatPage() {
+  const currentUserId = useAuthStore((s) => s.userId) ?? 0;
+  const qc = useQueryClient();
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const [activeChatId, setActiveChatId] = useState<number | null>(null);
+  const [activeChat, setActiveChatState] = useState<ChatView | null>(null);
+  const [chatSearch, setChatSearch] = useState("");
+  const [msgSearch, setMsgSearch] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [replyTo, setReplyTo] = useState<MessageDto | null>(null);
+
+  // ─── KEY STATE: kiểm soát khi nào mới enable infinite scroll cho messages ───
+  // false = đang chờ initial scroll to bottom → block infinite scroll
+  // true  = đã scroll to bottom → enable infinite scroll (scroll up load older)
+  const [isScrollReady, setIsScrollReady] = useState(false);
+
+  const [debouncedChatSearch] = useDebounceValue(chatSearch, 400);
+  const [debouncedMsgSearch] = useDebounceValue(msgSearch, 400);
+
+  const msgEndRef = useRef<HTMLDivElement>(null);
+  const scrollAnchorRef = useRef<{ scrollHeight: number; scrollTop: number } | null>(null);
+  const isNearBottomRef = useRef(true);
+
+  const setActiveChat = useChatStore((s) => s.setActiveChat);
+  const { typingLabel, onType, stopTyping } = useTyping(activeChatId, currentUserId);
+
+  // ── Socket ────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!activeChatId) return;
+    const socket = getSocket();
+    if (!socket) return;
+    socket.emit("join_room", { chatId: activeChatId });
+    socket.emit("mark_read", { chatId: activeChatId });
+    return () => {
+      socket.emit("leave_room", { chatId: activeChatId });
+    };
+  }, [activeChatId]);
+
+  useEffect(() => {
+    return () => {
+      setActiveChat(null);
+    };
+  }, [setActiveChat]);
+
+  // ── Chat list ─────────────────────────────────────────────────────────────
+  const chatListQ = useInfiniteQuery(chatQueries.listCursor());
+  const chatSearchQ = useInfiniteQuery(chatQueries.searchChats(debouncedChatSearch));
+  const isSearchingChat = debouncedChatSearch.trim().length > 0;
+  const activeChatQ = isSearchingChat ? chatSearchQ : chatListQ;
+
+  const rawChats = useMemo(
+    () => activeChatQ.data?.pages.flatMap((p) => p.result?.data ?? []) ?? [],
+    [activeChatQ.data]
+  );
+
+  const chats = useMemo(
+    () =>
+      [...rawChats].sort((a, b) => {
+        if (!a.lastMessageAt) return 1;
+        if (!b.lastMessageAt) return -1;
+        return new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime();
+      }),
+    [rawChats]
+  );
+
+  const chatListScrollRef = useInfiniteScroll<HTMLDivElement>({
+    onLoadMore: () => activeChatQ.fetchNextPage(),
+    hasNextPage: activeChatQ.hasNextPage ?? false,
+    isFetching: activeChatQ.isFetchingNextPage,
+    direction: "bottom"
+  });
+
+  // ── Messages ──────────────────────────────────────────────────────────────
+  const msgListQ = useInfiniteQuery(chatQueries.messages(activeChatId ?? 0));
+  const msgSearchQ = useInfiniteQuery(
+    chatQueries.searchMessages(activeChatId ?? 0, debouncedMsgSearch)
+  );
+  const isSearchingMsg = showSearch && debouncedMsgSearch.trim().length > 0;
+  const activeMsgQ = isSearchingMsg ? msgSearchQ : msgListQ;
+
+  const messages = useMemo(
+    () => [...(activeMsgQ.data?.pages.flatMap((p) => p.result?.data ?? []) ?? [])].reverse(),
+    [activeMsgQ.data]
+  );
+
+  const messageGroups = useMemo(
+    () => groupMessages(messages, currentUserId),
+    [messages, currentUserId]
+  );
+
+  // ── Infinite scroll cho messages: CHỈ enable sau khi isScrollReady = true ──
+  const msgListScrollRef = useInfiniteScroll<HTMLDivElement>({
+    onLoadMore: () => {
+      const el = msgListScrollRef.current;
+      if (el) {
+        scrollAnchorRef.current = {
+          scrollHeight: el.scrollHeight,
+          scrollTop: el.scrollTop
+        };
+      }
+      activeMsgQ.fetchNextPage();
+    },
+    hasNextPage: activeMsgQ.hasNextPage ?? false,
+    isFetching: activeMsgQ.isFetchingNextPage,
+    direction: "top",
+    threshold: 120,
+    enabled: isScrollReady // ← BLOCK khi chưa scroll to bottom
+  });
+
+  // ── Restore scroll sau load older ─────────────────────────────────────────
+  useLayoutEffect(() => {
+    const el = msgListScrollRef.current;
+    const anchor = scrollAnchorRef.current;
+    if (!el || !anchor || activeMsgQ.isFetchingNextPage) return;
+
+    const diff = el.scrollHeight - anchor.scrollHeight;
+    if (diff > 0) {
+      el.scrollTop = anchor.scrollTop + diff;
+      scrollAnchorRef.current = null;
+    }
+  }, [messages.length, activeMsgQ.isFetchingNextPage]);
+
+  // ── Initial scroll to bottom khi data sẵn sàng ───────────────────────────
+  // Trigger: activeChatId thay đổi HOẶC data vừa load xong (isSuccess)
+  // Logic:
+  //   1. Khi selectChat → isScrollReady = false (block infinite scroll)
+  //   2. Effect này chờ activeMsgQ.isSuccess = true
+  //   3. Scroll to bottom bằng requestAnimationFrame (sau khi DOM render)
+  //   4. Set isScrollReady = true → enable infinite scroll
+  useEffect(() => {
+    // Chưa chọn chat hoặc data chưa load
+    if (!activeChatId || !activeMsgQ.isSuccess) return;
+
+    // Nếu đã ready rồi thì không làm gì (tránh re-trigger khi có msg mới)
+    if (isScrollReady) return;
+
+    const el = msgListScrollRef.current;
+    if (!el) return;
+
+    // Double rAF để đảm bảo DOM đã paint xong hoàn toàn
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+        isNearBottomRef.current = true;
+        setIsScrollReady(true); // Enable infinite scroll
+      });
+    });
+  }, [activeChatId, activeMsgQ.isSuccess, isScrollReady]);
+
+  // ── Track near bottom ─────────────────────────────────────────────────────
+  useEffect(() => {
+    const el = msgListScrollRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [activeChatId]);
+
+  // ── Auto-scroll khi có message mới (chỉ nếu đang ở gần bottom) ───────────
+  const prevMsgCount = useRef(0);
+  useEffect(() => {
+    if (messages.length > prevMsgCount.current && isNearBottomRef.current) {
+      msgEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevMsgCount.current = messages.length;
+  }, [messages.length]);
+
+  // ── Send ──────────────────────────────────────────────────────────────────
+  const sendMutation = useMutation({
+    ...chatMutations.sendMessage(),
+    onSuccess: (res) => {
+      const saved = res.result;
+      if (!saved || !activeChatId) return;
+
+      type MC = InfiniteData<ApiResponse<CursorResult<MessageDto>>>;
+      qc.setQueryData<MC>(chatKeys.messages(activeChatId), (old) => {
+        if (!old) return old;
+        if (old.pages.some((p) => p.result?.data.some((m) => m.id === saved.id))) return old;
+        const [first, ...rest] = old.pages;
+        return {
+          ...old,
+          pages: [
+            {
+              ...first,
+              result: first.result
+                ? { ...first.result, data: [saved, ...(first.result.data ?? [])] }
+                : first.result
+            },
+            ...rest
+          ]
+        };
+      });
+
+      setReplyTo(null);
+      stopTyping();
+
+      requestAnimationFrame(() => {
+        msgEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+  });
+
+  const selectChat = (chat: ChatView) => {
+    setActiveChatId(chat.id);
+    setActiveChatState(chat);
+    setActiveChat(chat);
+    setReplyTo(null);
+    setShowSearch(false);
+    setMsgSearch("");
+    prevMsgCount.current = 0;
+    isNearBottomRef.current = true;
+    // Reset scroll ready → block infinite scroll cho đến khi scroll to bottom xong
+    setIsScrollReady(false);
+  };
+
+  // ──────────────────────────────────────────────────────────────────────────
   return (
     <div className="page-wrapper">
-      <div className="content">
-        {/* --- PAGE HEADER --- */}
-        <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
-          <div>
-            <h4 className="mb-1 fw-bold">Chat</h4>
-            <div className="text-muted small">Ứng dụng / Chat</div>
-          </div>
-          <div className="gap-2 d-flex align-items-center flex-wrap">
-            <button className="btn btn-icon btn-outline-light shadow">
-              <i className="ti ti-refresh"></i>
-            </button>
-            <button className="btn btn-icon btn-outline-light shadow" id="collapse-header">
-              <i className="ti ti-transition-top"></i>
-            </button>
-          </div>
-        </div>
-
-        <div className="chat-wrapper">
-          {/* --- SIDEBAR GROUP --- */}
-          <div className="sidebar-group">
-            <div id="chats" className="sidebar-content active">
-              <div className="chat-search-header">
-                <div className="header-title d-flex align-items-center justify-content-between">
-                  <h5 className="mb-3">Chats</h5>
-                </div>
-                <div className="search-wrap">
-                  <div className="input-group">
-                    <input type="text" className="form-control" placeholder="Search" />
-                    <span className="input-group-text">
-                      <i className="ti ti-search"></i>
-                    </span>
-                  </div>
-                </div>
+      <div className="content p-0" style={{ height: "calc(100vh - 60px)", width: "100%" }}>
+        <div className="chat-wrapper d-flex h-100 w-100">
+          {/* SIDEBAR */}
+          <div
+            className="d-flex flex-column flex-shrink-0 border-end bg-white"
+            style={{ width: 300 }}
+          >
+            <div className="p-3 border-bottom">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <h6 className="fw-bold mb-0">Tin nhắn</h6>
+                <button
+                  className="btn btn-sm btn-primary rounded-circle d-flex align-items-center justify-content-center"
+                  style={{ width: 28, height: 28, padding: 0 }}
+                  onClick={() => setShowCreateModal(true)}
+                  title="Tạo cuộc trò chuyện"
+                >
+                  <i className="ti ti-edit" style={{ fontSize: 13 }} />
+                </button>
               </div>
-
-              <div className="sidebar-body chat-body" id="chatsidebar">
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h5 className="chat-title mb-0">All Chats</h5>
-                </div>
-
-                <div className="chat-users-wrap">
-                  {/* Item 1: Is Typing */}
-                  <div className="chat-list active">
-                    <div className="chat-user-list cursor-pointer">
-                      <div className="avatar avatar-lg online me-2">
-                        <img
-                          src="assets/img/profiles/avatar-10.jpg"
-                          className="rounded-circle"
-                          alt="image"
-                        />
-                      </div>
-                      <div className="chat-user-info">
-                        <div className="chat-user-msg">
-                          <h6>Anthony Lewis</h6>
-                          <p>
-                            <span className="animate-typing">
-                              is typing<span className="dot"></span>
-                              <span className="dot"></span>
-                              <span className="dot"></span>
-                              <span className="dot"></span>
-                            </span>
-                          </p>
-                        </div>
-                        <div className="chat-user-time">
-                          <span className="time">02:40 PM</span>
-                          <div className="chat-pin">
-                            <i className="ti ti-pin me-2"></i>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="chat-dropdown">
-                      <a className="#" href="#" data-bs-toggle="dropdown">
-                        <i className="ti ti-dots-vertical"></i>
-                      </a>
-                      <ul className="dropdown-menu dropdown-menu-end">
-                        <li>
-                          <a className="dropdown-item" href="#">
-                            <i className="ti ti-box-align-right me-2"></i>Archive Chat
-                          </a>
-                        </li>
-                        <li>
-                          <a className="dropdown-item" href="#">
-                            <i className="ti ti-heart me-2"></i>Mark as Favourite
-                          </a>
-                        </li>
-                        <li>
-                          <a className="dropdown-item" href="#">
-                            <i className="ti ti-check me-2"></i>Mark as Unread
-                          </a>
-                        </li>
-                        <li>
-                          <a className="dropdown-item" href="#">
-                            <i className="ti ti-pinned me-2"></i>Pin Chats
-                          </a>
-                        </li>
-                        <li>
-                          <a className="dropdown-item" href="#">
-                            <i className="ti ti-trash me-2"></i>Delete
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Item 2: Document */}
-                  <div className="chat-list">
-                    <div className="chat-user-list cursor-pointer">
-                      <div className="avatar avatar-lg online me-2">
-                        <img
-                          src="assets/img/profiles/avatar-01.jpg"
-                          className="rounded-circle"
-                          alt="image"
-                        />
-                      </div>
-                      <div className="chat-user-info">
-                        <div className="chat-user-msg">
-                          <h6>Elliot Murray</h6>
-                          <p>
-                            <i className="ti ti-file me-1"></i>Document
-                          </p>
-                        </div>
-                        <div className="chat-user-time">
-                          <span className="time">06:12 AM</span>
-                          <div className="chat-pin">
-                            <i className="ti ti-checks text-success"></i>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="chat-dropdown">
-                      <a className="#" href="#" data-bs-toggle="dropdown">
-                        <i className="ti ti-dots-vertical"></i>
-                      </a>
-                      <ul className="dropdown-menu dropdown-menu-end">
-                        <li>
-                          <a className="dropdown-item" href="#">
-                            <i className="ti ti-box-align-right me-2"></i>Archive Chat
-                          </a>
-                        </li>
-                        <li>
-                          <a className="dropdown-item" href="#">
-                            <i className="ti ti-heart me-2"></i>Mark as Favourite
-                          </a>
-                        </li>
-                        <li>
-                          <a className="dropdown-item" href="#">
-                            <i className="ti ti-check me-2"></i>Mark as Unread
-                          </a>
-                        </li>
-                        <li>
-                          <a className="dropdown-item" href="#">
-                            <i className="ti ti-pinned me-2"></i>Pin Chats
-                          </a>
-                        </li>
-                        <li>
-                          <a className="dropdown-item" href="#">
-                            <i className="ti ti-trash me-2"></i>Delete
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* --- MAIN CHAT MESSAGES --- */}
-          <div className="chat chat-messages show" id="middle">
-            <div className="chat-header">
-              <div className="user-details">
-                <div className="d-xl-none">
-                  <a className="text-muted chat-close me-1" href="#">
-                    <i className="ti ti-circle-arrow-left"></i>
-                  </a>
-                </div>
-                <div className="avatar online flex-shrink-0">
-                  <img
-                    src="assets/img/profiles/avatar-01.jpg"
-                    className="rounded-circle"
-                    alt="image"
-                  />
-                </div>
-                <div className="ms-2 overflow-hidden">
-                  <h6 className="fw-medium mb-1 text-dark">Anthony Lewis</h6>
-                  <p className="fs-13 mb-0">Online</p>
-                </div>
-              </div>
-              <div className="chat-options">
-                <ul className="list-unstyled d-flex gap-2">
-                  <li>
-                    <a
-                      href="javascript:void(0)"
-                      className="btn chat-search-btn"
-                      data-bs-toggle="tooltip"
-                      data-bs-placement="bottom"
-                      title="Search"
-                    >
-                      <i className="ti ti-search text-muted"></i>
-                    </a>
-                  </li>
-                  <li>
-                    <button className="btn no-bg">
-                      <i className="ti ti-search text-muted"></i>
-                    </button>
-                  </li>
-                  <li>
-                    <button className="btn no-bg">
-                      <i className="ti ti-dots-vertical text-muted"></i>
-                    </button>
-                  </li>
-                </ul>
+              <div className="input-group input-group-sm">
+                <span className="input-group-text border-0 bg-light">
+                  <i className="ti ti-search text-muted" />
+                </span>
+                <input
+                  className="form-control border-0 bg-light"
+                  placeholder="Tìm kiếm..."
+                  value={chatSearch}
+                  onChange={(e) => setChatSearch(e.target.value)}
+                />
+                {chatSearch && (
+                  <button className="btn btn-light border-0" onClick={() => setChatSearch("")}>
+                    <i className="ti ti-x" />
+                  </button>
+                )}
               </div>
             </div>
 
             <div
-              className="chat-body chat-page-group"
-              style={{ height: "calc(100vh - 435px)", overflowY: "auto" }}
+              ref={chatListScrollRef}
+              className="overflow-auto flex-grow-1"
+              style={{ overflowY: "auto" }}
             >
-              <div className="messages">
-                {/* Left Message */}
-                <div className="chats">
-                  <div className="chat-avatar">
-                    <img
-                      src="assets/img/profiles/avatar-01.jpg"
-                      className="rounded-circle"
-                      alt="image"
-                    />
-                  </div>
-                  <div className="chat-content">
-                    <div className="chat-info">
-                      <div className="message-content">
-                        Hi John, I wanted to update you on a new company policy regarding remote
-                        work.
-                      </div>
-                    </div>
-                    <div className="chat-profile-name">
-                      <h6>
-                        Anthony Lewis<i className="ti ti-circle-filled fs-7 mx-2"></i>
-                        <span className="chat-time">08:00 AM</span>
-                      </h6>
-                    </div>
-                  </div>
+              {activeChatQ.isLoading && (
+                <div className="text-center py-4 text-muted small">
+                  <span className="spinner-border spinner-border-sm me-1" />
+                  Đang tải...
                 </div>
-
-                {/* Right Message */}
-                <div className="chats chats-right">
-                  <div className="chat-content">
-                    <div className="chat-info">
-                      <div className="message-content">Sure, Sarah. What’s the new policy?</div>
-                    </div>
-                    <div className="chat-profile-name text-end">
-                      <h6>
-                        You<i className="ti ti-circle-filled fs-7 mx-2"></i>
-                        <span className="chat-time">08:00 AM</span>
-                        <span className="msg-read success">
-                          <i className="ti ti-checks"></i>
-                        </span>
-                      </h6>
-                    </div>
-                  </div>
-                  <div className="chat-avatar">
-                    <img
-                      src="assets/img/profiles/avatar-14.jpg"
-                      className="rounded-circle dreams_chat"
-                      alt="image"
-                    />
-                  </div>
+              )}
+              {!activeChatQ.isLoading && chats.length === 0 && (
+                <div className="text-center py-5 text-muted small">
+                  {isSearchingChat ? "Không có kết quả" : "Chưa có cuộc trò chuyện"}
                 </div>
-
-                <div className="chat-line">
-                  <span className="chat-date">Today, July 24</span>
+              )}
+              {chats.map((chat) => (
+                <ChatItem
+                  key={chat.id}
+                  chat={chat}
+                  active={chat.id === activeChatId}
+                  onClick={() => selectChat(chat)}
+                />
+              ))}
+              {activeChatQ.isFetchingNextPage && (
+                <div className="text-center py-2">
+                  <span className="spinner-border spinner-border-sm text-muted" />
                 </div>
-              </div>
-            </div>
-
-            {/* --- CHAT FOOTER --- */}
-            <div className="chat-footer">
-              <form className="footer-form">
-                <div className="chat-footer-wrap">
-                  <div className="form-item">
-                    <button type="button" className="action-circle">
-                      <i className="ti ti-microphone"></i>
-                    </button>
-                  </div>
-                  <div className="form-wrap w-100">
-                    <input
-                      type="text"
-                      className="form-control shadow-none"
-                      placeholder="Type Your Message"
-                    />
-                  </div>
-                  <div className="form-item">
-                    <button type="button" className="action-circle">
-                      <i className="ti ti-mood-smile"></i>
-                    </button>
-                  </div>
-                  <div className="form-item">
-                    <button type="button" className="action-circle">
-                      <i className="ti ti-folder"></i>
-                    </button>
-                  </div>
-                  <div className="form-btn">
-                    <button className="btn btn-primary" type="submit">
-                      <i className="ti ti-send"></i>
-                    </button>
-                  </div>
-                </div>
-              </form>
+              )}
             </div>
           </div>
+
+          {/* CHAT PANEL */}
+          {activeChatId && activeChat ? (
+            <div
+              className="d-flex flex-column flex-grow-1 h-100 w-100"
+              style={{ minWidth: 0, minHeight: 0, flex: "1 1 0%" }}
+            >
+              {/* Header */}
+              <div className="d-flex align-items-center justify-content-between px-3 py-2 border-bottom bg-white flex-shrink-0">
+                <div className="d-flex align-items-center gap-2">
+                  <img
+                    src={activeChat.chatAvatar ?? avatar(activeChat.chatName)}
+                    className="rounded-circle"
+                    style={{ width: 38, height: 38, objectFit: "cover" }}
+                    alt=""
+                  />
+                  <div>
+                    <div className="fw-semibold" style={{ fontSize: 14 }}>
+                      {activeChat.chatName}
+                    </div>
+                    <div style={{ fontSize: 12 }}>
+                      {typingLabel ? (
+                        <span className="text-success">{typingLabel}</span>
+                      ) : (
+                        <span className="text-muted">
+                          {activeChat.isGroupChat ? "Nhóm" : "Online"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  className={cn(
+                    "btn btn-sm btn-icon",
+                    showSearch ? "btn-primary" : "btn-outline-secondary"
+                  )}
+                  onClick={() => {
+                    setShowSearch((v) => !v);
+                    setMsgSearch("");
+                  }}
+                >
+                  <i className="ti ti-search" />
+                </button>
+              </div>
+
+              {/* Search bar */}
+              {showSearch && (
+                <div className="px-3 py-2 border-bottom bg-light flex-shrink-0">
+                  <div className="input-group input-group-sm">
+                    <span className="input-group-text bg-white">
+                      <i className="ti ti-search text-muted" />
+                    </span>
+                    <input
+                      autoFocus
+                      className="form-control"
+                      placeholder="Tìm trong cuộc trò chuyện..."
+                      value={msgSearch}
+                      onChange={(e) => setMsgSearch(e.target.value)}
+                    />
+                    {msgSearch && (
+                      <button className="btn btn-white" onClick={() => setMsgSearch("")}>
+                        <i className="ti ti-x" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Messages */}
+              <div
+                ref={msgListScrollRef}
+                className="chat-body flex-grow-1 px-3 py-2 bg-light"
+                style={{ overflowY: "auto", minHeight: 0 }}
+              >
+                {activeMsgQ.isFetchingNextPage && (
+                  <div className="text-center py-2">
+                    <span className="spinner-border spinner-border-sm text-muted" />
+                  </div>
+                )}
+                {activeMsgQ.isLoading && (
+                  <div className="text-center py-5 text-muted">
+                    <span className="spinner-border spinner-border-sm me-2" />
+                    Đang tải...
+                  </div>
+                )}
+
+                {messageGroups.map((group, gIdx) => {
+                  const prevGroup = messageGroups[gIdx - 1];
+                  const firstMsg = group.messages[0];
+                  const showDate =
+                    !prevGroup ||
+                    !sameDay(
+                      prevGroup.messages[prevGroup.messages.length - 1].createdAt,
+                      firstMsg.createdAt
+                    );
+                  return (
+                    <div key={`group-${firstMsg.id}`}>
+                      {showDate && (
+                        <div className="text-center my-3">
+                          <span
+                            className="badge bg-light text-muted border px-3"
+                            style={{ fontSize: 11 }}
+                          >
+                            {fmt(firstMsg.createdAt, "date")}
+                          </span>
+                        </div>
+                      )}
+                      <MessageGroup group={group} onReply={(msg) => setReplyTo(msg)} />
+                    </div>
+                  );
+                })}
+
+                <div ref={msgEndRef} />
+              </div>
+
+              <div className="flex-shrink-0">
+                <MessageInput
+                  key={activeChatId}
+                  onSend={({ content, file, messageType, replyToMessageId }) => {
+                    sendMutation.mutate({
+                      chatId: activeChatId!,
+                      content,
+                      file,
+                      messageType,
+                      replyToMessageId
+                    });
+                  }}
+                  isPending={sendMutation.isPending}
+                  replyTo={replyTo}
+                  onCancelReply={() => setReplyTo(null)}
+                  onType={onType}
+                  onStopTyping={stopTyping}
+                  disabled={!activeChatId}
+                />
+              </div>
+            </div>
+          ) : (
+            <div
+              className="d-flex flex-grow-1 h-100 w-100 align-items-center justify-content-center flex-column gap-2 text-muted"
+              style={{ minWidth: 0, minHeight: 0 }}
+            >
+              <i className="ti ti-message-2" style={{ fontSize: 56, opacity: 0.2 }} />
+              <span className="small">Chọn một cuộc trò chuyện để bắt đầu</span>
+            </div>
+          )}
         </div>
+      </div>
+      <CreateChatModal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onCreated={(chat) => {
+          setShowCreateModal(false);
+          selectChat(chat);
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── ChatItem (giữ nguyên từ file bạn) ───────────────────────────────────────
+
+function ChatItem({
+  chat,
+  active,
+  onClick
+}: {
+  chat: ChatView;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const icon = chat.lastMessageType ? FILE_ICON[chat.lastMessageType] : null;
+  const preview = icon ? (
+    <>
+      <i className={`${icon} me-1`} />
+      {chat.lastMessageType === 6 ? "Tệp" : "Media"}
+    </>
+  ) : (
+    chat.lastMessageContent
+  );
+
+  return (
+    <div
+      className={cn(
+        "d-flex align-items-center px-3 py-2 gap-2",
+        active ? "bg-primary bg-opacity-10" : "hover-bg"
+      )}
+      style={{ cursor: "pointer", minHeight: 62 }}
+      onClick={onClick}
+    >
+      <div className="position-relative flex-shrink-0">
+        <img
+          src={chat.chatAvatar ?? avatar(chat.chatName)}
+          className="rounded-circle"
+          style={{ width: 42, height: 42, objectFit: "cover" }}
+          alt=""
+          onError={(e) => {
+            e.currentTarget.src = avatar(chat.chatName);
+          }}
+        />
+        {chat.unreadCount > 0 && (
+          <span
+            className="position-absolute badge bg-danger rounded-pill"
+            style={{ top: -2, right: -4, fontSize: 10, minWidth: 18, padding: "2px 5px" }}
+          >
+            {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
+          </span>
+        )}
+      </div>
+      <div className="flex-grow-1 overflow-hidden">
+        <div className="d-flex justify-content-between align-items-center">
+          <span
+            className={cn("text-truncate", chat.unreadCount > 0 ? "fw-semibold" : "fw-medium")}
+            style={{ fontSize: 13, maxWidth: 170 }}
+          >
+            {chat.chatName}
+          </span>
+          <span className="text-muted flex-shrink-0 ms-1" style={{ fontSize: 11 }}>
+            {fmt(chat.lastMessageAt)}
+          </span>
+        </div>
+        <div
+          className={cn(
+            "text-truncate",
+            chat.unreadCount > 0 ? "fw-medium text-dark" : "text-muted"
+          )}
+          style={{ fontSize: 12 }}
+        >
+          {preview ?? <span className="fst-italic">Chưa có tin nhắn</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MessageGroup + MsgBubble  ───────────────────────
+
+function MessageGroup({
+  group,
+  onReply
+}: {
+  group: MessageGroup;
+  onReply: (msg: MessageDto) => void;
+}) {
+  const { messages, isOwn } = group;
+  return (
+    <div
+      className={cn("d-flex align-items-end gap-2 mb-1", isOwn ? "flex-row-reverse" : "flex-row")}
+    >
+      {!isOwn ? (
+        <img
+          src={avatar("User " + group.senderId)}
+          className="rounded-circle flex-shrink-0"
+          style={{ width: 28, height: 28, objectFit: "cover", marginBottom: 2 }}
+          alt=""
+        />
+      ) : (
+        <div style={{ width: 28, flexShrink: 0 }} />
+      )}
+      <div
+        className={cn("d-flex flex-column gap-1", isOwn ? "align-items-end" : "align-items-start")}
+        style={{ maxWidth: "70%" }}
+      >
+        {messages.map((msg, idx) => (
+          <MsgBubble
+            key={msg.id}
+            msg={msg}
+            isOwn={isOwn}
+            isFirst={idx === 0}
+            isLast={idx === messages.length - 1}
+            showSenderName={!isOwn && idx === 0 && messages.length > 1}
+            onReply={() => onReply(msg)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MsgBubble({
+  msg,
+  isOwn,
+  isFirst,
+  isLast,
+  showSenderName,
+  onReply
+}: {
+  msg: MessageDto;
+  isOwn: boolean;
+  isFirst: boolean;
+  isLast: boolean;
+  showSenderName: boolean;
+  onReply: () => void;
+}) {
+  const isImage = msg.messageType === 2;
+  const isVideo = msg.messageType === 3;
+  const isFile = msg.messageType === 6;
+  const hasMedia = isImage || isVideo;
+  const radius = isOwn
+    ? {
+        borderTopLeftRadius: "16px",
+        borderTopRightRadius: isFirst ? "16px" : "4px",
+        borderBottomRightRadius: isLast ? "16px" : "4px",
+        borderBottomLeftRadius: "16px"
+      }
+    : {
+        borderTopLeftRadius: isFirst ? "16px" : "4px",
+        borderTopRightRadius: "16px",
+        borderBottomRightRadius: "16px",
+        borderBottomLeftRadius: isLast ? "16px" : "4px"
+      };
+
+  return (
+    <div className="position-relative msg-bubble-wrapper">
+      {msg.replyToMessageContent && (
+        <div
+          className={cn(
+            "small rounded px-2 py-1 mb-1",
+            isOwn ? "bg-primary bg-opacity-25" : "bg-white border"
+          )}
+          style={{ borderLeft: isOwn ? undefined : "3px solid var(--bs-primary)", fontSize: 11 }}
+        >
+          <div className="text-primary fw-medium">Đã trả lời</div>
+          <div className="text-muted text-truncate">{msg.replyToMessageContent}</div>
+        </div>
+      )}
+      <div
+        className={cn(isOwn ? "bg-primary text-white" : "bg-white shadow-sm")}
+        style={{
+          ...radius,
+          padding: hasMedia ? 0 : "7px 12px",
+          wordBreak: "break-word",
+          fontSize: 14,
+          lineHeight: "1.45",
+          display: "inline-block",
+          maxWidth: "100%"
+        }}
+      >
+        {isImage && msg.filePath ? (
+          <img
+            src={msg.filePath}
+            alt=""
+            className="rounded"
+            style={{ maxWidth: 200, maxHeight: 200, objectFit: "cover", display: "block" }}
+          />
+        ) : isVideo && msg.filePath ? (
+          <video
+            src={msg.filePath}
+            controls
+            className="rounded"
+            style={{ maxWidth: 320, maxHeight: 240, width: "100%", display: "block" }}
+          />
+        ) : isFile && msg.fileName ? (
+          <a
+            href={msg.filePath ?? "#"}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(
+              "d-flex align-items-center gap-2 text-decoration-none",
+              isOwn ? "text-white" : "text-dark"
+            )}
+          >
+            <i className="ti ti-file fs-5" />
+            <div>
+              <div className="small fw-medium text-truncate" style={{ maxWidth: 150 }}>
+                {msg.fileName}
+              </div>
+              {msg.fileSize && (
+                <div className="small opacity-75">{(msg.fileSize / 1024).toFixed(1)} KB</div>
+              )}
+            </div>
+          </a>
+        ) : (
+          msg.content
+        )}
+      </div>
+      <div
+        className={cn(
+          "msg-actions d-flex align-items-center gap-1",
+          isOwn ? "msg-actions-left" : "msg-actions-right"
+        )}
+      >
+        {!isOwn && (
+          <button
+            className="btn btn-sm btn-light border rounded-circle d-flex align-items-center justify-content-center p-0"
+            style={{ width: 24, height: 24, flexShrink: 0 }}
+            onClick={onReply}
+            title="Trả lời"
+          >
+            <i className="ti ti-corner-up-left" style={{ fontSize: 12 }} />
+          </button>
+        )}
+        <span
+          className="badge bg-light text-muted border"
+          style={{ fontSize: 10, fontWeight: 400, whiteSpace: "nowrap" }}
+        >
+          {fmt(msg.createdAt)}
+          {msg.isEdited && " (đã sửa)"}
+        </span>
+        {isOwn && (
+          <button
+            className="btn btn-sm btn-light border rounded-circle d-flex align-items-center justify-content-center p-0"
+            style={{ width: 24, height: 24, flexShrink: 0 }}
+            onClick={onReply}
+            title="Trả lời"
+          >
+            <i className="ti ti-corner-up-left" style={{ fontSize: 12 }} />
+          </button>
+        )}
       </div>
     </div>
   );

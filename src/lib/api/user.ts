@@ -10,6 +10,7 @@ import type {
   UserCreateRequest,
   UserInfoUpdateRequest
 } from "@/lib/types/user";
+import type { CursorResult } from "@/lib/types/chat";
 
 export const getUsers = async (
   params: UserListRequest,
@@ -63,3 +64,10 @@ export const getUserInfo = async (signal?: AbortSignal): Promise<ApiResponse<Use
   const res = await axiosInstance.get<ApiResponse<UserDto>>(ENDPOINTS.user.info, { signal });
   return res.data;
 };
+export const getUserListCursor = (
+  params: { beforeUserId?: number; keyword?: string; limit?: number },
+  signal?: AbortSignal
+): Promise<ApiResponse<CursorResult<UserDto>>> =>
+  axiosInstance
+    .get<ApiResponse<CursorResult<UserDto>>>(ENDPOINTS.user.listCursor, { params, signal })
+    .then((r) => r.data);
