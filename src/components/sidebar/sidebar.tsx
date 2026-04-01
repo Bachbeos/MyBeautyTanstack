@@ -58,7 +58,8 @@ export default function Sidebar() {
     "/chat": "chat",
     "/notification": "notification",
     "/sale": "sale",
-    "/draft-invoice": "draft-invoice"
+    "/draft-invoice": "draft-invoice",
+    "/report": "report"
   };
 
   const location = useLocation();
@@ -331,6 +332,16 @@ export default function Sidebar() {
                   >
                     <i className="ti ti-file-invoice"></i>
                     <span>Hóa đơn nháp</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/report"
+                    className={activeTab === "report" ? "active" : ""}
+                    onClick={() => handleTabClick("report")}
+                  >
+                    <i className="ti ti-report-analytics"></i>
+                    <span>Báo cáo & Thống kê</span>
                   </Link>
                 </li>
               </ul>
