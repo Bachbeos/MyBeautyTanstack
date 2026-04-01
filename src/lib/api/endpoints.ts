@@ -31,7 +31,8 @@ export const ENDPOINTS = {
     delete: (id: UserId) => `/user/delete/${id}`,
     detail: "/user/getById",
     updatePassword: "/user/update-password",
-    updateStatus: "/user/update-status"
+    updateStatus: "/user/update-status",
+    listCursor: "/user/list-cursor"
   },
   products: {
     list: "/products",
@@ -156,5 +157,17 @@ export const ENDPOINTS = {
     update: "/opportunity/update",
     delete: (id: OpportunityId) => `/opportunity/delete/${id}`,
     detail: "/opportunity/get"
+  },
+  chat: {
+    listCursor: "/chat/list-cursor",
+    search: "/chat/search",
+    create: "/chat/create"
+  },
+  message: {
+    listCursor: "/message/list-cursor",
+    search: "/message/search",
+    send: "/message/send",
+    edit: "/message/edit",
+    delete: "/message/delete"
   }
 } as const;
