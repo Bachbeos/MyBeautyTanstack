@@ -85,7 +85,7 @@ export default function ModalCustomerSource({
             <button type="button" className="btn btn-light me-2" onClick={onClose}>
               Hủy
             </button>
-            <button type="submit" form="customerSource-form" className="btn btn-primary">
+            <button type="submit" form="customer-source-form" className="btn btn-primary">
               {type === "add" ? "Thêm mới" : "Lưu thay đổi"}
             </button>
           </>

@@ -25,7 +25,7 @@ const productSchema = z.object({
   price: z.string().min(1, "Giá bán không được để trống"),
   discount: z.string(),
   discountUnit: z.number().default(1),
-  expiredPeriod: z.number().default(0),
+  expiredPeriod: z.coerce.number().default(0),
   position: z.number().default(1),
   status: z.number().default(1),
   content: z.string().optional(),

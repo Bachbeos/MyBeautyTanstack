@@ -27,7 +27,7 @@ export default function ModalService({
 }: ModalProps) {
   void onLoadMoreCategories;
 
-  if (!type && !shown) return null;
+  if (!shown || !type) return null;
 
   const getTitle = () => {
     switch (type) {

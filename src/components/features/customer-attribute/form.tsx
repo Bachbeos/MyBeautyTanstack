@@ -51,13 +51,54 @@ type AttributeFormProps = {
 const isChoiceDatatype = (dt: string) => ["dropdown", "radio", "multiselect"].includes(dt);
 
 function safeJsonParse(raw: unknown) {
-  if (!raw) return null;
-  if (typeof raw !== "string") return null;
+  if (!raw || typeof raw !== "string") return null;
   try {
     return JSON.parse(raw);
   } catch {
     return null;
   }
+}
+
+function toNumberOrFallback(value: unknown, fallback = 0): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function getUniquedFromDto(attribute?: CustomerAttributeDto): number {
+  const raw = (attribute as any)?.uniqued ?? (attribute as any)?.unique;
+  return toNumberOrFallback(raw);
+}
+
+function normalizeAttributesPayload(raw: unknown): unknown {
+  if (raw == null) return null;
+
+  if (typeof raw === "string") {
+    return safeJsonParse(raw);
+  }
+
+  if (Array.isArray(raw)) {
+    if (!raw.length) return [];
+
+    if (raw.length === 1 && typeof raw[0] === "string") {
+      return safeJsonParse(raw[0]);
+    }
+
+    if (raw.every((x) => typeof x !== "string")) {
+      return raw;
+    }
+
+    const parsedItems = raw
+      .map((x) => (typeof x === "string" ? safeJsonParse(x) : x))
+      .filter((x) => x != null);
+
+    if (!parsedItems.length) return null;
+    if (parsedItems.length === 1) return parsedItems[0];
+    return parsedItems;
+  }
+
+  if (typeof raw === "object") return raw;
+
+  return null;
 }
 
 function normalizeAttributesFromDto(attribute?: CustomerAttributeDto): {
@@ -71,20 +112,26 @@ function normalizeAttributesFromDto(attribute?: CustomerAttributeDto): {
 
   if (!attribute) return fallback;
 
-  const raw = Array.isArray(attribute.attributes) ? attribute.attributes[0] : attribute.attributes;
-  const parsed = safeJsonParse(raw);
+  const parsed = normalizeAttributesPayload(attribute.attributes);
 
   if (attribute.datatype === "number") {
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-      const nf = typeof parsed.numberFormat === "string" ? parsed.numberFormat : "";
+      const parsedNumber = parsed as { numberFormat?: unknown };
+      const nf = typeof parsedNumber.numberFormat === "string" ? parsedNumber.numberFormat : "";
       return { dropdownOptions: fallback.dropdownOptions, numberFormat: nf };
     }
     return fallback;
   }
 
   if (isChoiceDatatype(attribute.datatype)) {
-    if (Array.isArray(parsed)) {
-      const cleaned = parsed
+    const optionsRaw = Array.isArray(parsed)
+      ? parsed
+      : parsed && typeof parsed === "object" && Array.isArray((parsed as any).options)
+        ? (parsed as any).options
+        : null;
+
+    if (Array.isArray(optionsRaw)) {
+      const cleaned = optionsRaw
         .map((x: any) => ({
           value: typeof x?.value === "string" ? x.value : "",
           label: typeof x?.label === "string" ? x.label : ""
@@ -129,15 +176,15 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
 
   const form = useAppForm({
     defaultValues: {
-      id: attribute?.id,
+      id: toNumberOrFallback(attribute?.id),
       name: attribute?.name || "",
-      fieldName: String(attribute?.fieldName || ""),
+      fieldName: String((attribute as any)?.fieldName ?? attribute?.fileName ?? ""),
       datatype: attribute?.datatype || "text",
-      position: attribute?.position || 0,
-      parentId: attribute?.parentId || 0,
-      required: attribute?.required || 0,
-      uniqued: attribute?.unique || 0,
-      readonly: attribute?.readonly || 0,
+      position: toNumberOrFallback(attribute?.position),
+      parentId: toNumberOrFallback(attribute?.parentId),
+      required: toNumberOrFallback(attribute?.required),
+      uniqued: getUniquedFromDto(attribute),
+      readonly: toNumberOrFallback(attribute?.readonly),
       dropdownOptions: [{ value: "", label: "" }],
       numberFormat: ""
     } as AttributeFormValues,
@@ -169,20 +216,20 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
     const extra = normalizeAttributesFromDto(attribute);
 
     form.reset({
-      id: attribute.id,
+      id: toNumberOrFallback(attribute.id),
       name: attribute.name ?? "",
-      fieldName: String(attribute.fieldName ?? ""),
+      fieldName: String((attribute as any).fieldName ?? attribute.fileName ?? ""),
       datatype: attribute.datatype ?? "text",
-      position: attribute.position ?? 0,
-      parentId: attribute.parentId ?? 0,
-      required: attribute.required ?? 0,
-      uniqued: attribute.unique ?? 0,
-      readonly: attribute.readonly ?? 0,
+      position: toNumberOrFallback(attribute.position),
+      parentId: toNumberOrFallback(attribute.parentId),
+      required: toNumberOrFallback(attribute.required),
+      uniqued: getUniquedFromDto(attribute),
+      readonly: toNumberOrFallback(attribute.readonly),
       dropdownOptions: extra.dropdownOptions,
       numberFormat: extra.numberFormat
     } as any);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attribute?.id, mode]);
+  }, [attribute, mode]);
 
   const selectedDatatype = (form.state.values as any)?.datatype;
 

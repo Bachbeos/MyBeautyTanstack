@@ -74,6 +74,15 @@ function RouteComponent() {
   const attributes = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
 
+  const selectedAttributeId = modal.item?.id as any;
+  const detailQuery = useQuery({
+    ...customerAttributeQueries.detail(selectedAttributeId),
+    enabled:
+      !!selectedAttributeId && modalShown && (modal.type === "edit" || modal.type === "detail")
+  });
+
+  const modalItem = (detailQuery.data?.result as CustomerAttributeDto | undefined) ?? modal.item;
+
   const allAttributesQuery = useQuery(customerAttributeQueries.list({ page: 1, limit: 1000 }));
 
   const parentOptions = useMemo(() => {
@@ -174,7 +183,7 @@ function RouteComponent() {
         <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
           <div>
             <h4 className="mb-1 fw-bold">
-              Thuộc tính tin khách hàng
+              Thuộc tính khách hàng
               <span className="badge badge-soft-primary ms-2">{total}</span>
             </h4>
             <div className="text-muted small">Cài đặt khách hàng / Thuộc tính khách hàng</div>
@@ -224,7 +233,7 @@ function RouteComponent() {
       <ModalAttribute
         type={modal.type}
         shown={modalShown}
-        item={modal.item}
+        item={modalItem}
         onClose={closeModal}
         onSubmit={handleSubmit}
         onDelete={handleDelete}

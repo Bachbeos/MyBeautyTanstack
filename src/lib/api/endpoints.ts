@@ -14,6 +14,11 @@ import type { CustomerAttributeId } from "../types/customer-attribute";
 import type { AppointmentId } from "../types/appointment";
 import type { NotificationId } from "../types/notification";
 import type { OpportunityId } from "../types/opportunity";
+import type { InvoiceId } from "../types/invoice";
+import type { BoughtProductId } from "../types/bought-product";
+import type { BoughtServiceId } from "../types/bought-service";
+import { create } from "zustand";
+import { getBy } from "@tanstack/react-form";
 
 export const ENDPOINTS = {
   auth: {
@@ -99,25 +104,32 @@ export const ENDPOINTS = {
     update: "/voucher/update",
     delete: (id: VoucherId) => `/voucher/delete/${id}`,
     detail: "/voucher/get",
-    apply: "/voucher/applyVoucher"
+    apply: "/voucher/applyVoucher",
+    getByCode: "/voucher/getByCode"
   },
   invoice: {
     list: "/invoice/list",
     update: "/invoice/update",
-    delete: (id: string) => `/invoice/delete/${id}`,
+    delete: (id: InvoiceId) => `/invoice/delete/${id}`,
     detail: "/invoice/get",
     draft: "/invoice/draft",
-    recalculate: "/invoice/recalculate"
+    recalculate: "/invoice/recalculate",
+    draftCreate: "/invoice/draft/create",
+    draftUpdate: "/invoice/draft/update",
+    draftDelete: (id: InvoiceId) => `/invoice/draft/delete/${id}`,
+    draftDetail: "/invoice/getDetail",
+    create: "/invoice/create"
   },
   boughtProduct: {
     list: "/boughtProduct/list",
     update: "/boughtProduct/update",
-    delete: (id: string) => `/boughtProduct/delete/${id}`
+    delete: (id: BoughtProductId) => `/boughtProduct/delete/${id}`,
+    batch: "/boughtProduct/batch-upsert"
   },
   boughtService: {
     list: "/boughtService/list",
     update: "/boughtService/update",
-    delete: (id: string) => `/boughtService/delete/${id}`
+    delete: (id: BoughtServiceId) => `/boughtService/delete/${id}`
   },
   branch: {
     list: "/branch/list",
@@ -157,6 +169,17 @@ export const ENDPOINTS = {
     update: "/opportunity/update",
     delete: (id: OpportunityId) => `/opportunity/delete/${id}`,
     detail: "/opportunity/get"
+  },
+  emailTemplate: {
+    list: "/email-templates",
+    detail: (id: number) => `/email-templates/${id}`,
+    all: "/email-templates/list",
+    create: "/email-templates",
+    update: (id: number) => `/email-templates/${id}`,
+    delete: (id: number) => `/email-templates/${id}`
+  },
+  mail: {
+    send: "/mail/send"
   },
   chat: {
     listCursor: "/chat/list-cursor",

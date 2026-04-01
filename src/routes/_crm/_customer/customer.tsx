@@ -2,6 +2,7 @@ import { AsyncBoundary } from "@/components/async-boundary";
 import CollapseButton from "@/components/collapse/collapse-button";
 import ExportButton from "@/components/export/export";
 import ModalCustomer from "@/components/features/customer/modal";
+import ModalOpportunity from "@/components/features/opportunity/modal";
 import RefreshButton from "@/components/refresh/refresh";
 import ActionsTable from "@/components/table/actions-table";
 import { DataTable } from "@/components/table/data-table";
@@ -11,6 +12,8 @@ import { useCloseModal, useModalFade } from "@/hooks/use-modal-animation";
 import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
 import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
 import { customerMutations, customerQueries } from "@/lib/tanstack/options/customer";
+import { opportunityMutations } from "@/lib/tanstack/options/opportunity";
+import { userQueries } from "@/lib/tanstack/options/user";
 import { customerAttributeQueries } from "@/lib/tanstack/options/customer-attribute";
 import { customerSourceQueries } from "@/lib/tanstack/options/customer-source";
 import type { CustomerDto } from "@/lib/types/customer";
@@ -47,13 +50,26 @@ function RouteComponent() {
 
   const [modal, setModal] = useState<{ type: any; item: any }>({ type: null, item: null });
   const [modalShown, setModalShown] = useState(false);
+  const [opportunityModal, setOpportunityModal] = useState<{ type: any; item: any }>({
+    type: null,
+    item: null
+  });
+  const [opportunityModalShown, setOpportunityModalShown] = useState(false);
 
   useModalFade(modal.type, setModalShown);
+  useModalFade(opportunityModal.type, setOpportunityModalShown);
 
   const closeModal = useCloseModal(setModalShown, (state) => setModal(state as any));
+  const closeOpportunityModal = useCloseModal(setOpportunityModalShown, (state) =>
+    setOpportunityModal(state as any)
+  );
 
   const openModal = (type: any, item: any) => {
     setModal({ type, item });
+  };
+
+  const openOpportunityModal = (type: any, item: any) => {
+    setOpportunityModal({ type, item });
   };
 
   const params = useMemo(
@@ -73,12 +89,13 @@ function RouteComponent() {
   const customers = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
 
-  const attrQuery = useQuery(customerAttributeQueries.list({}));
+  const attrQuery = useQuery(customerAttributeQueries.list({ isParent: 2 }));
   const dynamicAttributes = attrQuery.data?.result?.items ?? [];
 
   const createMutation = useMutation(customerMutations.create());
   const updateMutation = useMutation(customerMutations.update());
   const deleteMutation = useMutation(customerMutations.delete());
+  const createOpportunityMutation = useMutation(opportunityMutations.create());
 
   const columns = useMemo(() => {
     const staticCols = [
@@ -117,29 +134,61 @@ function RouteComponent() {
     ];
 
     const dynamicCols = dynamicAttributes.map((attr: any) =>
-      columnHelper.display({
-        id: `attr_${attr.id}`,
-        header: attr.name,
-        cell: (info) => {
-          const extraInfos = (info.row.original.customerExtraInfos as any[]) || [];
+      columnHelper.accessor(
+        (row: any) => {
+          const extraInfos = row.customerExtraInfos || [];
           const found = extraInfos.find((ei: any) => ei.attributeId === attr.id);
-          if (!found?.attributeValue) return "-";
+          return found?.attributeValue ?? null;
+        },
+        {
+          id: `attr_${attr.id}`,
+          header: attr.name,
+          cell: (info) => {
+            const value = info.getValue();
 
-          if (attr.datatype === "attachment") {
-            return (
-              <a href={found.attributeValue} target="_blank" className="text-primary">
-                <i className="ti ti-paperclip" />
-              </a>
-            );
+            if (!value) return "-";
+
+            if (attr.datatype === "attachment") {
+              return (
+                <a href={value} target="_blank" className="text-primary">
+                  <i className="ti ti-paperclip" />
+                </a>
+              );
+            }
+
+            return value;
           }
-          return found.attributeValue;
         }
-      })
+      )
     );
 
     return [
       ...staticCols,
       ...dynamicCols,
+      columnHelper.accessor("opportunityCount", {
+        header: "Số cơ hội",
+        cell: (info) => {
+          const row = info.row.original;
+          const count = Number(info.getValue() ?? 0);
+
+          return (
+            <div
+              className="badge cursor-pointer badge-soft-danger custom-cursor-on-hover"
+              title="Thêm cơ hội"
+              onClick={() =>
+                openOpportunityModal("add", {
+                  customerId: Number(row.id),
+                  customerName: row.name
+                })
+              }
+            >
+              <span>{count} cơ hội</span>
+              <i className="ti ti-plus" />
+            </div>
+          );
+        },
+        meta: { className: "text-center" }
+      }),
       columnHelper.display({
         id: "actions",
         header: "Thao tác",
@@ -178,6 +227,8 @@ function RouteComponent() {
   });
 
   const customerSourcesInf = useInfiniteQuery(customerSourceQueries.infinite({ limit: 10 }));
+  const usersInf = useInfiniteQuery(userQueries.infinite({ limit: 10 }));
+  const customersInf = useInfiniteQuery(customerQueries.infinite({ limit: 10 }));
 
   const customerSourceOptions = useMemo(
     () =>
@@ -194,6 +245,22 @@ function RouteComponent() {
     (q) => () => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()
   );
 
+  const [userOptions, customerOptions] = useMemo(
+    () => [
+      usersInf.data?.pages
+        .flatMap((page) => page.result?.items ?? [])
+        .map((user) => ({ label: String(user.name), value: Number(user.id) })) ?? [],
+      customersInf.data?.pages
+        .flatMap((page) => page.result?.items ?? [])
+        .map((customer) => ({ label: String(customer.name), value: Number(customer.id) })) ?? []
+    ],
+    [usersInf.data, customersInf.data]
+  );
+
+  const [handleLoadMoreUsers, handleLoadMoreCustomers] = [usersInf, customersInf].map(
+    (q) => () => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()
+  );
+
   const handleSubmit = async (values: any) => {
     if (modal.type === "add") await createMutation.mutateAsync(values);
     if (modal.type === "edit") await updateMutation.mutateAsync(values);
@@ -205,6 +272,12 @@ function RouteComponent() {
     if (!modal.item?.id) return;
     await deleteMutation.mutateAsync(modal.item.id);
     closeModal();
+    query.refetch();
+  };
+
+  const handleOpportunitySubmit = async (values: any) => {
+    await createOpportunityMutation.mutateAsync(values);
+    closeOpportunityModal();
     query.refetch();
   };
 
@@ -276,6 +349,18 @@ function RouteComponent() {
         onDelete={handleDelete}
         customerSourceOptions={customerSourceOptions}
         onLoadMorecustomerSources={handleLoadMoreCustomerSources}
+      />
+
+      <ModalOpportunity
+        type={opportunityModal.type}
+        shown={opportunityModalShown}
+        item={opportunityModal.item}
+        onClose={closeOpportunityModal}
+        onSubmit={handleOpportunitySubmit}
+        userOptions={userOptions}
+        customerOptions={customerOptions}
+        onLoadMoreUsers={handleLoadMoreUsers}
+        onLoadMoreCustomers={handleLoadMoreCustomers}
       />
     </div>
   );

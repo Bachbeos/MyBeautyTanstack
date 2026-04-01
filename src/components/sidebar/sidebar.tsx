@@ -32,7 +32,8 @@ export default function Sidebar() {
     "call-history": "application",
     chat: "application",
     notification: "application",
-    "customer-attribute": "system_settings"
+    "customer-attribute": "system_settings",
+    email: "system_settings"
   };
 
   const pathToTabKey: Record<string, string> = {
@@ -52,7 +53,12 @@ export default function Sidebar() {
     "/service": "service",
     "/call-history": "call-history",
     "/appointment": "appointment",
-    "/customer-attribute": "customer-attribute"
+    "/customer-attribute": "customer-attribute",
+    "/email": "email",
+    "/chat": "chat",
+    "/notification": "notification",
+    "/sale": "sale",
+    "/draft-invoice": "draft-invoice"
   };
 
   const location = useLocation();
@@ -213,7 +219,7 @@ export default function Sidebar() {
                     className={activeTab === "opportunitys" ? "active" : ""}
                     onClick={() => handleTabClick("opportunitys")}
                   >
-                    <i className="ti ti-user-up"></i>
+                    <i className="ti ti-checkup-list"></i>
                     <span>Cơ hội</span>
                   </Link>
                 </li>
@@ -292,6 +298,39 @@ export default function Sidebar() {
                   >
                     <i className="ti ti-briefcase"></i>
                     <span>Dịch vụ</span>
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/sale"
+                    search={{ invoiceId: undefined }}
+                    className={activeTab === "sale" ? "active" : ""}
+                    onClick={() => handleTabClick("sale")}
+                  >
+                    <i className="ti ti-report-money"></i>
+                    <span>Bán hàng</span>
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/invoice"
+                    className={activeTab === "invoice" ? "active" : ""}
+                    onClick={() => handleTabClick("invoice")}
+                  >
+                    <i className="ti ti-file-invoice"></i>
+                    <span>Hóa đơn</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/draft-invoice"
+                    className={activeTab === "draft-invoice" ? "active" : ""}
+                    onClick={() => handleTabClick("draft-invoice")}
+                  >
+                    <i className="ti ti-file-invoice"></i>
+                    <span>Hóa đơn nháp</span>
                   </Link>
                 </li>
               </ul>
@@ -392,6 +431,16 @@ export default function Sidebar() {
                         style={{ background: "none" }}
                       >
                         Cài đặt khách hàng
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/email"
+                        className={activeTab === "email" ? "active" : ""}
+                        onClick={() => handleTabClick("email")}
+                        style={{ background: "none" }}
+                      >
+                        Cài đặt email
                       </Link>
                     </li>
                   </SubMenuMotion>

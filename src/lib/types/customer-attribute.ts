@@ -7,20 +7,23 @@ export const CustomerAttributeId = (v: number) => toId<"CustomerAttribute", numb
 export type CustomerAttributeDto = {
   id: CustomerAttributeId;
   name: string;
-  fileName: string;
+  fieldName?: string;
+  fileName?: string;
   required: number;
   readonly: number;
-  unique: number;
+  unique?: number | null;
+  uniqued?: number | null;
   datatype: string;
   attributes: string | string[];
   position: number;
   parentId: number;
-  parentName: string;
-  createdAt: string;
+  parentName: string | null;
+  createdAt: string | null;
   [key: string]: unknown;
 };
 
 export type CustomerAttributeListRequest = {
+  isParent?: 1 | 2;
   keyword?: string;
   active?: number;
   [key: string]: unknown;
