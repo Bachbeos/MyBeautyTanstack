@@ -8,7 +8,8 @@ import {
   getCustomers,
   getCustomerDetail,
   upsertCustomer,
-  deleteCustomer
+  deleteCustomer,
+  getCustomersExtraInfo
 } from "@/lib/api/customer";
 
 import type {
@@ -50,6 +51,45 @@ export const customerQueries = {
       initialPageParam: 1,
       queryFn: ({ signal, pageParam }) =>
         getCustomers({ ...(params as any), page: pageParam }, signal),
+      getNextPageParam: (lastPage, _pages, lastPageParam) => {
+        const items = lastPage?.result?.items ?? [];
+        const total = lastPage?.result?.total ?? 0;
+        const limit = (params as any).limit ?? items.length ?? 0;
+
+        const loadedSoFar = lastPageParam * (limit || 0);
+        if (!limit) return items.length > 0 ? lastPageParam + 1 : undefined;
+
+        return loadedSoFar < total ? lastPageParam + 1 : undefined;
+      }
+    }),
+
+  detail: (id: CustomerId) =>
+    queryOptions<ApiResponse<CustomerDto>>({
+      queryKey: customerKeys.detail(id),
+      queryFn: ({ signal }) => getCustomerDetail(id, signal),
+      enabled: !!id
+    })
+};
+
+export const customerExtraInfoQueries = {
+  list: (params: CustomerListRequest) =>
+    queryOptions<ApiResponse<CustomerListResponse>>({
+      queryKey: customerKeys.list(params),
+      queryFn: ({ signal }) => getCustomersExtraInfo(params, signal)
+    }),
+
+  infinite: (params: Omit<CustomerListRequest, "page">) =>
+    infiniteQueryOptions<
+      ApiResponse<CustomerListResponse>,
+      Error,
+      InfiniteData<ApiResponse<CustomerListResponse>>,
+      ReturnType<typeof customerKeys.infinite>,
+      number
+    >({
+      queryKey: customerKeys.infinite(params),
+      initialPageParam: 1,
+      queryFn: ({ signal, pageParam }) =>
+        getCustomersExtraInfo({ ...(params as any), page: pageParam }, signal),
       getNextPageParam: (lastPage, _pages, lastPageParam) => {
         const items = lastPage?.result?.items ?? [];
         const total = lastPage?.result?.total ?? 0;

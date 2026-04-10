@@ -93,6 +93,7 @@ export const ENDPOINTS = {
   },
   customer: {
     list: "/customer/list",
+    listExtraInfo: "/customer/extra/list",
     update: "/customer/update",
     delete: (id: CustomerId) => `/customer/delete/${id}`,
     detail: "/customer/get"

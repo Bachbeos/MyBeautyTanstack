@@ -11,7 +11,7 @@ import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { useCloseModal, useModalFade } from "@/hooks/use-modal-animation";
 import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
 import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
-import { customerMutations, customerQueries } from "@/lib/tanstack/options/customer";
+import { customerExtraInfoQueries, customerMutations, customerQueries } from "@/lib/tanstack/options/customer";
 import { opportunityMutations } from "@/lib/tanstack/options/opportunity";
 import { userQueries } from "@/lib/tanstack/options/user";
 import { customerAttributeQueries } from "@/lib/tanstack/options/customer-attribute";
@@ -85,7 +85,7 @@ function RouteComponent() {
     setPageIndex(0);
   }, [nameFilter]);
 
-  const query = useQuery(customerQueries.list(params));
+  const query = useQuery(customerExtraInfoQueries.list(params));
   const customers = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
 
