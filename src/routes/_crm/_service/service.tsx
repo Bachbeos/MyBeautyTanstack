@@ -231,8 +231,9 @@ function RouteComponent() {
     }
   };
 
-  const categorysInf = useInfiniteQuery(categoryQueries.infinite({ limit: 10 }));
-
+  const categorysInf = useInfiniteQuery(
+    categoryQueries.infinite({ limit: 10, active: 1, type: 1 })
+  );
   const categoryOptions = useMemo(() => {
     return (
       categorysInf.data?.pages

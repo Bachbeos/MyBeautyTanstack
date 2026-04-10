@@ -219,7 +219,9 @@ function RouteComponent() {
   });
 
   const unitsInf = useInfiniteQuery(unitQueries.infinite({ limit: 10 }));
-  const categorysInf = useInfiniteQuery(categoryQueries.infinite({ limit: 10 }));
+  const categorysInf = useInfiniteQuery(
+    categoryQueries.infinite({ limit: 10, active: 1, type: 2 })
+  );
 
   const [unitOptions, categoryOptions] = useMemo(
     () => [
