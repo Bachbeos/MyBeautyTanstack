@@ -191,8 +191,8 @@ function RouteComponent() {
     getCoreRowModel: getCoreRowModel()
   });
 
-  const parentsInf = useInfiniteQuery(branchQueries.infinite({ limit: 10 }));
-  const ownersInf = useInfiniteQuery(userQueries.infinite({ limit: 10 }));
+  const parentsInf = useInfiniteQuery(branchQueries.infinite({ limit: 10, status: 1 }));
+  const ownersInf = useInfiniteQuery(userQueries.infinite({ limit: 10, status: 1 }));
 
   const [parentOptions, ownerOptions] = useMemo(
     () => [

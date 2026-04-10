@@ -209,7 +209,7 @@ function RouteComponent() {
     getCoreRowModel: getCoreRowModel()
   });
 
-  const branchsInf = useInfiniteQuery(branchQueries.infinite({ limit: 10 }));
+  const branchsInf = useInfiniteQuery(branchQueries.infinite({ limit: 10, status: 1 }));
 
   const branchOptions = useMemo(() => {
     return (
