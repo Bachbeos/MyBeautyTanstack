@@ -25,11 +25,13 @@ import { createKeys } from "@/lib/tanstack/query-key";
 
 export const customerKeys = createKeys("customer", {
   list: (params: CustomerListRequest) => ["list", params] as const,
+  extraList: (params: CustomerListRequest) => ["extraList", params] as const,
   detail: (id: CustomerId) => ["detail", id] as const,
   create: () => ["create"] as const,
   update: () => ["update"] as const,
   delete: () => ["delete"] as const,
-  infinite: (params: Omit<CustomerListRequest, "page">) => ["infinite", params] as const
+  infinite: (params: Omit<CustomerListRequest, "page">) => ["infinite", params] as const,
+  extraInfinite: (params: Omit<CustomerListRequest, "page">) => ["extraInfinite", params] as const
 });
 
 export const customerQueries = {
@@ -74,7 +76,7 @@ export const customerQueries = {
 export const customerExtraInfoQueries = {
   list: (params: CustomerListRequest) =>
     queryOptions<ApiResponse<CustomerListResponse>>({
-      queryKey: customerKeys.list(params),
+      queryKey: customerKeys.extraList(params),
       queryFn: ({ signal }) => getCustomersExtraInfo(params, signal)
     }),
 
@@ -83,10 +85,10 @@ export const customerExtraInfoQueries = {
       ApiResponse<CustomerListResponse>,
       Error,
       InfiniteData<ApiResponse<CustomerListResponse>>,
-      ReturnType<typeof customerKeys.infinite>,
+      ReturnType<typeof customerKeys.extraInfinite>,
       number
     >({
-      queryKey: customerKeys.infinite(params),
+      queryKey: customerKeys.extraInfinite(params),
       initialPageParam: 1,
       queryFn: ({ signal, pageParam }) =>
         getCustomersExtraInfo({ ...(params as any), page: pageParam }, signal),
@@ -117,7 +119,7 @@ export const customerMutations = {
       mutationFn: (body) => upsertCustomer(body),
       meta: {
         successMessage: "Tạo khách hàng thành công",
-        invalidatesQuery: [customerKeys.list({})]
+        invalidatesQuery: [customerKeys.list({}), customerKeys.extraList({})]
       }
     }),
 
@@ -127,7 +129,7 @@ export const customerMutations = {
       mutationFn: (body) => upsertCustomer(body),
       meta: {
         successMessage: "Cập nhật khách hàng thành công",
-        invalidatesQuery: [customerKeys.list({})]
+        invalidatesQuery: [customerKeys.list({}), customerKeys.extraList({})]
       }
     }),
 
@@ -137,7 +139,7 @@ export const customerMutations = {
       mutationFn: (id) => deleteCustomer(id),
       meta: {
         successMessage: "Xóa khách hàng thành công",
-        invalidatesQuery: [customerKeys.list({})]
+        invalidatesQuery: [customerKeys.list({}), customerKeys.extraList({})]
       }
     })
 };

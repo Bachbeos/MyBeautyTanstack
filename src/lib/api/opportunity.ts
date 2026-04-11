@@ -7,7 +7,11 @@ import type {
   OpportunityListRequest,
   OpportunityUpdateRequest,
   OpportunityListResponse,
-  OpportunityCreateRequest
+  OpportunityCreateRequest,
+  OpportunityKanbanRequest,
+  OpportunityKanbanResponse,
+  OpportunityMoveStageRequest,
+  StageTransitionMetaResponse
 } from "@/lib/types/opportunity";
 
 export const getOpportunities = async (
@@ -47,5 +51,39 @@ export const upsertOpportunity = async (
 
 export const deleteOpportunity = async (id: OpportunityId): Promise<ApiResponse<void>> => {
   const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.opportunity.delete(id));
+  return res.data;
+};
+
+export const getOpportunityKanban = async (
+  params: OpportunityKanbanRequest,
+  signal?: AbortSignal
+): Promise<ApiResponse<OpportunityKanbanResponse>> => {
+  const res = await axiosInstance.get<ApiResponse<OpportunityKanbanResponse>>(
+    ENDPOINTS.opportunity.kanban,
+    {
+      params,
+      signal
+    }
+  );
+  return res.data;
+};
+
+export const getOpportunityStageTransitionMeta = async (
+  signal?: AbortSignal
+): Promise<ApiResponse<StageTransitionMetaResponse>> => {
+  const res = await axiosInstance.get<ApiResponse<StageTransitionMetaResponse>>(
+    ENDPOINTS.opportunity.stageTransitionMeta,
+    {
+      signal
+    }
+  );
+  return res.data;
+};
+
+export const moveOpportunityStage = async (
+  id: OpportunityId,
+  body: OpportunityMoveStageRequest
+): Promise<ApiResponse<number>> => {
+  const res = await axiosInstance.post<ApiResponse<number>>(ENDPOINTS.opportunity.moveStage(id), body);
   return res.data;
 };

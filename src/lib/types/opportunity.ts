@@ -4,7 +4,7 @@ import type { Page, PageMeta } from "@/lib/types/paging";
 export type OpportunityId = ID<"Opportunity", number>;
 export const OpportunityId = (v: number) => toId<"Opportunity", number>(v);
 
-export type OpportunityStage = 1 | 2 | 3 | 4 | 5;
+export type OpportunityStage = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export type OpportunityDto = {
   id: OpportunityId;
@@ -47,4 +47,50 @@ export type OpportunityUpdateRequest = {
   id: OpportunityId;
   stage?: OpportunityStage;
   status?: number;
+};
+
+export type OpportunityKanbanRequest = {
+  keyword?: string;
+  customerId?: number;
+  userId?: number;
+  status?: number;
+};
+
+export type OpportunityKanbanColumn = {
+  stage: OpportunityStage;
+  stageName: string;
+  count: number;
+  totalExpectedValue?: number;
+  totalWeightedValue?: number;
+  items: OpportunityDto[];
+};
+
+export type OpportunityKanbanResponse = {
+  columns: OpportunityKanbanColumn[];
+};
+
+export type StageTransitionMetaResponse = {
+  stages: {
+    id: OpportunityStage;
+    code: string;
+    name: string;
+  }[];
+  rules: {
+    toStage: OpportunityStage;
+    requiredFields: string[];
+  }[];
+};
+
+export type OpportunityMoveStageRequest = {
+  toStage: OpportunityStage;
+  userId?: number;
+  expectedValue?: number;
+  probability?: number;
+  expectedCloseDate?: string;
+  lastActivityDate?: string;
+  actualCloseDate?: string;
+  lostReason?: string;
+  priority?: number;
+  nextActionType?: string;
+  nextActionDate?: string;
 };

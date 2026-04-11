@@ -22,17 +22,14 @@ export function BaseModal({
   headerActions,
   contentClassName
 }: BaseModalProps) {
-  // if (!shown) return null;
+  if (!shown) return null;
 
   const sizeClass =
     size === "sm" ? "modal-sm" : size === "lg" ? "modal-lg" : size === "xl" ? "modal-xl" : "";
 
   return (
     <Fragment>
-      <div
-        className={cn("modal fade", shown && "show d-block")}
-        style={{ zIndex: 1051, display: "block" }}
-      >
+      <div className={cn("modal fade show d-block")} style={{ zIndex: 1051 }}>
         <div className={`modal-dialog modal-dialog-centered ${sizeClass}`}>
           <div className={cn("modal-content", contentClassName)}>
             <div className="modal-header">

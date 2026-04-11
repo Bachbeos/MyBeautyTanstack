@@ -11,7 +11,7 @@ import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { useCloseModal, useModalFade } from "@/hooks/use-modal-animation";
 import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
 import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
-import { customerExtraInfoQueries, customerMutations, customerQueries } from "@/lib/tanstack/options/customer";
+import { customerExtraInfoQueries, customerMutations } from "@/lib/tanstack/options/customer";
 import { opportunityMutations } from "@/lib/tanstack/options/opportunity";
 import { userQueries } from "@/lib/tanstack/options/user";
 import { customerAttributeQueries } from "@/lib/tanstack/options/customer-attribute";
@@ -228,7 +228,7 @@ function RouteComponent() {
 
   const customerSourcesInf = useInfiniteQuery(customerSourceQueries.infinite({ limit: 10 }));
   const usersInf = useInfiniteQuery(userQueries.infinite({ limit: 10 }));
-  const customersInf = useInfiniteQuery(customerQueries.infinite({ limit: 10 }));
+  const customersInf = useInfiniteQuery(customerExtraInfoQueries.infinite({ limit: 10 }));
 
   const customerSourceOptions = useMemo(
     () =>
