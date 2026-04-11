@@ -41,13 +41,23 @@ const stageColorMap: Record<number, string> = {
 };
 
 const stageNameFallback: Record<number, string> = {
-  1: "Lead",
-  2: "Contacted",
-  3: "Consulting",
-  4: "Proposal",
-  5: "Negotiation",
-  6: "Won",
-  7: "Lost"
+  1: "Tiềm năng",
+  2: "Đã liên hệ",
+  3: "Tư vấn",
+  4: "Đề xuất",
+  5: "Đàm phán",
+  6: "Thành công",
+  7: "Thất bại"
+};
+
+const stageIconMap: Record<number, string> = {
+  1: "ti ti-bulb",
+  2: "ti ti-phone-call",
+  3: "ti ti-message-chatbot",
+  4: "ti ti-file-description",
+  5: "ti ti-scale",
+  6: "ti ti-rosette-discount-check",
+  7: "ti ti-mood-sad"
 };
 
 const fieldLabelMap: Record<string, string> = {
@@ -125,7 +135,7 @@ function RouteComponent() {
     (localColumns ?? serverColumns).forEach((c) => byStage.set(Number(c.stage), c));
 
     const stageList =
-      metaQuery.data?.result?.stages?.map((s) => ({ id: Number(s.id), name: s.name })) ??
+      metaQuery.data?.result?.stages?.map((s) => ({ id: Number(s.id), name: stageNameFallback[Number(s.id)] || s.name })) ??
       [1, 2, 3, 4, 5, 6, 7].map((id) => ({ id, name: stageNameFallback[id] }));
 
     return stageList.map(({ id, name }) => {
@@ -214,7 +224,6 @@ function RouteComponent() {
       await resetLocalFromServer();
     } catch {
       rollbackMove(move.card, move.fromStage, move.toStage);
-      toast.error("Chuyển stage thất bại, đã hoàn tác vị trí thẻ");
       setPendingMove(null);
       setDynamicValues({});
     }
@@ -309,80 +318,105 @@ function RouteComponent() {
           onRetry={() => resetLocalFromServer()}
         >
           {() => (
-            <div className="d-flex gap-3 overflow-auto pb-2">
+            <div
+              className="row g-3"
+              style={{
+                gridAutoRows: "1fr"
+              }}
+            >
               {columns.map((column) => {
                 const color = stageColorMap[Number(column.stage)] || "secondary";
                 const cards = column.items || [];
+                const icon = stageIconMap[Number(column.stage)] || "ti ti-layout-kanban";
 
                 return (
-                  <div
-                    key={Number(column.stage)}
-                    className="card border-0 shadow-sm"
-                    style={{ minWidth: 330, width: 330 }}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={async () => {
-                      const moved = cards.find((c) => Number(c.id) === draggingId);
-                      const source = (localColumns ?? columns)
-                        .flatMap((col) => col.items)
-                        .find((c) => Number(c.id) === draggingId);
-                      const card = moved || source;
-                      if (!card) return;
-                      await onDropCard(card, column.stage);
-                      setDraggingId(null);
-                    }}
-                  >
-                    <div className="card-header bg-white border-0 pb-2">
-                      <div className="d-flex align-items-center justify-content-between">
-                        <span className={cn("badge", `badge-soft-${color}`)}>{column.stageName}</span>
-                        <span className="badge bg-light text-dark">{cards.length}</span>
-                      </div>
-                      <div className="small text-muted mt-2">
-                        Tổng dự kiến: {new Intl.NumberFormat("vi-VN").format(Number(column.totalExpectedValue || 0))} VND
-                      </div>
-                    </div>
-
-                    <div className="card-body pt-0" style={{ maxHeight: "65vh", overflowY: "auto" }}>
-                      {cards.map((item) => (
-                        <div
-                          key={Number(item.id)}
-                          className="card kanban-card mb-2 border"
-                          draggable
-                          onDragStart={() => setDraggingId(Number(item.id))}
-                        >
-                          <div
-                            className="card-body p-3 cursor-pointer"
-                            role="button"
-                            onClick={() => setDetailId(item.id)}
-                          >
-                            <div className="d-flex justify-content-between align-items-start mb-1">
-                              <h6 className="mb-0 text-truncate" style={{ maxWidth: 220 }}>
-                                {item.name}
-                              </h6>
-                              <span className={cn("badge", `badge-soft-${color}`)}>{item.probability}%</span>
-                            </div>
-
-                            <div className="small text-muted mb-1">
-                              <i className="ti ti-user me-1" /> {item.customerName || "-"}
-                            </div>
-                            <div className="small text-muted mb-1">
-                              <i className="ti ti-user-circle me-1" /> {item.userName || "-"}
-                            </div>
-                            <div className="small text-muted mb-2">
-                              <i className="ti ti-calendar-event me-1" />
-                              {item.expectedCloseDate
-                                ? new Date(item.expectedCloseDate).toLocaleDateString("vi-VN")
-                                : "Chưa có ngày chốt"}
-                            </div>
-
-                            <div className="fw-semibold text-primary">
-                              {new Intl.NumberFormat("vi-VN", {
-                                style: "currency",
-                                currency: "VND"
-                              }).format(Number(item.expectedValue || 0))}
+                  <div key={Number(column.stage)} className="col-12 col-md-6 col-xl-4 col-xxl">
+                    <div
+                      className="card border-0 shadow-sm h-100"
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={async () => {
+                        const moved = cards.find((c) => Number(c.id) === draggingId);
+                        const source = (localColumns ?? columns)
+                          .flatMap((col) => col.items)
+                          .find((c) => Number(c.id) === draggingId);
+                        const card = moved || source;
+                        if (!card) return;
+                        await onDropCard(card, column.stage);
+                        setDraggingId(null);
+                      }}
+                    >
+                      <div className={cn("card-header border-0", `bg-${color}-transparent`)}>
+                        <div className="d-flex align-items-center justify-content-between">
+                          <div className="d-flex align-items-center gap-2">
+                            <span className={cn("avatar avatar-sm rounded-circle", `bg-${color}`)}>
+                              <i className={cn(icon, "text-white fs-14")} />
+                            </span>
+                            <div>
+                              <div className="fw-semibold">{column.stageName}</div>
+                              <div className="text-muted small">{cards.length} cơ hội</div>
                             </div>
                           </div>
+                          <span className={cn("badge", `badge-soft-${color}`)}>{cards.length}</span>
                         </div>
-                      ))}
+                        <div className="small text-muted mt-2">
+                          Dự kiến: {new Intl.NumberFormat("vi-VN").format(Number(column.totalExpectedValue || 0))}₫
+                        </div>
+                      </div>
+
+                      <div className="card-body pt-2" style={{ maxHeight: "55vh", overflowY: "auto" }}>
+                        {cards.map((item) => (
+                          <div
+                            key={Number(item.id)}
+                            className="card kanban-card mb-2 border-0 shadow-sm"
+                            draggable
+                            onDragStart={() => setDraggingId(Number(item.id))}
+                          >
+                            <div
+                              className="card-body p-3 cursor-pointer"
+                              role="button"
+                              onClick={() => setDetailId(item.id)}
+                            >
+                              <div className="d-flex justify-content-between align-items-start mb-2">
+                                <h6 className="mb-0 text-truncate pe-2" style={{ maxWidth: 220 }}>
+                                  {item.name}
+                                </h6>
+                                <span className={cn("badge rounded-pill", `badge-soft-${color}`)}>
+                                  {item.probability}%
+                                </span>
+                              </div>
+
+                              <div className="small text-muted d-flex align-items-center mb-1">
+                                <i className="ti ti-user me-1" />
+                                <span className="text-truncate">{item.customerName || "Chưa có khách hàng"}</span>
+                              </div>
+                              <div className="small text-muted d-flex align-items-center mb-1">
+                                <i className="ti ti-user-circle me-1" />
+                                <span className="text-truncate">{item.userName || "Chưa phân công"}</span>
+                              </div>
+                              <div className="small text-muted d-flex align-items-center mb-2">
+                                <i className="ti ti-calendar-event me-1" />
+                                {item.expectedCloseDate
+                                  ? new Date(item.expectedCloseDate).toLocaleDateString("vi-VN")
+                                  : "Chưa có ngày dự kiến"}
+                              </div>
+
+                              <div className="d-flex align-items-center justify-content-between">
+                                <span className="small text-muted">Giá trị dự kiến</span>
+                                <div className="fw-bold text-primary">
+                                  {new Intl.NumberFormat("vi-VN", {
+                                    style: "currency",
+                                    currency: "VND"
+                                  }).format(Number(item.expectedValue || 0))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {cards.length === 0 && (
+                          <div className="text-center text-muted small py-4">Chưa có cơ hội trong giai đoạn này</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

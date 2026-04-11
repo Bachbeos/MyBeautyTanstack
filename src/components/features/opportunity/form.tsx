@@ -7,10 +7,11 @@ const opportunitySchema = z.object({
   id: z.number().optional(),
   customerId: z.number().min(1, "Vui lòng chọn khách hàng"),
   name: z.string().min(1, "Tên cơ hội không được để trống"),
-  userId: z.number().min(1, "Vui lòng chọn sale phụ trách"),
+  userId: z.number().nullable().optional(),
   description: z.string().optional(),
   expectedValue: z.coerce.number().min(0).optional(),
   expectedCloseDate: z.string().optional(),
+  priority: z.coerce.number().min(0).max(5).default(1),
   status: z.number().default(1)
 });
 
@@ -24,6 +25,9 @@ type OpportunityFormProps = {
   onSubmit: (values: OpportunityFormValues) => Promise<void>;
   onLoadMoreUsers?: () => void;
   onLoadMoreCustomers?: () => void;
+  hideUserField?: boolean;
+  hideExpectedCloseDateField?: boolean;
+  forceStatusActive?: boolean;
 };
 
 export function OpportunityForm({
@@ -33,7 +37,10 @@ export function OpportunityForm({
   customerOptions,
   onSubmit,
   onLoadMoreUsers,
-  onLoadMoreCustomers
+  onLoadMoreCustomers,
+  hideUserField = false,
+  hideExpectedCloseDateField = false,
+  forceStatusActive = false
 }: OpportunityFormProps) {
   const isReadOnly = mode === "detail";
 
@@ -42,21 +49,26 @@ export function OpportunityForm({
       id: opportunity?.id,
       customerId: opportunity?.customerId ?? 0,
       name: opportunity?.name ?? "",
-      userId: opportunity?.userId ?? 0,
+      userId: opportunity?.userId ?? null,
       description: opportunity?.description ?? "",
       expectedValue: opportunity?.expectedValue ?? 0,
       expectedCloseDate: opportunity?.expectedCloseDate
         ? opportunity.expectedCloseDate.substring(0, 10)
         : "",
-      status: opportunity?.status ?? 1
+      priority: (opportunity as any)?.priority ?? 1,
+      status: forceStatusActive ? 1 : (opportunity?.status ?? 1)
     } as OpportunityFormValues,
     validators: { onSubmit: opportunitySchema as any },
     onSubmit: async ({ value }) => {
       const payload = {
         ...value,
-        expectedCloseDate: value.expectedCloseDate
-          ? `${value.expectedCloseDate}T00:00:00`
-          : undefined
+        status: forceStatusActive ? 1 : value.status,
+        expectedCloseDate: hideExpectedCloseDateField
+          ? undefined
+          : value.expectedCloseDate
+            ? `${value.expectedCloseDate}T00:00:00`
+            : undefined,
+        userId: hideUserField ? null : (value.userId ?? null)
       };
       await onSubmit(payload as any);
     }
@@ -68,11 +80,12 @@ export function OpportunityForm({
         id: opportunity.id,
         customerId: opportunity.customerId,
         name: opportunity.name,
-        userId: opportunity.userId,
+        userId: opportunity.userId ?? null,
         description: opportunity.description,
         expectedValue: opportunity.expectedValue,
         expectedCloseDate: opportunity.expectedCloseDate?.substring(0, 10),
-        status: opportunity.status
+        priority: (opportunity as any).priority ?? 1,
+        status: forceStatusActive ? 1 : opportunity.status
       } as any);
     }
   }, [opportunity]);
@@ -105,7 +118,7 @@ export function OpportunityForm({
             {(field) => (
               <field.Input
                 label="Tên cơ hội"
-                placeholder="Ví dụ: Combo trị mụn 3 tháng"
+                placeholder="Ví dụ: Thuê chung cư tại Ba Đình"
                 disabled={isReadOnly}
                 required
               />
@@ -113,18 +126,20 @@ export function OpportunityForm({
           </form.AppField>
         </div>
 
-        <div className="col-md-6 mb-3">
-          <form.AppField name="userId">
-            {(field) => (
-              <field.Select
-                label="Sale phụ trách"
-                options={userOptions}
-                disabled={isReadOnly}
-                onLoadMore={onLoadMoreUsers}
-              />
-            )}
-          </form.AppField>
-        </div>
+        {!hideUserField && (
+          <div className="col-md-6 mb-3">
+            <form.AppField name="userId">
+              {(field) => (
+                <field.Select
+                  label="Sale phụ trách"
+                  options={userOptions}
+                  disabled={isReadOnly}
+                  onLoadMore={onLoadMoreUsers}
+                />
+              )}
+            </form.AppField>
+          </div>
+        )}
 
         <div className="col-md-6 mb-3">
           <form.AppField name="expectedValue">
@@ -139,27 +154,50 @@ export function OpportunityForm({
           </form.AppField>
         </div>
 
-        <div className="col-md-6 mb-3">
-          <form.AppField name="expectedCloseDate">
-            {(field) => <field.Input type="date" label="Ngày dự kiến chốt" disabled={isReadOnly} />}
-          </form.AppField>
-        </div>
+        {!hideExpectedCloseDateField && (
+          <div className="col-md-6 mb-3">
+            <form.AppField name="expectedCloseDate">
+              {(field) => <field.Input type="date" label="Ngày dự kiến chốt" disabled={isReadOnly} />}
+            </form.AppField>
+          </div>
+        )}
 
         <div className="col-md-6 mb-3">
-          <form.AppField name="status">
+          <form.AppField name="priority">
             {(field) => (
-              <field.Radio
-                label="Trạng thái"
+              <field.Select
+                label="Mức độ ưu tiên"
                 options={[
-                  { label: "Đang hoạt động", value: 1 },
-                  { label: "Ngưng hoạt động", value: 0 }
+                  { label: "0 - Rất thấp", value: 0 },
+                  { label: "1 - Thấp", value: 1 },
+                  { label: "2 - Trung bình", value: 2 },
+                  { label: "3 - Cao", value: 3 },
+                  { label: "4 - Rất cao", value: 4 },
+                  { label: "5 - Khẩn cấp", value: 5 }
                 ]}
                 disabled={isReadOnly}
-                inline
               />
             )}
           </form.AppField>
         </div>
+
+        {!forceStatusActive && (
+          <div className="col-md-6 mb-3">
+            <form.AppField name="status">
+              {(field) => (
+                <field.Radio
+                  label="Trạng thái"
+                  options={[
+                    { label: "Đang hoạt động", value: 1 },
+                    { label: "Ngưng hoạt động", value: 0 }
+                  ]}
+                  disabled={isReadOnly}
+                  inline
+                />
+              )}
+            </form.AppField>
+          </div>
+        )}
 
         <div className="col-12">
           <form.AppField name="description">

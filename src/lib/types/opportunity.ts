@@ -11,8 +11,8 @@ export type OpportunityDto = {
   code: string;
   customerId: number;
   customerName: string;
-  userId: number;
-  userName: string;
+  userId: number | null;
+  userName: string | null;
   branchId: number;
   creatorId: number;
   name: string;
@@ -29,6 +29,7 @@ export type OpportunityDto = {
 export type OpportunityListRequest = {
   keyword?: string;
   active?: number;
+  unassignedOnly?: boolean;
   [key: string]: unknown;
 } & Partial<PageMeta>;
 
@@ -40,7 +41,9 @@ export type OpportunityCreateRequest = {
   description?: string;
   expectedValue?: number;
   expectedCloseDate?: string;
-  userId?: number;
+  userId?: number | null;
+  priority?: number;
+  status?: number;
 };
 
 export type OpportunityUpdateRequest = {

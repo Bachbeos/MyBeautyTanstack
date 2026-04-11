@@ -35,6 +35,14 @@ export const Route = createFileRoute("/_crm/_customer/customer")({
 
 function RouteComponent() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  const segmentLabelMap: Record<string, { label: string; className: string }> = {
+    vip: { label: "Khách VIP", className: "badge-soft-success" },
+    loyal: { label: "Khách trung thành", className: "badge-soft-primary" },
+    potential: { label: "Khách tiềm năng", className: "badge-soft-warning" },
+    at_risk: { label: "Có nguy cơ rời bỏ", className: "badge-soft-danger" },
+    churned: { label: "Đã rời bỏ", className: "badge-soft-secondary" }
+  };
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
@@ -130,7 +138,19 @@ function RouteComponent() {
       }),
       columnHelper.accessor("phone", { header: "Số điện thoại" }),
       columnHelper.accessor("email", { header: "Email" }),
-      columnHelper.accessor("address", { header: "Địa chỉ" })
+      columnHelper.accessor("address", { header: "Địa chỉ" }),
+      columnHelper.accessor((row) => String((row as any).segmentCode || ""), {
+        id: "segmentCode",
+        header: "Phân khúc",
+        cell: (info) => {
+          const code = String(info.getValue() || "").toLowerCase();
+          const mapped = segmentLabelMap[code];
+          if (!mapped) return <span className="text-muted">Chưa phân loại</span>;
+
+          return <span className={`badge ${mapped.className}`}>{mapped.label}</span>;
+        },
+        meta: { className: "text-center" }
+      })
     ];
 
     const dynamicCols = dynamicAttributes.map((attr: any) =>
@@ -276,7 +296,13 @@ function RouteComponent() {
   };
 
   const handleOpportunitySubmit = async (values: any) => {
-    await createOpportunityMutation.mutateAsync(values);
+    const payload = {
+      ...values,
+      status: 1,
+      expectedCloseDate: undefined,
+      userId: null
+    };
+    await createOpportunityMutation.mutateAsync(payload);
     closeOpportunityModal();
     query.refetch();
   };
@@ -361,6 +387,9 @@ function RouteComponent() {
         customerOptions={customerOptions}
         onLoadMoreUsers={handleLoadMoreUsers}
         onLoadMoreCustomers={handleLoadMoreCustomers}
+        hideUserField
+        hideExpectedCloseDateField
+        forceStatusActive
       />
     </div>
   );

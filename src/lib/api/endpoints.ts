@@ -168,6 +168,8 @@ export const ENDPOINTS = {
     kanban: "/opportunity/kanban",
     stageTransitionMeta: "/opportunity/stage-transition-meta",
     moveStage: (id: OpportunityId) => `/opportunity/move-stage/${id}`,
+    assign: (id: OpportunityId) => `/opportunity/assign/${id}`,
+    assignAuto: (id: OpportunityId) => `/opportunity/assign-auto/${id}`,
     update: "/opportunity/update",
     delete: (id: OpportunityId) => `/opportunity/delete/${id}`,
     detail: "/opportunity/get"

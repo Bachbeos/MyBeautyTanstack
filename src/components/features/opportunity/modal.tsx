@@ -15,6 +15,9 @@ type ModalProps = {
   onDelete?: () => Promise<void> | void;
   onLoadMoreUsers?: () => void;
   onLoadMoreCustomers?: () => void;
+  hideUserField?: boolean;
+  hideExpectedCloseDateField?: boolean;
+  forceStatusActive?: boolean;
 };
 
 export default function ModalOpportunity({
@@ -27,7 +30,10 @@ export default function ModalOpportunity({
   onSubmit,
   onDelete,
   onLoadMoreUsers,
-  onLoadMoreCustomers
+  onLoadMoreCustomers,
+  hideUserField,
+  hideExpectedCloseDateField,
+  forceStatusActive
 }: ModalProps) {
   if (!type && !shown) return null;
 
@@ -108,6 +114,9 @@ export default function ModalOpportunity({
             onSubmit={onSubmit}
             onLoadMoreUsers={onLoadMoreUsers}
             onLoadMoreCustomers={onLoadMoreCustomers}
+            hideUserField={hideUserField}
+            hideExpectedCloseDateField={hideExpectedCloseDateField}
+            forceStatusActive={forceStatusActive}
           />
         )}
       </div>

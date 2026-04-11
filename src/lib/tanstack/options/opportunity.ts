@@ -11,7 +11,9 @@ import {
   deleteOpportunity,
   getOpportunityKanban,
   getOpportunityStageTransitionMeta,
-  moveOpportunityStage
+  moveOpportunityStage,
+  assignOpportunity,
+  autoAssignOpportunity
 } from "@/lib/api/opportunity";
 
 import type {
@@ -38,6 +40,8 @@ export const opportunityKeys = createKeys("opportunity", {
   update: () => ["update"] as const,
   delete: () => ["delete"] as const,
   moveStage: () => ["moveStage"] as const,
+  assign: () => ["assign"] as const,
+  assignAuto: () => ["assignAuto"] as const,
   infinite: (params: Omit<OpportunityListRequest, "page">) => ["infinite", params] as const
 });
 
@@ -135,6 +139,26 @@ export const opportunityMutations = {
       meta: {
         successMessage: "Chuyển giai đoạn thành công",
         invalidatesQuery: [opportunityKeys.kanban({ status: 1 })]
+      }
+    }),
+
+  assign: () =>
+    mutationOptions<ApiResponse<number>, Error, { id: OpportunityId; userId: number }>({
+      mutationKey: opportunityKeys.assign(),
+      mutationFn: ({ id, userId }) => assignOpportunity(id, userId),
+      meta: {
+        successMessage: "Phân công cơ hội thành công",
+        invalidatesQuery: [opportunityKeys.list({})]
+      }
+    }),
+
+  assignAuto: () =>
+    mutationOptions<ApiResponse<number>, Error, { id: OpportunityId }>({
+      mutationKey: opportunityKeys.assignAuto(),
+      mutationFn: ({ id }) => autoAssignOpportunity(id),
+      meta: {
+        successMessage: "Đã tự động điều phối cơ hội",
+        invalidatesQuery: [opportunityKeys.list({})]
       }
     })
 };

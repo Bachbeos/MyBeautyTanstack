@@ -87,3 +87,18 @@ export const moveOpportunityStage = async (
   const res = await axiosInstance.post<ApiResponse<number>>(ENDPOINTS.opportunity.moveStage(id), body);
   return res.data;
 };
+
+export const assignOpportunity = async (
+  id: OpportunityId,
+  userId: number
+): Promise<ApiResponse<number>> => {
+  const res = await axiosInstance.post<ApiResponse<number>>(ENDPOINTS.opportunity.assign(id), null, {
+    params: { userId }
+  });
+  return res.data;
+};
+
+export const autoAssignOpportunity = async (id: OpportunityId): Promise<ApiResponse<number>> => {
+  const res = await axiosInstance.post<ApiResponse<number>>(ENDPOINTS.opportunity.assignAuto(id));
+  return res.data;
+};
