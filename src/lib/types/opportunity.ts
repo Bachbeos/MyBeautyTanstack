@@ -56,13 +56,20 @@ export type OpportunityKanbanRequest = {
   keyword?: string;
   customerId?: number;
   userId?: number;
+  stage?: number;
   status?: number;
+  page?: number;
+  limit?: number;
 };
 
 export type OpportunityKanbanColumn = {
   stage: OpportunityStage;
   stageName: string;
   count: number;
+  page?: number;
+  limit?: number;
+  total?: number;
+  hasMore?: boolean;
   totalExpectedValue?: number;
   totalWeightedValue?: number;
   items: OpportunityDto[];
@@ -96,4 +103,10 @@ export type OpportunityMoveStageRequest = {
   priority?: number;
   nextActionType?: string;
   nextActionDate?: string;
+};
+
+export type OpportunityAutoAssignRequest = {
+  opportunityIds?: number[];
+  roleId?: number;
+  userIds?: number[];
 };

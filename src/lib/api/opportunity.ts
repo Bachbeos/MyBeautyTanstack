@@ -11,7 +11,8 @@ import type {
   OpportunityKanbanRequest,
   OpportunityKanbanResponse,
   OpportunityMoveStageRequest,
-  StageTransitionMetaResponse
+  StageTransitionMetaResponse,
+  OpportunityAutoAssignRequest
 } from "@/lib/types/opportunity";
 
 export const getOpportunities = async (
@@ -98,7 +99,10 @@ export const assignOpportunity = async (
   return res.data;
 };
 
-export const autoAssignOpportunity = async (id: OpportunityId): Promise<ApiResponse<number>> => {
-  const res = await axiosInstance.post<ApiResponse<number>>(ENDPOINTS.opportunity.assignAuto(id));
+export const autoAssignOpportunity = async (
+  id: OpportunityId,
+  body?: OpportunityAutoAssignRequest
+): Promise<ApiResponse<number>> => {
+  const res = await axiosInstance.post<ApiResponse<number>>(ENDPOINTS.opportunity.assignAuto(id), body);
   return res.data;
 };

@@ -44,6 +44,7 @@ export default function Sidebar() {
     "/profile-settings": "profile-settings",
     "/customer": "customers",
     "/opportunity": "opportunitys",
+    "/dispatch": "opportunity-dispatch",
     "/customer-source": "customerSource",
     "/invoice": "invoice",
     "/voucher": "voucher",
@@ -222,6 +223,17 @@ export default function Sidebar() {
                   >
                     <i className="ti ti-checkup-list"></i>
                     <span>Cơ hội</span>
+                  </Link>
+                </li>
+
+                <li>
+                  <Link
+                    to="/dispatch"
+                    className={activeTab === "opportunity-dispatch" ? "active" : ""}
+                    onClick={() => handleTabClick("opportunity-dispatch")}
+                  >
+                    <i className="ti ti-medal"></i>
+                    <span>Điều phối cơ hội</span>
                   </Link>
                 </li>
 

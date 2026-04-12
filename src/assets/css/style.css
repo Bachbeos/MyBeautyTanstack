@@ -25244,3 +25244,15 @@ th.fc-day-header {
   background-color: rgba(0, 0, 0, 0.04);
   transition: background-color 0.1s ease;
 }
+
+/* Hide scrollbar nhưng vẫn scroll được */
+.kanban-hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.kanban-hide-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}

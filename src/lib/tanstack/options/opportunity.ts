@@ -26,7 +26,8 @@ import type {
   OpportunityKanbanRequest,
   OpportunityKanbanResponse,
   OpportunityMoveStageRequest,
-  StageTransitionMetaResponse
+  StageTransitionMetaResponse,
+  OpportunityAutoAssignRequest
 } from "@/lib/types/opportunity";
 import type { ApiResponse } from "@/lib/types/common";
 import { createKeys } from "@/lib/tanstack/query-key";
@@ -55,7 +56,8 @@ export const opportunityQueries = {
   kanban: (params: OpportunityKanbanRequest) =>
     queryOptions<ApiResponse<OpportunityKanbanResponse>>({
       queryKey: opportunityKeys.kanban(params),
-      queryFn: ({ signal }) => getOpportunityKanban(params, signal)
+      queryFn: ({ signal }) => getOpportunityKanban(params, signal),
+      placeholderData: (previousData) => previousData
     }),
 
   stageTransitionMeta: () =>
@@ -153,9 +155,13 @@ export const opportunityMutations = {
     }),
 
   assignAuto: () =>
-    mutationOptions<ApiResponse<number>, Error, { id: OpportunityId }>({
+    mutationOptions<
+      ApiResponse<number>,
+      Error,
+      { id: OpportunityId; body?: OpportunityAutoAssignRequest }
+    >({
       mutationKey: opportunityKeys.assignAuto(),
-      mutationFn: ({ id }) => autoAssignOpportunity(id),
+      mutationFn: ({ id, body }) => autoAssignOpportunity(id, body),
       meta: {
         successMessage: "Đã tự động điều phối cơ hội",
         invalidatesQuery: [opportunityKeys.list({})]
