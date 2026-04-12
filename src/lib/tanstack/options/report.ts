@@ -5,7 +5,10 @@ import {
   getMonthlyRevenue,
   getFrequency,
   getCallHistoryAvg,
-  getInterestBar
+  getInterestBar,
+  getCustomerSegment,
+  getSegmentTrend,
+  getRevenueByHourToday
 } from "@/lib/api/report";
 
 import type {
@@ -13,7 +16,8 @@ import type {
   RevenueParams,
   FrequencyParams,
   CallHistoryAvgParams,
-  InterestBarParams
+  InterestBarParams,
+  SegmentTrendParams
 } from "@/lib/types/report";
 import { createKeys } from "@/lib/tanstack/query-key";
 
@@ -23,7 +27,10 @@ export const reportKeys = createKeys("report", {
   monthlyRevenue: (params: RevenueParams) => ["monthlyRevenue", params] as const,
   frequency: (params: FrequencyParams) => ["frequency", params] as const,
   callHistoryAvg: (params: CallHistoryAvgParams) => ["callHistoryAvg", params] as const,
-  interestBar: (params: InterestBarParams) => ["interestBar", params] as const
+  interestBar: (params: InterestBarParams) => ["interestBar", params] as const,
+  customerSegment: (params: ReportBaseParams) => ["customerSegment", params] as const,
+  segmentTrend: (params: SegmentTrendParams) => ["segmentTrend", params] as const,
+  revenueByHourToday: () => ["revenueByHourToday"] as const
 });
 
 export const reportQueries = {
@@ -61,5 +68,23 @@ export const reportQueries = {
     queryOptions({
       queryKey: reportKeys.interestBar(params),
       queryFn: ({ signal }) => getInterestBar(params, signal)
+    }),
+
+  customerSegment: (params: ReportBaseParams) =>
+    queryOptions({
+      queryKey: reportKeys.customerSegment(params),
+      queryFn: ({ signal }) => getCustomerSegment(params, signal)
+    }),
+
+  segmentTrend: (params: SegmentTrendParams) =>
+    queryOptions({
+      queryKey: reportKeys.segmentTrend(params),
+      queryFn: ({ signal }) => getSegmentTrend(params, signal)
+    }),
+
+  revenueByHourToday: () =>
+    queryOptions({
+      queryKey: reportKeys.revenueByHourToday(),
+      queryFn: ({ signal }) => getRevenueByHourToday(signal)
     })
 };

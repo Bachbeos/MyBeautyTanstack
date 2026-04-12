@@ -76,6 +76,7 @@ function RouteComponent() {
   const [interestPageSize, setInterestPageSize] = useState(10);
 
   const [minInterest] = useState(3);
+  const [monthsBack, setMonthsBack] = useState<6 | 12>(6);
 
   const monthQuery = useQuery(reportQueries.customerByMonth({ year: selectedYear }));
   const sourceQuery = useQuery(reportQueries.customerBySource({ year: selectedYear }));
@@ -99,6 +100,9 @@ function RouteComponent() {
   );
 
   const barQuery = useQuery(reportQueries.interestBar({ year: selectedYear, minAvgInterest: minInterest }));
+  const segmentQuery = useQuery(reportQueries.customerSegment({ year: selectedYear }));
+  const trendQuery = useQuery(reportQueries.segmentTrend({ monthsBack }));
+  const revenueHourQuery = useQuery(reportQueries.revenueByHourToday());
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: reportKeys._root });
@@ -143,6 +147,63 @@ function RouteComponent() {
     return { total, high };
   }, [barQuery.data]);
 
+  const { segmentLabels, segmentSeries } = useMemo(() => {
+    const data = segmentQuery.data?.result ?? [];
+    const labelMapping: Record<string, string> = {
+      CHURNED: "Đã rời bỏ",
+      POTENTIAL: "Tiềm năng",
+      AT_RISK: "Nguy cơ rời bỏ",
+      VIP: "VIP"
+    };
+
+    return {
+      segmentLabels: data.map((i) => labelMapping[i.segmentCode] || i.segmentCode),
+      segmentSeries: data.map((i) => i.totalCustomer)
+    };
+  }, [segmentQuery.data]);
+
+  const { trendPeriods, trendSeries } = useMemo(() => {
+    const data = trendQuery.data?.result ?? [];
+    const segmentLabelMapping: Record<string, string> = {
+      CHURNED: "Đã rời bỏ",
+      POTENTIAL: "Tiềm năng",
+      AT_RISK: "Nguy cơ rời bỏ",
+      VIP: "VIP",
+      LOYAL: "Trung thành"
+    };
+    const segmentColorMapping: Record<string, string> = {
+      CHURNED: "#6c757d",
+      POTENTIAL: "#2F80ED",
+      AT_RISK: "#FFA201",
+      VIP: "#E41F07",
+      LOYAL: "#1ABE17"
+    };
+
+    // Collect all unique periods (sorted) and segments
+    const periodSet = new Set<string>();
+    const segmentSet = new Set<string>();
+    data.forEach((d) => {
+      periodSet.add(d.period);
+      segmentSet.add(d.segmentCode);
+    });
+    const periods = Array.from(periodSet).sort();
+    const segments = Array.from(segmentSet);
+
+    // Build a map for quick lookup
+    const lookup: Record<string, number> = {};
+    data.forEach((d) => {
+      lookup[`${d.period}_${d.segmentCode}`] = d.totalCustomer;
+    });
+
+    const series = segments.map((seg) => ({
+      name: segmentLabelMapping[seg] || seg,
+      color: segmentColorMapping[seg],
+      data: periods.map((p) => lookup[`${p}_${seg}`] ?? 0)
+    }));
+
+    return { trendPeriods: periods, trendSeries: series };
+  }, [trendQuery.data]);
+
   const leadsByYearOptions: ApexOptions = {
     chart: { type: "bar", height: 350, toolbar: { show: false } },
     plotOptions: { bar: { horizontal: false, columnWidth: "55%", borderRadius: 4 } },
@@ -173,6 +234,49 @@ function RouteComponent() {
     colors: ["#2F80ED", "#FFA201"],
     legend: { position: "top" },
     tooltip: { y: { formatter: (val) => val + " khách hàng" } }
+  };
+
+  const segmentOptions: ApexOptions = {
+    chart: { type: "donut", height: 350 },
+    labels: segmentLabels,
+    colors: ["#6c757d", "#2F80ED", "#FFA201", "#E41F07", "#1ABE17"],
+    legend: { position: "bottom" },
+    noData: { text: "Không có dữ liệu" }
+  };
+
+  const trendOptions: ApexOptions = {
+    chart: { type: "line", height: 350, toolbar: { show: false }, zoom: { enabled: false } },
+    stroke: { curve: "smooth", width: 2 },
+    dataLabels: { enabled: false },
+    markers: { size: 4 },
+    xaxis: { categories: trendPeriods, title: { text: "Tháng" } },
+    yaxis: { title: { text: "Số khách hàng" } },
+    legend: { position: "top" },
+    tooltip: { y: { formatter: (val) => val.toLocaleString("vi-VN") + " khách hàng" } },
+    noData: { text: "Không có dữ liệu" }
+  };
+
+  const revenueByHourData = useMemo(() => {
+    const data = revenueHourQuery.data?.result ?? [];
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+    const lookup: Record<number, number> = {};
+    data.forEach((d) => { lookup[d.hour] = d.totalRevenue; });
+    return {
+      categories: hours.map((h) => `${String(h).padStart(2, "0")}h`),
+      values: hours.map((h) => lookup[h] ?? 0)
+    };
+  }, [revenueHourQuery.data]);
+
+  const revenueByHourOptions: ApexOptions = {
+    chart: { type: "bar", height: 300, toolbar: { show: false } },
+    plotOptions: { bar: { horizontal: false, columnWidth: "60%", borderRadius: 3 } },
+    dataLabels: { enabled: false },
+    stroke: { show: true, width: 2, colors: ["transparent"] },
+    xaxis: { categories: revenueByHourData.categories, title: { text: "Giờ trong ngày" } },
+    yaxis: { title: { text: "Doanh thu (VNĐ)" }, labels: { formatter: (val) => new Intl.NumberFormat("vi-VN", { notation: "compact" }).format(val) } },
+    fill: { opacity: 1 },
+    colors: ["#1ABE17"],
+    tooltip: { y: { formatter: (val) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(val) } }
   };
 
   const freqColumns = useMemo(() => [
@@ -327,7 +431,7 @@ function RouteComponent() {
                 />
               </div>
               <div className="card-body p-2">
-                <AsyncBoundary status={monthQuery.status} error={monthQuery.error} onRetry={() => monthQuery.refetch()}>
+                <AsyncBoundary status={monthQuery.status} error={monthQuery.error} onRetry={() => monthQuery.refetch()} data={true}>
                   {() => <Chart options={leadsByYearOptions} series={[{ name: "Khách hàng", data: customerByMonthData }]} type="bar" height={350} />}
                 </AsyncBoundary>
               </div>
@@ -351,8 +455,30 @@ function RouteComponent() {
                 />
               </div>
               <div className="card-body d-flex flex-column align-items-center justify-content-center p-2">
-                <AsyncBoundary status={sourceQuery.status} error={sourceQuery.error} onRetry={() => sourceQuery.refetch()}>
+                <AsyncBoundary status={sourceQuery.status} error={sourceQuery.error} onRetry={() => sourceQuery.refetch()} data={true}>
                   {() => <Chart options={leadsBySourceOptions} series={customerBySourceSeries} type="donut" height={350} />}
+                </AsyncBoundary>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="row mb-4">
+          <div className="col-md-12">
+            <div className="card shadow-sm border-0 h-100">
+              <div className="card-header bg-transparent border-bottom-0 pt-3 px-3">
+                <h6 className="mb-0 fw-semibold">Doanh thu theo giờ hôm nay</h6>
+              </div>
+              <div className="card-body p-2">
+                <AsyncBoundary status={revenueHourQuery.status} error={revenueHourQuery.error} onRetry={() => revenueHourQuery.refetch()} data={true}>
+                  {() => (
+                    <Chart
+                      options={revenueByHourOptions}
+                      series={[{ name: "Doanh thu", data: revenueByHourData.values }]}
+                      type="bar"
+                      height={300}
+                    />
+                  )}
                 </AsyncBoundary>
               </div>
             </div>
@@ -366,7 +492,7 @@ function RouteComponent() {
                 <h6 className="mb-0 fw-semibold">So sánh mức độ quan tâm (min: {minInterest})</h6>
               </div>
               <div className="card-body p-2">
-                <AsyncBoundary status={barQuery.status} error={barQuery.error} onRetry={() => barQuery.refetch()}>
+                <AsyncBoundary status={barQuery.status} error={barQuery.error} onRetry={() => barQuery.refetch()} data={true}>
                   {() => (
                     <Chart
                       options={interestCompareOptions}
@@ -378,6 +504,59 @@ function RouteComponent() {
                       height={300}
                     />
                   )}
+                </AsyncBoundary>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="row mb-4">
+          <div className="col-md-12">
+            <div className="card shadow-sm border-0 h-100">
+              <div className="card-header bg-transparent border-bottom-0 d-flex justify-content-between align-items-center pt-3 px-3">
+                <h6 className="mb-0 fw-semibold">Phân khúc khách hàng</h6>
+                <Select
+                  options={reactSelectYearOptions}
+                  value={reactSelectYearOptions.find(opt => opt.value === selectedYear)}
+                  onChange={(opt) => setSelectedYear(opt?.value || currentYear)}
+                  styles={filterSelectStyles}
+                  theme={filterSelectTheme}
+                  blurInputOnSelect
+                  isSearchable={false}
+                  menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+                  menuPosition="fixed"
+                  className="shadow-sm d-inline-block"
+                />
+              </div>
+              <div className="card-body p-2 d-flex flex-column align-items-center justify-content-center">
+                <AsyncBoundary status={segmentQuery.status} error={segmentQuery.error} onRetry={() => segmentQuery.refetch()} data={true}>
+                  {() => <Chart options={segmentOptions} series={segmentSeries} type="donut" height={350} />}
+                </AsyncBoundary>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="row mb-4">
+          <div className="col-md-12">
+            <div className="card shadow-sm border-0 h-100">
+              <div className="card-header bg-transparent border-bottom-0 d-flex justify-content-between align-items-center pt-3 px-3">
+                <h6 className="mb-0 fw-semibold">Xu hướng phân khúc khách hàng</h6>
+                <div className="d-flex gap-2">
+                  {([6, 12] as const).map((m) => (
+                    <button
+                      key={m}
+                      className={`btn btn-sm ${monthsBack === m ? "btn-danger" : "btn-outline-secondary"}`}
+                      onClick={() => setMonthsBack(m)}
+                    >
+                      {m} tháng
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="card-body p-2">
+                <AsyncBoundary status={trendQuery.status} error={trendQuery.error} onRetry={() => trendQuery.refetch()} data={true}>
+                  {() => <Chart options={trendOptions} series={trendSeries} type="line" height={350} />}
                 </AsyncBoundary>
               </div>
             </div>

@@ -67,3 +67,23 @@ export type InterestBarDataDto = {
   totalCustomer: number;
   highInterestCustomer: number;
 };
+
+export type CustomerSegmentDto = {
+  segmentCode: string;
+  totalCustomer: number;
+};
+
+export type SegmentTrendDto = {
+  period: string;
+  segmentCode: string;
+  totalCustomer: number;
+};
+
+export type SegmentTrendParams = {
+  monthsBack: number;
+};
+
+export type RevenueByHourDto = {
+  hour: number;
+  totalRevenue: number;
+};

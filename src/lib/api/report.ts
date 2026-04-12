@@ -12,7 +12,11 @@ import type {
   RevenueDataDto,
   FrequencyResponse,
   AvgInterestResponse,
-  InterestBarDataDto
+  InterestBarDataDto,
+  CustomerSegmentDto,
+  SegmentTrendDto,
+  SegmentTrendParams,
+  RevenueByHourDto
 } from "@/lib/types/report";
 
 export const getCustomerByMonth = async (
@@ -78,5 +82,34 @@ export const getInterestBar = async (
     params,
     signal
   });
+  return res.data;
+};
+
+export const getCustomerSegment = async (
+  params: ReportBaseParams,
+  signal?: AbortSignal
+): Promise<ApiResponse<CustomerSegmentDto[]>> => {
+  const res = await axiosInstance.get<ApiResponse<CustomerSegmentDto[]>>(ENDPOINTS.report.customerSegment, {
+    params,
+    signal
+  });
+  return res.data;
+};
+
+export const getSegmentTrend = async (
+  params: SegmentTrendParams,
+  signal?: AbortSignal
+): Promise<ApiResponse<SegmentTrendDto[]>> => {
+  const res = await axiosInstance.get<ApiResponse<SegmentTrendDto[]>>(ENDPOINTS.report.segmentTrend, {
+    params,
+    signal
+  });
+  return res.data;
+};
+
+export const getRevenueByHourToday = async (
+  signal?: AbortSignal
+): Promise<ApiResponse<RevenueByHourDto[]>> => {
+  const res = await axiosInstance.get<ApiResponse<RevenueByHourDto[]>>(ENDPOINTS.report.revenueByHourToday, { signal });
   return res.data;
 };

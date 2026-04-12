@@ -204,5 +204,8 @@ export const ENDPOINTS = {
     frequency: "/report/invoice/frequency",
     callHistoryAvg: "/report/callHistory/avg-interest",
     callHistoryInterest: "/report/callHistory/interest-bar",
+    customerSegment: "/segment/summary",
+    segmentTrend: "/segment/trend",
+    revenueByHourToday: "/invoice/getRevenueByHourToday"
   }
 } as const;
