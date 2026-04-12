@@ -6,7 +6,7 @@ import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { opportunityMutations, opportunityQueries } from "@/lib/tanstack/options/opportunity";
 import { roleQueries } from "@/lib/tanstack/options/role";
 import { userQueries } from "@/lib/tanstack/options/user";
-import type { OpportunityDto } from "@/lib/types/opportunity";
+import type { OpportunityDto, OpportunityId } from "@/lib/types/opportunity";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -119,20 +119,20 @@ function RouteComponent() {
 
   useEffect(() => {
     if (!selectedRoleId) return;
-    setSelectedUserIds((prev) => prev.filter((id) => userOptions.some((u) => Number(u.value) === id)));
+    setSelectedUserIds((prev) =>
+      prev.filter((id) => userOptions.some((u) => Number(u.value) === id))
+    );
   }, [selectedRoleId, userOptions]);
 
-  const selectedOpportunityIds = useMemo(
-    () =>
-      Object.keys(rowSelection)
-        .filter((key) => rowSelection[key])
-        .map((index) => opportunities[Number(index)]?.id)
-        .filter((id): id is number => Boolean(id))
-        .map((id) => Number(id)),
-    [rowSelection, opportunities]
-  );
+  const selectedOpportunityIds = useMemo(() => {
+    return Object.keys(rowSelection)
+      .filter((key) => rowSelection[key])
+      .map((index) => opportunities[Number(index)]?.id)
+      .filter((id): id is OpportunityId => Boolean(id));
+  }, [rowSelection, opportunities]);
 
-  const canDispatchByRole = dispatchMode === "role" && !!selectedRoleId && selectedOpportunityIds.length > 0;
+  const canDispatchByRole =
+    dispatchMode === "role" && !!selectedRoleId && selectedOpportunityIds.length > 0;
   const canDispatchByUsers =
     dispatchMode === "users" && selectedUserIds.length > 0 && selectedOpportunityIds.length > 0;
   const canDispatch = canDispatchByRole || canDispatchByUsers;
@@ -200,7 +200,10 @@ function RouteComponent() {
         header: "Mức độ ưu tiên",
         cell: (info) => {
           const p = Number(info.getValue() ?? 0);
-          const mapped = priorityLabelMap[p] ?? { label: "Không xác định", className: "badge-soft-secondary" };
+          const mapped = priorityLabelMap[p] ?? {
+            label: "Không xác định",
+            className: "badge-soft-secondary"
+          };
           return <span className={`badge ${mapped.className}`}>{mapped.label}</span>;
         },
         meta: { className: "text-center" }
@@ -232,7 +235,8 @@ function RouteComponent() {
         header: "Điều phối nhanh",
         cell: (info) => {
           const row = info.row.original;
-          const selectedQuickUser = userOptions.find((u) => Number(u.value) === Number(row.userId ?? -1)) ?? null;
+          const selectedQuickUser =
+            userOptions.find((u) => Number(u.value) === Number(row.userId ?? -1)) ?? null;
 
           return (
             <div style={{ minWidth: 220 }}>
@@ -256,7 +260,15 @@ function RouteComponent() {
         }
       })
     ],
-    [pageIndex, pageSize, assignMutation, userOptions, usersInf.hasNextPage, usersInf.isFetchingNextPage, query]
+    [
+      pageIndex,
+      pageSize,
+      assignMutation,
+      userOptions,
+      usersInf.hasNextPage,
+      usersInf.isFetchingNextPage,
+      query
+    ]
   );
 
   const table = useReactTable({
@@ -335,7 +347,9 @@ function RouteComponent() {
                   Chỉ hiển thị cơ hội chưa có nhân viên
                 </label>
               </div>
-              <span className="badge badge-soft-primary">Đã chọn {selectedOpportunityIds.length} cơ hội</span>
+              <span className="badge badge-soft-primary">
+                Đã chọn {selectedOpportunityIds.length} cơ hội
+              </span>
             </div>
 
             <div className="border rounded-2 p-3 bg-light-subtle">
@@ -375,7 +389,9 @@ function RouteComponent() {
                     <label className="form-label mb-1">Chọn chức vụ</label>
                     <AppSelect
                       value={
-                        roleOptions.find((role) => Number(role.value) === Number(selectedRoleId ?? -1)) ?? null
+                        roleOptions.find(
+                          (role) => Number(role.value) === Number(selectedRoleId ?? -1)
+                        ) ?? null
                       }
                       options={roleOptions}
                       placeholder="-- Chọn chức vụ --"
@@ -398,11 +414,15 @@ function RouteComponent() {
                       isMulti
                       placeholder="Tìm kiếm và chọn nhân viên"
                       onMenuScrollToBottom={() =>
-                        usersInf.hasNextPage && !usersInf.isFetchingNextPage && usersInf.fetchNextPage()
+                        usersInf.hasNextPage &&
+                        !usersInf.isFetchingNextPage &&
+                        usersInf.fetchNextPage()
                       }
                       onChange={(option) => {
                         const selected = Array.isArray(option) ? option : option ? [option] : [];
-                        setSelectedUserIds(selected.map((item) => Number(item.value)).filter(Boolean));
+                        setSelectedUserIds(
+                          selected.map((item) => Number(item.value)).filter(Boolean)
+                        );
                       }}
                     />
                   </div>
