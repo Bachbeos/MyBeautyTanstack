@@ -83,6 +83,24 @@ export type SegmentTrendParams = {
   monthsBack: number;
 };
 
+export type SegmentRecomputeProgressDto = {
+  runId: string;
+  branchId: number | null;
+  status: string;
+  totalCustomers: number | null;
+  chunkSize: number | null;
+  totalChunks: number | null;
+  processedChunks: number | null;
+  processedCustomers: number | null;
+  errorCount: number | null;
+  nextChunkIndex: number | null;
+  resumeFromChunkIndex: number | null;
+  resumable: boolean | null;
+  message: string | null;
+  startedAtEpochMs: number | null;
+  lastUpdatedAtEpochMs: number | null;
+};
+
 export type RevenueByHourDto = {
   hour: number;
   totalRevenue: number;

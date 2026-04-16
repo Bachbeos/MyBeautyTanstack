@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import Select from "react-select";
 import Chart from "react-apexcharts";
@@ -16,7 +16,8 @@ import RefreshButton from "@/components/refresh/refresh";
 import CollapseButton from "@/components/collapse/collapse-button";
 
 import { reportQueries, reportKeys } from "@/lib/tanstack/options/report";
-import type { FrequencyItemDto, AvgInterestItemDto } from "@/lib/types/report";
+import { triggerCustomerSegmentRecompute } from "@/lib/api/report";
+import type { FrequencyItemDto, AvgInterestItemDto, SegmentRecomputeProgressDto } from "@/lib/types/report";
 
 export const Route = createFileRoute('/_crm/_report/report')({
   component: RouteComponent,
@@ -103,9 +104,27 @@ function RouteComponent() {
   const segmentQuery = useQuery(reportQueries.customerSegment({ year: selectedYear }));
   const trendQuery = useQuery(reportQueries.segmentTrend({ monthsBack }));
   const revenueHourQuery = useQuery(reportQueries.revenueByHourToday());
+  const segmentRecomputeLatestQuery = useQuery(reportQueries.customerSegmentRecomputeLatest());
+
+  const recomputeMutation = useMutation({
+    mutationFn: () => triggerCustomerSegmentRecompute(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reportKeys._root });
+    }
+  });
+
+  const latestRecompute: SegmentRecomputeProgressDto | undefined = segmentRecomputeLatestQuery.data?.result;
+  const isRecomputing = latestRecompute?.status === "RUNNING";
+  const recomputeProgress = isRecomputing
+    ? Math.min(100, Math.max(0, Math.round(((latestRecompute.processedChunks ?? 0) / Math.max(latestRecompute.totalChunks ?? 1, 1)) * 100)))
+    : 0;
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: reportKeys._root });
+  };
+
+  const handleRecomputeSegment = () => {
+    recomputeMutation.mutate();
   };
 
   const handleCollapse = () => {
@@ -407,6 +426,25 @@ function RouteComponent() {
             <div className="text-muted small">Báo cáo / Báo cáo & Thống kê</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
+            <button
+              className="btn btn-danger btn-sm d-inline-flex align-items-center gap-2"
+              onClick={handleRecomputeSegment}
+              disabled={recomputeMutation.isPending || isRecomputing}
+            >
+              {recomputeMutation.isPending ? (
+                <>
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                  Đang khởi tạo...
+                </>
+              ) : isRecomputing ? (
+                <>
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                  Tính toán lại phân khúc {recomputeProgress}%
+                </>
+              ) : (
+                <>Tính toán lại phân khúc</>
+              )}
+            </button>
             <RefreshButton onRefresh={handleRefresh} />
             <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>

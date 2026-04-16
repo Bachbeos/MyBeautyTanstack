@@ -16,7 +16,8 @@ import type {
   CustomerSegmentDto,
   SegmentTrendDto,
   SegmentTrendParams,
-  RevenueByHourDto
+  RevenueByHourDto,
+  SegmentRecomputeProgressDto
 } from "@/lib/types/report";
 
 export const getCustomerByMonth = async (
@@ -111,5 +112,40 @@ export const getRevenueByHourToday = async (
   signal?: AbortSignal
 ): Promise<ApiResponse<RevenueByHourDto[]>> => {
   const res = await axiosInstance.get<ApiResponse<RevenueByHourDto[]>>(ENDPOINTS.report.revenueByHourToday, { signal });
+  return res.data;
+};
+
+export const triggerCustomerSegmentRecompute = async (signal?: AbortSignal): Promise<ApiResponse<string>> => {
+  const res = await axiosInstance.post<ApiResponse<string>>(ENDPOINTS.report.recomputeSegment, undefined, { signal });
+  return res.data;
+};
+
+export const stopCustomerSegmentRecompute = async (signal?: AbortSignal): Promise<ApiResponse<string>> => {
+  const res = await axiosInstance.post<ApiResponse<string>>(ENDPOINTS.report.recomputeSegmentStop, undefined, { signal });
+  return res.data;
+};
+
+export const resumeCustomerSegmentRecompute = async (signal?: AbortSignal): Promise<ApiResponse<string>> => {
+  const res = await axiosInstance.post<ApiResponse<string>>(ENDPOINTS.report.recomputeSegmentResume, undefined, { signal });
+  return res.data;
+};
+
+export const restartCustomerSegmentRecompute = async (signal?: AbortSignal): Promise<ApiResponse<string>> => {
+  const res = await axiosInstance.post<ApiResponse<string>>(ENDPOINTS.report.recomputeSegmentRestart, undefined, { signal });
+  return res.data;
+};
+
+export const getLatestCustomerSegmentRecompute = async (
+  signal?: AbortSignal
+): Promise<ApiResponse<SegmentRecomputeProgressDto>> => {
+  const res = await axiosInstance.get<ApiResponse<SegmentRecomputeProgressDto>>(ENDPOINTS.report.recomputeSegmentLatest, { signal });
+  return res.data;
+};
+
+export const getCustomerSegmentRecomputeProgress = async (
+  runId: string,
+  signal?: AbortSignal
+): Promise<ApiResponse<SegmentRecomputeProgressDto>> => {
+  const res = await axiosInstance.get<ApiResponse<SegmentRecomputeProgressDto>>(ENDPOINTS.report.recomputeSegmentProgress(runId), { signal });
   return res.data;
 };
