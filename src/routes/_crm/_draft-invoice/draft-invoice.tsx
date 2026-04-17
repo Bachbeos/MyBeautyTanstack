@@ -17,7 +17,6 @@ import {
   type ColumnFiltersState
 } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 
 const columnHelper = createColumnHelper<InvoiceDto>();
 
@@ -55,7 +54,7 @@ function RouteComponent() {
       page: pageIndex + 1,
       limit: pageSize,
       keyword: nameFilter || undefined,
-      status: 0 // Lấy các hóa đơn nháp
+      status: 0
     }),
     [pageIndex, pageSize, nameFilter]
   );
@@ -74,11 +73,10 @@ function RouteComponent() {
     if (!modal.item?.id) return;
     try {
       await deleteMutation.mutateAsync(modal.item.id as any);
-      toast.success("Đã xóa hóa đơn nháp");
       closeModal();
       query.refetch();
     } catch (error) {
-      toast.error("Xóa hóa đơn nháp thất bại");
+      // Error is usually handled by global mutation handler if meta is present
     }
   };
 

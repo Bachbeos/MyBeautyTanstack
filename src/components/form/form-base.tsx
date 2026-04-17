@@ -7,6 +7,7 @@ export type FormControlProps = {
   label: string;
   description?: string;
   required?: boolean;
+  disabled?: boolean;
   errorStrategy?: ErrorStrategy;
   wrapperClassName?: string;
 };

@@ -1,30 +1,65 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { authMutations } from "@/lib/tanstack/options/auth";
+import { useStep } from "@/hooks/use-step";
+import { Button } from "@/components/ui/button";
 
 import logo from "@assets/img/logo.svg";
 import appleLogo from "@assets/img/icons/apple-logo.svg";
 import googleLogo from "@assets/img/icons/google-logo.svg";
 import facebookLogo from "@assets/img/icons/facebook-logo.svg";
-import { useStep } from "@/hooks/use-step";
 
 export const Route = createFileRoute("/_auth/forgot-password")({
   component: RouteComponent
 });
 
 function RouteComponent() {
-  // 1. Initialize the hook with 2 steps (Email input & Reset form)
   const [currentStep, helpers] = useStep(2);
   const [email, setEmail] = React.useState("");
+  const [otp, setOtp] = React.useState("");
+  const [newPassword, setNewPassword] = React.useState("");
+  const [confirmPassword, setConfirmPassword] = React.useState("");
 
-  // Handle the primary button click
-  const handleAction = () => {
+  const [showNewPassword, setShowNewPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+
+  const forgotMutation = useMutation(authMutations.forgotPassword());
+  const resetMutation = useMutation(authMutations.resetPassword());
+
+  const isLoading = forgotMutation.isPending || resetMutation.isPending;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (currentStep === 1) {
-      // Add your logic to trigger the OTP email API here
-      console.log("Sending OTP to:", email);
-      helpers.goToNextStep();
+      if (!email || !email.includes("@")) {
+        return;
+      }
+      forgotMutation.mutate(
+        { email },
+        {
+          onSuccess: () => {
+            helpers.goToNextStep();
+          }
+        }
+      );
     } else {
-      // Add your logic to submit the new password here
-      console.log("Resetting password...");
+      if (newPassword.length < 6) {
+        alert("Mật khẩu phải có ít nhất 6 ký tự!");
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        alert("Mật khẩu nhập lại không khớp!");
+        return;
+      }
+
+      resetMutation.mutate({
+        email,
+        otp,
+        newPassword
+      });
     }
   };
 
@@ -37,7 +72,7 @@ function RouteComponent() {
               <div className="col-md-10 mx-auto">
                 <form
                   className="vh-100 d-flex justify-content-between flex-column p-4 pb-0"
-                  onSubmit={(e) => e.preventDefault()} // Prevent page refresh
+                  onSubmit={handleSubmit}
                 >
                   <div className="text-center mb-3 auth-logo">
                     <img src={logo} className="img-fluid" alt="Logo" />
@@ -64,6 +99,8 @@ function RouteComponent() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="example@gmail.com"
+                            required
+                            disabled={isLoading}
                           />
                           <span className="input-group-text">
                             <i className="ti ti-mail"></i>
@@ -86,7 +123,14 @@ function RouteComponent() {
                       <div className="mb-3">
                         <label className="form-label">Mã OTP</label>
                         <div className="input-group input-group-flat">
-                          <input type="text" className="form-control" />
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            required
+                            disabled={isLoading}
+                          />
                           <span className="input-group-text">
                             <i className="ti ti-key"></i>
                           </span>
@@ -96,9 +140,20 @@ function RouteComponent() {
                       <div className="mb-3">
                         <label className="form-label">Mật khẩu mới</label>
                         <div className="input-group input-group-flat pass-group">
-                          <input type="password" className="form-control pass-input" />
-                          <span className="input-group-text" style={{ cursor: "pointer" }}>
-                            <i className="ti ti-eye-off"></i>
+                          <input
+                            type={showNewPassword ? "text" : "password"}
+                            className="form-control pass-input"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required
+                            disabled={isLoading}
+                          />
+                          <span
+                            className="input-group-text toggle-password"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                          >
+                            <i className={`ti ${showNewPassword ? "ti-eye" : "ti-eye-off"}`}></i>
                           </span>
                         </div>
                       </div>
@@ -106,9 +161,22 @@ function RouteComponent() {
                       <div className="mb-3">
                         <label className="form-label">Xác nhận mật khẩu</label>
                         <div className="input-group input-group-flat pass-group">
-                          <input type="password" className="form-control pass-input" />
-                          <span className="input-group-text" style={{ cursor: "pointer" }}>
-                            <i className="ti ti-eye-off"></i>
+                          <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            className="form-control pass-input"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            disabled={isLoading}
+                          />
+                          <span
+                            className="input-group-text toggle-password"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          >
+                            <i
+                              className={`ti ${showConfirmPassword ? "ti-eye" : "ti-eye-off"}`}
+                            ></i>
                           </span>
                         </div>
                       </div>
@@ -117,6 +185,7 @@ function RouteComponent() {
                         type="button"
                         className="btn btn-link p-0 mb-3"
                         onClick={helpers.goToPrevStep}
+                        disabled={isLoading}
                       >
                         <i className="ti ti-arrow-left"></i> Quay lại nhập email
                       </button>
@@ -124,17 +193,18 @@ function RouteComponent() {
                   )}
 
                   <div className="mb-3">
-                    <button type="button" className="btn btn-primary w-100" onClick={handleAction}>
+                    <Button type="submit" block loading={isLoading}>
                       {currentStep === 1 ? "Gửi OTP" : "Đổi mật khẩu"}
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="mb-3 text-center">
                     <p className="mb-0">
                       Quay lại
-                      <a href="/login" className="link-indigo fw-bold link-hover ms-1">
+                      <Link to="/login" className="link-indigo fw-bold link-hover ms-1">
+                        {" "}
                         Đăng nhập
-                      </a>
+                      </Link>
                     </p>
                   </div>
 
@@ -146,7 +216,7 @@ function RouteComponent() {
                       <div className="d-flex align-items-center justify-content-center flex-wrap gap-2 mb-3">
                         <div className="text-center flex-fill">
                           <a
-                            href="#"
+                            href="javascript:void(0);"
                             className="p-2 btn btn-info d-flex align-items-center justify-content-center"
                           >
                             <img className="img-fluid m-1" src={facebookLogo} alt="Facebook" />
@@ -154,7 +224,7 @@ function RouteComponent() {
                         </div>
                         <div className="text-center flex-fill">
                           <a
-                            href="#"
+                            href="javascript:void(0);"
                             className="p-2 btn btn-outline-light d-flex align-items-center justify-content-center"
                           >
                             <img className="img-fluid m-1" src={googleLogo} alt="Google" />
@@ -162,7 +232,7 @@ function RouteComponent() {
                         </div>
                         <div className="text-center flex-fill">
                           <a
-                            href="#"
+                            href="javascript:void(0);"
                             className="p-2 btn btn-dark d-flex align-items-center justify-content-center"
                           >
                             <img className="img-fluid m-1" src={appleLogo} alt="Apple" />

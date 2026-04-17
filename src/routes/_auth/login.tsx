@@ -9,24 +9,38 @@ import { useAppForm } from "@/components/form/hooks";
 import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { authMutations } from "@/lib/tanstack/options/auth";
+import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 
 export const Route = createFileRoute("/_auth/login")({
   component: RouteComponent
 });
 
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+  "486014130328-d2ul4iub40vmmuv5oadmohe2d921s9dn.apps.googleusercontent.com";
+
 const loginSchema = z.object({
   phone: z
     .string()
-    .min(9, "Số điện thoại không hợp lệ")
-    .regex(/^\+?\d+$/, "Chỉ được chứa số"),
-  password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+    .regex(/^0[0-9]{9}$/, "Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số"),
+  password: z
+    .string()
+    .min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
   remember: z.boolean().optional()
 });
 
 type LoginInput = z.infer<typeof loginSchema>;
 
-function RouteComponent() {
+function LoginForm() {
   const login = useMutation(authMutations.login());
+  const loginGoogleMutation = useMutation(authMutations.loginGoogle());
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      loginGoogleMutation.mutate({ token: tokenResponse.access_token });
+    }
+  });
+
   const form = useAppForm({
     defaultValues: {
       phone: "",
@@ -44,6 +58,9 @@ function RouteComponent() {
       login.mutate(data);
     }
   });
+
+  const isLoading = login.isPending || loginGoogleMutation.isPending;
+
   return (
     <div className="main-wrapper">
       <div className="overflow-hidden p-3 acc-vh">
@@ -73,15 +90,14 @@ function RouteComponent() {
                     {/* Phone */}
                     <div className="mb-3">
                       <form.AppField name="phone">
-                        {(f) => <f.Phone label="Số điện thoại" />}
+                        {(f) => <f.Phone label="Số điện thoại" disabled={isLoading} />}
                       </form.AppField>
                     </div>
 
                     {/* Password */}
                     <div className="mb-3">
-                      {" "}
                       <form.AppField name="password">
-                        {(f) => <f.Password label="Mật khẩu" />}
+                        {(f) => <f.Password label="Mật khẩu" disabled={isLoading} />}
                       </form.AppField>
                     </div>
 
@@ -95,6 +111,7 @@ function RouteComponent() {
                               className="form-check-input mt-0"
                               checked={field.state.value}
                               onChange={(e) => field.handleChange(e.target.checked)}
+                              disabled={isLoading}
                             />
                             <label className="form-check-label text-dark ms-1">
                               Ghi nhớ đăng nhập
@@ -102,17 +119,20 @@ function RouteComponent() {
                           </div>
 
                           <div className="text-end">
-                            <a href="/forgot-password" className="link-danger fw-medium link-hover">
+                            <Link
+                              to="/forgot-password"
+                              className="link-danger fw-medium link-hover"
+                            >
                               Quên mật khẩu?
-                            </a>
+                            </Link>
                           </div>
                         </div>
                       )}
                     </form.Field>
 
                     <div className="mb-3">
-                      <Button type="submit" block>
-                        Đăng nhập
+                      <Button type="submit" block loading={isLoading}>
+                        {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
                       </Button>
                     </div>
 
@@ -133,7 +153,7 @@ function RouteComponent() {
                     <div className="d-flex align-items-center justify-content-center flex-wrap gap-2 mb-3">
                       <div className="text-center flex-fill">
                         <a
-                          href="#"
+                          href="javascript:void(0);"
                           className="p-2 btn btn-info d-flex align-items-center justify-content-center"
                         >
                           <img className="img-fluid m-1" src={facebookLogo} alt="Facebook" />
@@ -141,17 +161,22 @@ function RouteComponent() {
                       </div>
 
                       <div className="text-center flex-fill">
-                        <a
-                          href="#"
-                          className="p-2 btn btn-outline-light d-flex align-items-center justify-content-center"
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            googleLogin();
+                          }}
+                          disabled={isLoading}
+                          className="p-2 btn btn-outline-light d-flex align-items-center justify-content-center w-100"
                         >
                           <img className="img-fluid m-1" src={googleLogo} alt="Google" />
-                        </a>
+                        </button>
                       </div>
 
                       <div className="text-center flex-fill">
                         <a
-                          href="#"
+                          href="javascript:void(0);"
                           className="p-2 btn btn-dark d-flex align-items-center justify-content-center"
                         >
                           <img className="img-fluid m-1" src={appleLogo} alt="Apple" />
@@ -170,5 +195,13 @@ function RouteComponent() {
         </div>
       </div>
     </div>
+  );
+}
+
+function RouteComponent() {
+  return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <LoginForm />
+    </GoogleOAuthProvider>
   );
 }

@@ -55,6 +55,13 @@ export const deleteInvoice = async (id: InvoiceId): Promise<ApiResponse<void>> =
   return res.data;
 };
 
+export const deleteDraftInvoice = async (id: InvoiceId): Promise<ApiResponse<void>> => {
+  const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.invoice.draftDelete, {
+    params: { invoiceId: id }
+  });
+  return res.data;
+};
+
 export const createDraftInvoice = async (
   customerId: number,
   signal?: AbortSignal

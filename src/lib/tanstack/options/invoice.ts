@@ -4,7 +4,7 @@ import {
   infiniteQueryOptions,
   type InfiniteData
 } from "@tanstack/react-query";
-import { getInvoices, getInvoiceDetail, getDraftInvoiceDetail, upsertInvoice, deleteInvoice } from "@/lib/api/invoice";
+import { getInvoices, getInvoiceDetail, getDraftInvoiceDetail, upsertInvoice, deleteInvoice, deleteDraftInvoice } from "@/lib/api/invoice";
 
 import type {
   InvoiceId,
@@ -108,7 +108,7 @@ export const invoiceMutations = {
   deleteDraft: () =>
     mutationOptions<ApiResponse<void>, Error, InvoiceId>({
       mutationKey: invoiceKeys.deleteDraft(),
-      mutationFn: (id) => deleteInvoice(id),
+      mutationFn: (id) => deleteDraftInvoice(id),
       meta: {
         successMessage: "Xóa hóa đơn nháp thành công",
         invalidatesQuery: [invoiceKeys.list({})]

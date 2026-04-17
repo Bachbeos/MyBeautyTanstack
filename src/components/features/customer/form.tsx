@@ -321,26 +321,30 @@ export function CustomerForm({
     } as CustomerFormValues,
     validators: { onSubmit: customerSchema as any },
     onSubmit: async ({ value }) => {
-      const numberAttrIds = new Set(
-        attributes.filter((attr) => attr.datatype === "number").map((attr) => Number(attr.id))
-      );
+      const customerExtraInfos = attributes
+        .map((attr) => {
+          const numericAttrId = Number(attr.id);
+          const key = toExtraValueKey(numericAttrId);
+          const v = value.extraValues?.[key];
 
-      const customerExtraInfos = Object.entries(value.extraValues || {}).map(
-        ([attrId, v]: [string, CustomerExtraInfo]) => {
-          const numericAttrId = parseAttributeIdFromExtraKey(attrId);
+          if (!v) return null;
+
           const rawAttributeValue = v.attributeValue || "";
+          if (!rawAttributeValue && v.id == null) return null;
 
           return {
             attributeId: numericAttrId,
-            attributeValue: numberAttrIds.has(numericAttrId)
-              ? sanitizeNumberPayload(rawAttributeValue)
-              : rawAttributeValue,
-            id: v.id || null
+            attributeValue:
+              attr.datatype === "number"
+                ? sanitizeNumberPayload(rawAttributeValue)
+                : rawAttributeValue,
+            id: v.id ?? null
           };
-        }
-      );
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null);
 
-      await onSubmit({ ...value, customerExtraInfos });
+      const { extraValues, ...rest } = value;
+      await onSubmit({ ...rest, customerExtraInfos });
     }
   });
 
@@ -358,7 +362,6 @@ export function CustomerForm({
         };
       });
 
-      // Fallback for APIs that return dynamic values as flat keys by fieldName.
       if (!Object.keys(extraMap).length) {
         for (const attr of attributes) {
           const attrId = Number(attr.id);
@@ -700,7 +703,8 @@ export function CustomerForm({
                         {group.items
                           .filter((g) => g.parentId !== 0)
                           .map((attr) => {
-                            const baseName = `extraValues.${attr.id}` as const;
+                            const prefixedKey = toExtraValueKey(attr.id);
+                            const baseName = `extraValues.${prefixedKey}` as const;
                             const opts = getOptionsForAttribute(attr);
                             const selectOptions = opts.map((o) => ({ value: o.id, label: o.name }));
                             const radioOptions = selectOptions;

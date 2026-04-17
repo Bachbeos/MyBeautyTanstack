@@ -24,7 +24,9 @@ export const ENDPOINTS = {
     register: "/user/create",
     refresh: "/auth/refresh",
     logout: "/auth/logout",
-    me: "/auth/me"
+    me: "/auth/me",
+    forgotPassword: "/auth/forgot-password",
+    resetPassword: "/auth/reset-password"
   },
   user: {
     info: "/user/info",
@@ -115,7 +117,7 @@ export const ENDPOINTS = {
     recalculate: "/invoice/recalculate",
     draftCreate: "/invoice/draft/create",
     draftUpdate: "/invoice/draft/update",
-    draftDelete: (id: InvoiceId) => `/invoice/draft/delete/${id}`,
+    draftDelete: "/invoice/draft/delete",
     draftDetail: "/invoice/getDetail",
     create: "/invoice/create"
   },

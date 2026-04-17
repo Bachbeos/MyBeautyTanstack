@@ -20,3 +20,17 @@ export type LoginResponse = ApiResponse<{
   token: string;
   userId: number;
 }>;
+
+export type LoginGoogleRequest = {
+  token: string;
+};
+
+export type ForgotPasswordRequest = {
+  email: string;
+};
+
+export type ResetPasswordRequest = {
+  email: string;
+  otp: string;
+  newPassword: string;
+};
