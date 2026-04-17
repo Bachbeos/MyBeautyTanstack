@@ -208,6 +208,12 @@ export const ENDPOINTS = {
     callHistoryInterest: "/report/callHistory/interest-bar",
     customerSegment: "/segment/summary",
     segmentTrend: "/segment/trend",
-    revenueByHourToday: "/invoice/getRevenueByHourToday"
+    revenueByHourToday: "/invoice/getRevenueByHourToday",
+    recomputeSegment: "/segment/recompute",
+    recomputeSegmentStop: "/segment/recompute/stop",
+    recomputeSegmentResume: "/segment/recompute/resume",
+    recomputeSegmentRestart: "/segment/recompute/restart",
+    recomputeSegmentLatest: "/segment/recompute/latest",
+    recomputeSegmentProgress: (runId: string) => `/segment/recompute/progress?runId=${runId}`
   }
 } as const;

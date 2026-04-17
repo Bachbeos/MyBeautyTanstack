@@ -136,12 +136,22 @@ function RouteComponent() {
       keyword: keyword || undefined,
       customerId,
       userId,
-      stage: selectedStages.length === 1 ? selectedStages[0] : undefined,
+      stage: undefined,
+      stages: selectedStages.length > 0 ? selectedStages : undefined,
+      priorities: selectedPriorities.length > 0 ? selectedPriorities : undefined,
       status: 1,
       page: kanbanPage,
       limit: kanbanLimit
     }),
-    [keyword, customerId, userId, selectedStages, kanbanPage, kanbanLimit]
+    [
+      keyword,
+      customerId,
+      userId,
+      selectedStages,
+      selectedPriorities,
+      kanbanPage,
+      kanbanLimit
+    ]
   );
 
   const kanbanQuery = useQuery(opportunityQueries.kanban(params));
@@ -238,45 +248,26 @@ function RouteComponent() {
 
     const combined = stageList.map(({ id, name }) => {
       const found = byStage.get(id);
-      const allItems = found?.items ?? [];
-
-      const filteredItems = allItems.filter((item) => {
-        const byKeyword = !keyword || String(item.name || "").toLowerCase().includes(keyword.toLowerCase());
-        const byCustomer = !customerId || Number(item.customerId) === Number(customerId);
-        const byUser = !userId || Number(item.userId) === Number(userId);
-        const byPriority =
-          selectedPriorities.length === 0 ||
-          selectedPriorities.includes(Number((item as any).priority ?? 0));
-        return byKeyword && byCustomer && byUser && byPriority;
-      });
+      const serverItems = found?.items ?? [];
 
       return {
         stage: id as OpportunityStage,
         stageName: name || stageNameMapVi[id],
-        count: found?.total ?? filteredItems.length,
+        count: found?.count ?? serverItems.length,
         page: found?.page,
         limit: found?.limit,
         total: found?.total,
         hasMore: found?.hasMore,
         totalExpectedValue:
-          found?.totalExpectedValue ?? filteredItems.reduce((sum, x) => sum + Number(x.expectedValue || 0), 0),
+          found?.totalExpectedValue ?? serverItems.reduce((sum, x) => sum + Number(x.expectedValue || 0), 0),
         totalWeightedValue: found?.totalWeightedValue ?? 0,
-        items: filteredItems
+        items: serverItems
       } satisfies OpportunityKanbanColumn;
     });
 
     if (selectedStages.length === 0) return combined;
     return combined.filter((c) => selectedStages.includes(Number(c.stage)));
-  }, [
-    localColumns,
-    serverColumns,
-    metaQuery.data,
-    keyword,
-    customerId,
-    userId,
-    selectedStages,
-    selectedPriorities
-  ]);
+  }, [localColumns, serverColumns, metaQuery.data, selectedStages]);
 
   const total = columns.reduce((sum, c) => sum + Number(c.total ?? c.count ?? c.items.length), 0);
 

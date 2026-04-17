@@ -57,6 +57,8 @@ export type OpportunityKanbanRequest = {
   customerId?: number;
   userId?: number;
   stage?: number;
+  stages?: number[];
+  priorities?: number[];
   status?: number;
   page?: number;
   limit?: number;
