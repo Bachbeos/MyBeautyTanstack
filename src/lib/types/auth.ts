@@ -19,6 +19,12 @@ export type LoginRequest = {
 export type LoginResponse = ApiResponse<{
   token: string;
   userId: number;
+  name?: string;
+  avatar?: string;
+  roleName?: string;
+  email?: string;
+  phone?: string;
+  roleId?: number;
 }>;
 
 export type LoginGoogleRequest = {

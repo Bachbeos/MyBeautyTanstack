@@ -64,12 +64,12 @@ function LoginForm() {
   return (
     <div className="main-wrapper">
       <div className="overflow-hidden p-3 acc-vh">
-        <div className="row vh-100 w-100 g-0">
-          <div className="col-lg-6 vh-100 overflow-y-auto overflow-x-hidden">
-            <div className="row">
-              <div className="col-md-10 mx-auto">
+        <div className="row vh-100 w-100 g-0 align-items-center justify-content-center">
+          <div className="col-lg-5 col-lg-4 vh-100 overflow-y-auto overflow-x-hidden">
+            <div className="row h-100">
+              <div className="col-md-11 mx-auto">
                 <form
-                  className="vh-100 d-flex justify-content-between flex-column p-4 pb-0"
+                  className="vh-100 d-flex justify-content-center flex-column p-4 pb-0"
                   onSubmit={(e) => {
                     e.preventDefault();
                     form.handleSubmit();
@@ -190,8 +190,6 @@ function LoginForm() {
               </div>
             </div>
           </div>
-
-          <div className="col-lg-6 account-bg-01"></div>
         </div>
       </div>
     </div>

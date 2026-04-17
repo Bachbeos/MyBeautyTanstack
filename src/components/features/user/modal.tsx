@@ -12,6 +12,7 @@ type ModalProps = {
   onSubmit: (values: any) => Promise<void>;
   onDelete?: () => Promise<void> | void;
   branchOptions: { label: string; value: number }[];
+  roleOptions: { label: string; value: number }[];
   onLoadMoreBranches?: () => void;
 };
 
@@ -20,6 +21,7 @@ export default function ModalUser({
   shown,
   item,
   branchOptions,
+  roleOptions,
   onClose,
   onSubmit,
   onDelete,
@@ -105,6 +107,7 @@ export default function ModalUser({
             mode={type}
             user={item}
             branchOptions={branchOptions}
+            roleOptions={roleOptions}
             onSubmit={onSubmit}
             onLoadMoreBranches={onLoadMoreBranches}
           />

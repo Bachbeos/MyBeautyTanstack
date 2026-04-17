@@ -23,6 +23,7 @@ type UserFormProps = {
   mode: "add" | "edit" | "detail";
   user?: UserDto;
   branchOptions: { label: string; value: number }[];
+  roleOptions: { label: string; value: number }[];
   onSubmit: (values: UserFormValues) => Promise<void>;
   onLoadMoreBranches?: () => void;
 };
@@ -31,6 +32,7 @@ export function UserForm({
   mode,
   user,
   branchOptions,
+  roleOptions,
   onSubmit,
   onLoadMoreBranches
 }: UserFormProps) {
@@ -125,6 +127,19 @@ export function UserForm({
                 disabled={isReadOnly}
                 placeholder="Chọn chi nhánh"
                 onLoadMore={onLoadMoreBranches}
+              />
+            )}
+          </form.AppField>
+        </div>
+
+        <div className="mb-2 col-md-6">
+          <form.AppField name="roleId">
+            {(field) => (
+              <field.Select
+                label="Chức vụ"
+                options={roleOptions}
+                disabled={isReadOnly}
+                placeholder="Chọn chức vụ"
               />
             )}
           </form.AppField>

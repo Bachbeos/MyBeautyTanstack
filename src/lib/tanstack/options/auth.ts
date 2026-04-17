@@ -35,9 +35,16 @@ export const authMutations = {
       mutationFn: (data: LoginRequest) => login(data),
       onSuccess: async (data) => {
         if (data.result?.token) {
-          useAuthStore
-            .getState()
-            .set({ accessToken: data.result.token, userId: UserId(data.result.userId) });
+          useAuthStore.getState().set({
+            accessToken: data.result.token,
+            userId: UserId(data.result.userId),
+            name: data.result.name,
+            avatar: data.result.avatar,
+            roleName: data.result.roleName,
+            email: data.result.email,
+            phone: data.result.phone,
+            roleId: data.result.roleId
+          });
           try {
             const response = await getMyResources();
             if (response && Array.isArray(response.result)) {
@@ -84,9 +91,16 @@ export const authMutations = {
       mutationFn: (data: LoginGoogleRequest) => loginGoogle(data),
       onSuccess: async (data) => {
         if (data.result?.token) {
-          useAuthStore
-            .getState()
-            .set({ accessToken: data.result.token, userId: UserId(data.result.userId) });
+          useAuthStore.getState().set({
+            accessToken: data.result.token,
+            userId: UserId(data.result.userId),
+            name: data.result.name,
+            avatar: data.result.avatar,
+            roleName: data.result.roleName,
+            email: data.result.email,
+            phone: data.result.phone,
+            roleId: data.result.roleId
+          });
           try {
             const response = await getMyResources();
             if (response && Array.isArray(response.result)) {

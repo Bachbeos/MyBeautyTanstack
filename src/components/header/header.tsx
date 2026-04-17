@@ -14,7 +14,7 @@ import type { NotificationDto } from "@/lib/types/notification";
 
 export default function Header() {
   const navigate = useNavigate();
-  const { clear, userId } = useAuthStore();
+  const { clear, userId, name, avatar, roleName } = useAuthStore();
 
   const [theme, setTheme] = useState<"light" | "dark">(
     (localStorage.getItem("theme") as "light" | "dark") ?? "light"
@@ -25,8 +25,11 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // Tạm thời giữ giả lập user để không nát giao diện vì bạn muốn "có gì giữ nguyên"
-  const user = { name: "Admin User", roleName: "Quản trị viên", avatar: "" };
+  const user = { 
+    name: name || "User", 
+    roleName: roleName || "Thành viên", 
+    avatar: avatar || "" 
+  };
 
   const hasAvatar = !!user?.avatar?.trim();
   const avatarSrc = user?.avatar || "";

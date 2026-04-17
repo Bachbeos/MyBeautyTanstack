@@ -7,6 +7,7 @@ import { DataTable } from "@/components/table/data-table";
 import AddButton from "@/components/ui/add-button";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { userMutations, userQueries } from "@/lib/tanstack/options/user";
+import { roleQueries } from "@/lib/tanstack/options/role";
 import type { UserDto } from "@/lib/types/user";
 import { cn } from "@/lib/utils";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
@@ -218,6 +219,16 @@ function RouteComponent() {
         .map((branch) => ({ label: String(branch.name), value: Number(branch.id) })) ?? []
     );
   }, [branchsInf.data]);
+ 
+  const rolesQuery = useQuery(roleQueries.list({ limit: 100 }));
+  const roleOptions = useMemo(() => {
+    return (
+      rolesQuery.data?.result?.items.map((role) => ({
+        label: role.name,
+        value: Number(role.id)
+      })) ?? []
+    );
+  }, [rolesQuery.data]);
 
   const [handleLoadMoreBranches] = [branchsInf].map(
     (q) => () => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()
@@ -299,6 +310,7 @@ function RouteComponent() {
         onSubmit={handleSubmit}
         onDelete={handleDelete}
         branchOptions={branchOptions}
+        roleOptions={roleOptions}
         onLoadMoreBranches={handleLoadMoreBranches}
       />
     </div>

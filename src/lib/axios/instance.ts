@@ -11,7 +11,8 @@ declare module "axios" {
 }
 
 const axiosBase = axios.create({
-  baseURL: env.VITE_API_URL
+  baseURL: env.VITE_API_URL,
+  withCredentials: true
 });
 
 const axiosInstance = axios.create({
