@@ -34,7 +34,8 @@ export default function Sidebar() {
     chat: "application",
     notification: "application",
     "customer-attribute": "system_settings",
-    email: "system_settings"
+    "email-template": "system_settings",
+    "email-send": "system_settings"
   };
 
   const pathToTabKey: Record<string, string> = {
@@ -56,7 +57,8 @@ export default function Sidebar() {
     "/call-history": "call-history",
     "/appointment": "appointment",
     "/customer-attribute": "customer-attribute",
-    "/email": "email",
+    "/email/template": "email-template",
+    "/email/send": "email-send",
     "/chat": "chat",
     "/notification": "notification",
     "/sale": "sale",

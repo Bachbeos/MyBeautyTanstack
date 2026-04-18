@@ -5,7 +5,9 @@ import type { ApiResponse } from "@/lib/types/common";
 export type SendMailRequest = {
   to: string;
   subject: string;
-  html: string;
+  html?: string;
+  templateId?: number | null;
+  variables?: Record<string, string>;
 };
 
 export const sendMail = async (body: SendMailRequest): Promise<ApiResponse<void>> => {
