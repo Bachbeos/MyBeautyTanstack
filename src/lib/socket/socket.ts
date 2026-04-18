@@ -1,6 +1,7 @@
 import { io, type Socket } from "socket.io-client";
 import type { MessageReceivedEvent, TypingEvent, MessageReadEvent } from "./types";
 import env from "@/lib/env";
+import { useSocketStore } from "@/lib/stores/socket";
 
 interface ServerToClient {
   message_received: (d: MessageReceivedEvent) => void;
@@ -24,20 +25,23 @@ export type AppSocket = Socket<ServerToClient, ClientToServer>;
 
 let _socket: AppSocket | null = null;
 
-export const getSocket = (): AppSocket | null => _socket;
+export const getSocket = (): AppSocket | null => {
+  const storeSocket = useSocketStore.getState().getSocket();
+  return storeSocket ?? _socket;
+};
 
 export function initSocket(userId: number, userName: string): AppSocket {
-  // Reuse nếu đang connected
-  if (_socket?.connected) {
+  const existing = getSocket();
+  if (existing?.connected) {
     console.log("[Socket] Already connected, reusing");
-    return _socket;
+    return existing;
   }
 
-  // Cleanup cũ
   if (_socket) {
     _socket.removeAllListeners();
     _socket.disconnect();
     _socket = null;
+    useSocketStore.getState().setSocket(null);
   }
 
   const url = env.VITE_SOCKET_URL as string;
@@ -56,8 +60,8 @@ export function initSocket(userId: number, userName: string): AppSocket {
 
   _socket.on("connect", () => {
     console.log("[Socket] ✅ Connected, id:", _socket!.id);
-    // Emit authenticate sau khi connect để server map userId → socket
     _socket!.emit("authenticate", { userId, userName });
+    useSocketStore.getState().setSocket(_socket);
   });
 
   _socket.on("disconnect", (reason) => {
@@ -68,6 +72,7 @@ export function initSocket(userId: number, userName: string): AppSocket {
     console.error("[Socket] ❌ connect_error:", err.message);
   });
 
+  useSocketStore.getState().setSocket(_socket);
   return _socket;
 }
 
@@ -76,5 +81,6 @@ export function disconnectSocket(): void {
   _socket.removeAllListeners();
   _socket.disconnect();
   _socket = null;
+  useSocketStore.getState().setSocket(null);
   console.log("[Socket] Disconnected");
 }
