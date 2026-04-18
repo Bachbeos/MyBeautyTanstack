@@ -34,7 +34,8 @@ function CRMLayout() {
         email: u.email,
         phone: u.phone,
         roleId: u.roleId,
-        roleName: u.roleName as string
+        roleName: u.roleName as string,
+        branchName: (u.branchName as string) || ""
       });
     }
   }, [userInfo, set]);

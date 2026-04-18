@@ -361,8 +361,8 @@ export default function Header() {
               <div className="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
                 <div className="ms-2">
                   <p className="fw-medium text-dark mb-0">{user?.name}</p>
-                  <span className="d-block fs-13">{user?.roleName}</span>
-                  <span className="d-block fs-14">Chi nhánh: {user?.branchName}</span>
+                  <p className="d-block fs-13 text-muted">Chức vụ: {user?.roleName}</p>
+                  <p className="fw-small text-dark mb-0">Chi nhánh: {user?.branchName}</p>
                 </div>
               </div>
 
