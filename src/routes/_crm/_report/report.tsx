@@ -472,7 +472,7 @@ function RouteComponent() {
             <div className="text-muted small">Báo cáo / Báo cáo & Thống kê</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
-            <Can I="UPDATE" a="REPORT">
+            <Can I="VIEW" a="COMPUTE_SEGMENT">
               <button
                 className="btn btn-danger btn-sm d-inline-flex align-items-center gap-2"
                 onClick={handleRecomputeSegment}

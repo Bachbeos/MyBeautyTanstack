@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { usePermission } from "@/hooks/use-permission";
 import { Can } from "@/components/auth/can";

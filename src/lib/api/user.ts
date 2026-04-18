@@ -49,7 +49,9 @@ export const updateUserInfo = async (
 };
 
 export const deleteUser = async (id: UserId): Promise<ApiResponse<void>> => {
-  const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.user.delete(id));
+  const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.user.delete, {
+    params: { id }
+  });
   return res.data;
 };
 

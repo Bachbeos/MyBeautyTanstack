@@ -459,7 +459,33 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-
+                {check("EMAIL_TEMPLATE") && (
+                  <>
+                  <li>
+                          <Link
+                            to="/email"
+                            className={activeTab === "email" ? "active" : ""}
+                            onClick={() => handleTabClick("email")}
+                            style={{ background: "none" }}
+                          >
+                            <i className="ti ti-file-report"></i>
+                            <span>Gửi email</span>
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/template"
+                            className={activeTab === "template" ? "active" : ""}
+                            onClick={() => handleTabClick("template")}
+                            style={{ background: "none" }}
+                          >
+                            <i className="ti ti-steam"></i>
+                            <span>Quản lý template</span>
+                          </Link>
+                        </li>
+                  </>
+                        
+                )}
                 <li className="submenu">
                   <a
                     href="#"
@@ -511,18 +537,6 @@ export default function Sidebar() {
                             style={{ background: "none" }}
                           >
                             Cài đặt khách hàng
-                          </Link>
-                        </li>
-                      )}
-                      {check("EMAIL_TEMPLATE") && (
-                        <li>
-                          <Link
-                            to="/email"
-                            className={activeTab === "email" ? "active" : ""}
-                            onClick={() => handleTabClick("email")}
-                            style={{ background: "none" }}
-                          >
-                            Cài đặt email
                           </Link>
                         </li>
                       )}
