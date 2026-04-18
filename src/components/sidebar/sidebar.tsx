@@ -33,7 +33,8 @@ export default function Sidebar() {
     chat: "application",
     notification: "application",
     "customer-attribute": "system_settings",
-    email: "system_settings"
+    "email-template": "system_settings",
+    "email-send": "system_settings"
   };
 
   const pathToTabKey: Record<string, string> = {
@@ -55,7 +56,8 @@ export default function Sidebar() {
     "/call-history": "call-history",
     "/appointment": "appointment",
     "/customer-attribute": "customer-attribute",
-    "/email": "email",
+    "/email/template": "email-template",
+    "/email/send": "email-send",
     "/chat": "chat",
     "/notification": "notification",
     "/sale": "sale",
@@ -458,12 +460,22 @@ export default function Sidebar() {
                     </li>
                     <li>
                       <Link
-                        to="/email"
-                        className={activeTab === "email" ? "active" : ""}
-                        onClick={() => handleTabClick("email")}
+                        to="/template"
+                        className={activeTab === "email-template" ? "active" : ""}
+                        onClick={() => handleTabClick("email-template")}
                         style={{ background: "none" }}
                       >
-                        Cài đặt email
+                        Quản lý template email
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/send"
+                        className={activeTab === "email-send" ? "active" : ""}
+                        onClick={() => handleTabClick("email-send")}
+                        style={{ background: "none" }}
+                      >
+                        Gửi email
                       </Link>
                     </li>
                   </SubMenuMotion>
