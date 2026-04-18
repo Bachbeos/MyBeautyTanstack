@@ -31,6 +31,10 @@ export function useChatSocket(userId: number, userName: string) {
     const onMessageReceived = (event: MessageReceivedEvent) => {
       console.log("[Socket] message_received:", event);
 
+      if (event.senderId !== userId && event.chatId === activeChatIdRef.current) {
+        socket.emit("mark_read", { chatId: event.chatId });
+      }
+
       // 1. Prepend vào message list
       qc.setQueryData<MessageCache>(chatKeys.messages(event.chatId), (old) => {
         if (!old) return old;
