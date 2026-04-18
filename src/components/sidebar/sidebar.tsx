@@ -463,7 +463,7 @@ export default function Sidebar() {
                   <>
                   <li>
                           <Link
-                            to="/email"
+                            to="/send"
                             className={activeTab === "email" ? "active" : ""}
                             onClick={() => handleTabClick("email")}
                             style={{ background: "none" }}

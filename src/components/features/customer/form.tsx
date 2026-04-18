@@ -581,6 +581,18 @@ export function CustomerForm({
                 </form.AppField>
               </div>
               <div className="col-md-6 mb-3">
+                <form.AppField name="phone">
+                  {(f) => (
+                    <f.Input
+                      label="Số điện thoại"
+                      required
+                      disabled={isReadOnly}
+                      placeholder="Nhập số điện thoại"
+                    />
+                  )}
+                </form.AppField>
+              </div>
+              <div className="col-md-6 mb-3">
                 <form.AppField name="gender">
                   {(f) => (
                     <f.Radio
@@ -616,18 +628,6 @@ export function CustomerForm({
             ref={address.ref}
           >
             <div className="accordion-body border-top row">
-              <div className="col-md-6 mb-3">
-                <form.AppField name="phone">
-                  {(f) => (
-                    <f.Input
-                      label="Số điện thoại"
-                      required
-                      disabled={isReadOnly}
-                      placeholder="Nhập số điện thoại"
-                    />
-                  )}
-                </form.AppField>
-              </div>
               <div className="col-md-6 mb-3">
                 <form.AppField name="email">
                   {(f) => <f.Input label="Email" disabled={isReadOnly} placeholder="Nhập email" />}

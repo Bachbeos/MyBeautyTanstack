@@ -14,7 +14,7 @@ import type { NotificationDto } from "@/lib/types/notification";
 
 export default function Header() {
   const navigate = useNavigate();
-  const { clear, userId, name, avatar, roleName } = useAuthStore();
+  const { clear, userId, name, avatar, roleName, branchName } = useAuthStore();
 
   const [theme, setTheme] = useState<"light" | "dark">(
     (localStorage.getItem("theme") as "light" | "dark") ?? "light"
@@ -28,7 +28,8 @@ export default function Header() {
   const user = { 
     name: name || "User", 
     roleName: roleName || "Thành viên", 
-    avatar: avatar || "" 
+    avatar: avatar || "", 
+    branchName: branchName || "N/A"
   };
 
   const hasAvatar = !!user?.avatar?.trim();
@@ -361,6 +362,7 @@ export default function Header() {
                 <div className="ms-2">
                   <p className="fw-medium text-dark mb-0">{user?.name}</p>
                   <span className="d-block fs-13">{user?.roleName}</span>
+                  <span className="d-block fs-14">Chi nhánh: {user?.branchName}</span>
                 </div>
               </div>
 
