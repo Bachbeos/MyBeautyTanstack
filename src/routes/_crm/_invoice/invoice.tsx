@@ -1,6 +1,9 @@
 import { AsyncBoundary } from "@/components/async-boundary";
 import CollapseButton from "@/components/collapse/collapse-button";
+import { usePermission } from "@/hooks/use-permission";
+import { Can } from "@/components/auth/can";
 import ExportButton from "@/components/export/export";
+import ActionsTable from "@/components/table/actions-table";
 import RefreshButton from "@/components/refresh/refresh";
 import { DataTable } from "@/components/table/data-table";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
@@ -33,6 +36,8 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
+ 
+  const { canAdd, canEdit, canDelete, canView } = usePermission("INVOICE");
 
   const rawNameFilter = useMemo(() => {
     const filter = columnFilters.find((f) => f.id === "invoice_code");
@@ -177,20 +182,21 @@ function RouteComponent() {
           );
         },
         meta: { className: "align-middle text-center" }
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: "Thao tác",
+        meta: { className: "text-center w-1" },
+        cell: (info) => (
+          <ActionsTable
+            row={info.row}
+            onView={(data) => openModal("detail", data)}
+            onEdit={(data) => openModal("edit", data)}
+            onDelete={(data) => openModal("delete", data)}
+            resource="INVOICE"
+          />
+        )
       })
-      // columnHelper.display({
-      //   id: "actions",
-      //   header: "Thao tác",
-      //   meta: { className: "text-center w-1" },
-      //   cell: (info) => (
-      //     <ActionsTable
-      //       row={info.row}
-      //       onView={(data) => openModal("detail", data)}
-      //       onEdit={(data) => openModal("edit", data)}
-      //       onDelete={(data) => openModal("delete", data)}
-      //     />
-      //   )
-      // })
     ],
     [pageIndex, pageSize]
   );
@@ -234,6 +240,20 @@ function RouteComponent() {
     document.body.classList.toggle("header-collapse");
     setIsHeaderCollapsed(document.body.classList.contains("header-collapse"));
   };
+
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-wrapper">

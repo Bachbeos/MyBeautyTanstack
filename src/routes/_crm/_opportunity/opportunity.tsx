@@ -1,5 +1,7 @@
 import { AsyncBoundary } from "@/components/async-boundary";
 import CollapseButton from "@/components/collapse/collapse-button";
+import { usePermission } from "@/hooks/use-permission";
+import { Can } from "@/components/auth/can";
 import RefreshButton from "@/components/refresh/refresh";
 import AppSelect, { type AppSelectOption } from "@/components/ui/app-select";
 import { BaseModal } from "@/components/ui/modal";
@@ -103,6 +105,8 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
+ 
+  const { canAdd, canEdit, canDelete, canView } = usePermission("OPPORTUNITY");
 
   const [keywordInput, setKeywordInput] = useState("");
   const [keyword] = useDebounceValue(keywordInput, 500);
@@ -382,6 +386,20 @@ function RouteComponent() {
     }
   }, [kanbanQuery.isFetching]);
 
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
@@ -550,6 +568,10 @@ function RouteComponent() {
                         }
                       }}
                       onDrop={async () => {
+                        if (!canEdit) {
+                          toast.error("Bạn không có quyền chỉnh sửa cơ hội");
+                          return;
+                        }
                         const moved = cards.find((c) => Number(c.id) === draggingId);
                         const source = (localColumns ?? columns)
                           .flatMap((col) => col.items)
@@ -608,7 +630,7 @@ function RouteComponent() {
                               transition: "all .18s ease",
                               cursor: draggingId === Number(item.id) ? "grabbing" : "grab"
                             }}
-                            draggable
+                            draggable={canEdit}
                             onDragStart={() => setDraggingId(Number(item.id))}
                             onDrag={(e) => {
                               const container = kanbanScrollRef.current;

@@ -103,5 +103,6 @@ export type SegmentRecomputeProgressDto = {
 
 export type RevenueByHourDto = {
   hour: number;
-  totalRevenue: number;
+  totalInvoice: number;
+  totalAmount: number;
 };

@@ -13,6 +13,8 @@ import { resourceQueries, resourceMutations } from "@/lib/tanstack/options/resou
 import { AsyncBoundary } from "@/components/async-boundary";
 import ModalResource from "@/components/features/resource/modal";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
+import { usePermission } from "@/hooks/use-permission";
+import { Can } from "@/components/auth/can";
 import ActionsTable from "@/components/table/actions-table";
 import AddButton from "@/components/ui/add-button";
 import ExportButton from "@/components/export/export";
@@ -35,6 +37,8 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
+ 
+  const { canAdd, canEdit, canDelete, canView } = usePermission("RESOURCE");
 
   const rawNameFilter = useMemo(() => {
     const filter = columnFilters.find((f) => f.id === "name");
@@ -105,6 +109,7 @@ function RouteComponent() {
             onView={(data) => openModal("detail", data)}
             onEdit={(data) => openModal("edit", data)}
             onDelete={(data) => openModal("delete", data)}
+            resource="RESOURCE"
           />
         )
       })
@@ -152,6 +157,20 @@ function RouteComponent() {
     setIsHeaderCollapsed(document.body.classList.contains("header-collapse"));
   };
 
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
+ 
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
@@ -196,7 +215,9 @@ function RouteComponent() {
                   filterKey="name"
                   filterKeyPlaceholder="Tìm nhanh tài nguyên..."
                   toolbarRight={
-                    <AddButton label="Thêm tài nguyên" onClick={() => openModal("add", null)} />
+                    <Can I="ADD" a="RESOURCE">
+                      <AddButton label="Thêm tài nguyên" onClick={() => openModal("add", null)} />
+                    </Can>
                   }
                 />
               )}

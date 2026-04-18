@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { usePermission } from "@/hooks/use-permission";
+import { Can } from "@/components/auth/can";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import Select from "react-select";
@@ -69,6 +71,8 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
+ 
+  const { canView } = usePermission("REPORT");
 
   const [freqPageIndex, setFreqPageIndex] = useState(0);
   const [freqPageSize, setFreqPageSize] = useState(10);
@@ -278,11 +282,20 @@ function RouteComponent() {
   const revenueByHourData = useMemo(() => {
     const data = revenueHourQuery.data?.result ?? [];
     const hours = Array.from({ length: 24 }, (_, i) => i);
-    const lookup: Record<number, number> = {};
-    data.forEach((d) => { lookup[d.hour] = d.totalRevenue; });
+    const lookupAmount: Record<number, number> = {};
+    const lookupInvoices: Record<number, number> = {};
+    data.forEach((d) => {
+      lookupAmount[d.hour] = d.totalAmount;
+      lookupInvoices[d.hour] = d.totalInvoice;
+    });
+
     return {
       categories: hours.map((h) => `${String(h).padStart(2, "0")}h`),
-      values: hours.map((h) => lookup[h] ?? 0)
+      seriesData: hours.map((h) => ({
+        x: `${String(h).padStart(2, "0")}h`,
+        y: lookupAmount[h] ?? 0,
+        invoices: lookupInvoices[h] ?? 0
+      }))
     };
   }, [revenueHourQuery.data]);
 
@@ -292,10 +305,29 @@ function RouteComponent() {
     dataLabels: { enabled: false },
     stroke: { show: true, width: 2, colors: ["transparent"] },
     xaxis: { categories: revenueByHourData.categories, title: { text: "Giờ trong ngày" } },
-    yaxis: { title: { text: "Doanh thu (VNĐ)" }, labels: { formatter: (val) => new Intl.NumberFormat("vi-VN", { notation: "compact" }).format(val) } },
+    yaxis: {
+      title: { text: "Doanh thu (VNĐ)" },
+      labels: {
+        formatter: (val) => new Intl.NumberFormat("vi-VN", { notation: "compact" }).format(val)
+      }
+    },
     fill: { opacity: 1 },
     colors: ["#1ABE17"],
-    tooltip: { y: { formatter: (val) => new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(val) } }
+    tooltip: {
+      y: {
+        formatter: (val: any, opts?: any): string => {
+          if (!opts) return String(val);
+          const { seriesIndex, dataPointIndex, w } = opts;
+          const revenue = new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND"
+          }).format(val);
+          const seriesData = w.config.series[seriesIndex].data[dataPointIndex];
+          const invoices = seriesData?.invoices || 0;
+          return `${revenue} (${invoices} hóa đơn)`;
+        }
+      }
+    }
   };
 
   const freqColumns = useMemo(() => [
@@ -417,6 +449,20 @@ function RouteComponent() {
   const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1);
   const reactSelectMonthOptions = monthOptions.map(m => ({ value: m, label: `Tháng ${m}` }));
 
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
@@ -426,25 +472,27 @@ function RouteComponent() {
             <div className="text-muted small">Báo cáo / Báo cáo & Thống kê</div>
           </div>
           <div className="gap-2 d-flex align-items-center flex-wrap">
-            <button
-              className="btn btn-danger btn-sm d-inline-flex align-items-center gap-2"
-              onClick={handleRecomputeSegment}
-              disabled={recomputeMutation.isPending || isRecomputing}
-            >
-              {recomputeMutation.isPending ? (
-                <>
-                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-                  Đang khởi tạo...
-                </>
-              ) : isRecomputing ? (
-                <>
-                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-                  Tính toán lại phân khúc {recomputeProgress}%
-                </>
-              ) : (
-                <>Tính toán lại phân khúc</>
-              )}
-            </button>
+            <Can I="UPDATE" a="REPORT">
+              <button
+                className="btn btn-danger btn-sm d-inline-flex align-items-center gap-2"
+                onClick={handleRecomputeSegment}
+                disabled={recomputeMutation.isPending || isRecomputing}
+              >
+                {recomputeMutation.isPending ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                    Đang khởi tạo...
+                  </>
+                ) : isRecomputing ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                    Tính toán lại phân khúc {recomputeProgress}%
+                  </>
+                ) : (
+                  <>Tính toán lại phân khúc</>
+                )}
+              </button>
+            </Can>
             <RefreshButton onRefresh={handleRefresh} />
             <CollapseButton onCollapse={handleCollapse} active={isHeaderCollapsed} />
           </div>
@@ -512,7 +560,7 @@ function RouteComponent() {
                   {() => (
                     <Chart
                       options={revenueByHourOptions}
-                      series={[{ name: "Doanh thu", data: revenueByHourData.values }]}
+                      series={[{ name: "Doanh thu", data: revenueByHourData.seriesData }]}
                       type="bar"
                       height={300}
                     />
@@ -650,7 +698,7 @@ function RouteComponent() {
             </div>
 
             <AsyncBoundary status={freqQuery.status} error={freqQuery.error} onRetry={() => freqQuery.refetch()} data={freqData}>
-               {() => <DataTable table={freqTable} />}
+               {() => <DataTable table={freqTable} filterable={true} filterKey="customerName" filterKeyPlaceholder="Tìm khách hàng..." />}
             </AsyncBoundary>
           </div>
         </div>
@@ -661,7 +709,7 @@ function RouteComponent() {
           </div>
           <div className="card-body p-3">
             <AsyncBoundary status={interestQuery.status} error={interestQuery.error} onRetry={() => interestQuery.refetch()} data={interestData}>
-               {() => <DataTable table={interestTable} />}
+               {() => <DataTable table={interestTable} filterable={true} filterKey="customerName" filterKeyPlaceholder="Tìm khách hàng..." />}
             </AsyncBoundary>
           </div>
         </div>

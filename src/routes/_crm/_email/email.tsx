@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useRef, useState } from "react";
+import { usePermission } from "@/hooks/use-permission";
+import { Can } from "@/components/auth/can";
 import EmailEditor, { type EditorRef, type EmailEditorProps } from "react-email-editor";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
@@ -30,6 +32,8 @@ function EmailPage() {
   const [design, setDesign] = useState<Record<string, unknown> | null>(null);
   const [name, setName] = useState("");
   const [currentId, setCurrentId] = useState<number | null>(null);
+ 
+  const { canAdd, canEdit, canView } = usePermission("EMAIL_TEMPLATE");
 
   const createMutation = useMutation(emailTemplateMutations.create());
   const updateMutation = useMutation(emailTemplateMutations.update());
@@ -145,6 +149,20 @@ function EmailPage() {
     }
   };
 
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
@@ -172,21 +190,25 @@ function EmailPage() {
             <div className="small text-muted">Trình soạn email trực quan</div>
 
             <div className="gap-2 d-flex align-items-center flex-wrap">
-              <button
-                className="btn btn-primary"
-                onClick={saveTemplate}
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                {currentId ? "Cập nhật Template" : "Lưu Template"}
-              </button>
+              <Can I={currentId ? "UPDATE" : "ADD"} a="EMAIL_TEMPLATE">
+                <button
+                  className="btn btn-primary"
+                  onClick={saveTemplate}
+                  disabled={createMutation.isPending || updateMutation.isPending}
+                >
+                  {currentId ? "Cập nhật Template" : "Lưu Template"}
+                </button>
+              </Can>
 
-              <button
-                className="btn btn-outline-primary"
-                onClick={saveAsNewTemplate}
-                disabled={createMutation.isPending}
-              >
-                Lưu Template mới
-              </button>
+              <Can I="ADD" a="EMAIL_TEMPLATE">
+                <button
+                  className="btn btn-outline-primary"
+                  onClick={saveAsNewTemplate}
+                  disabled={createMutation.isPending}
+                >
+                  Lưu Template mới
+                </button>
+              </Can>
 
               <button
                 className="btn btn-outline-danger"

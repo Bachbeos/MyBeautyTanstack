@@ -6,6 +6,8 @@ import RefreshButton from "@/components/refresh/refresh";
 import ActionsTable from "@/components/table/actions-table";
 import { DataTable } from "@/components/table/data-table";
 import AddButton from "@/components/ui/add-button";
+import { usePermission } from "@/hooks/use-permission";
+import { Can } from "@/components/auth/can";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { roleMutations, roleQueries } from "@/lib/tanstack/options/role";
 import type { RoleDto } from "@/lib/types/role";
@@ -37,6 +39,8 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
+ 
+  const { canAdd, canEdit, canDelete, canView } = usePermission("ROLE");
 
   const rawNameFilter = useMemo(() => {
     const filter = columnFilters.find((f) => f.id === "name");
@@ -110,7 +114,7 @@ function RouteComponent() {
           <BaseCheckbox
             id={`default-${info.row.original.id}`}
             checked={info.getValue() === 1}
-            disabled={updateMutation.isPending}
+            disabled={updateMutation.isPending || !canEdit}
             onChange={() => handleToggle(info.row.original, "isDefault")}
           />
         )
@@ -123,7 +127,7 @@ function RouteComponent() {
           <BaseCheckbox
             id={`operator-${info.row.original.id}`}
             checked={info.getValue() === 1}
-            disabled={updateMutation.isPending}
+            disabled={updateMutation.isPending || !canEdit}
             onChange={() => handleToggle(info.row.original, "isOperator")}
           />
         )
@@ -138,6 +142,7 @@ function RouteComponent() {
             onView={(data) => openModal("detail", data)}
             onEdit={(data) => openModal("edit", data)}
             onDelete={(data) => openModal("delete", data)}
+            resource="ROLE"
             onPermission={(data) => {
               navigate({
                 to: "/permission",
@@ -194,6 +199,20 @@ function RouteComponent() {
     setIsHeaderCollapsed(document.body.classList.contains("header-collapse"));
   };
 
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
+ 
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
@@ -238,7 +257,9 @@ function RouteComponent() {
                   filterKey="name"
                   filterKeyPlaceholder="Tìm nhanh chức vụ..."
                   toolbarRight={
-                    <AddButton label="Thêm chức vụ" onClick={() => openModal("add", null)} />
+                    <Can I="ADD" a="ROLE">
+                      <AddButton label="Thêm chức vụ" onClick={() => openModal("add", null)} />
+                    </Can>
                   }
                   toolbarLeft={<div className="text-muted small d-none d-md-block"></div>}
                 />
