@@ -4,6 +4,22 @@ import { useQuery } from "@tanstack/react-query";
 
 export type PermissionAction = "VIEW" | "ADD" | "UPDATE" | "DELETE";
 
+type Role = "OPERATOR" | "OTHER";
+
+type Policy = {
+  allow?: PermissionAction[];
+  deny?: PermissionAction[];
+};
+
+const rolePolicy: Record<Role, Policy> = {
+  OPERATOR: {
+    allow: ["VIEW", "ADD", "UPDATE", "DELETE"]
+  },
+  OTHER: {
+    allow: []
+  }
+};
+
 export interface PermissionResult {
   canView: boolean;
   canAdd: boolean;
@@ -14,6 +30,24 @@ export interface PermissionResult {
 
 const EMPTY_SET = new Set<PermissionAction>();
 
+function resolveAccess(
+  role: Role | undefined,
+  actions: Set<PermissionAction>,
+  action: PermissionAction
+): boolean {
+  const policy = role ? rolePolicy[role] : undefined;
+
+  if (policy?.deny?.includes(action)) {
+    return false;
+  }
+
+  if (policy?.allow?.includes(action)) {
+    return true;
+  }
+
+  return actions.has(action);
+}
+
 export function usePermission(resource: string): PermissionResult {
   const { data } = useQuery(authQueries.permissions());
   const { isOperator } = useAuthStore();
@@ -21,10 +55,7 @@ export function usePermission(resource: string): PermissionResult {
   const actions = data?.[resource] ?? EMPTY_SET;
 
   const hasAccess = (action: PermissionAction) => {
-    if (isOperator) {
-      return true;
-    }
-    return actions.has(action);
+    return resolveAccess(isOperator ? "OPERATOR" : "OTHER", actions, action);
   };
 
   return {
@@ -41,15 +72,12 @@ export function useViewPermission() {
   const { isOperator } = useAuthStore();
 
   const canView = (resource: string) => {
-    if (isOperator) return true;
-
-    return data?.[resource]?.has("VIEW") ?? false;
+    const actions = data?.[resource] ?? EMPTY_SET;
+    return resolveAccess(isOperator ? "OPERATOR" : "OTHER", actions, "VIEW");
   };
 
   const canViewAny = (resources: string[]) => {
-    if (isOperator) return true;
-
-    return resources.some(canView);
+    return resources.some((r) => canView(r));
   };
 
   return { canView, canViewAny };

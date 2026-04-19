@@ -512,7 +512,7 @@ export default function Sidebar() {
                   </SubMenuMotion>
                 </li>
 
-                {(canView("CUSTOMER_ATTRIBUTE") || canView("EMAIL_TEMPLATE")) && (
+                {canView("CUSTOMER_ATTRIBUTE") && (
                   <li className="submenu">
                     <a
                       href="#"
