@@ -13,6 +13,7 @@ import type { UserDto } from "@/lib/types/user";
 import type { ChatView, CursorResult } from "@/lib/types/chat";
 import type { ApiResponse } from "@/lib/types/common";
 import { userQueries } from "@/lib/tanstack/options/user";
+import { useAuthStore } from "@/lib/stores/auth";
 
 const avatar = (name: string) =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "?")}&background=random&color=fff`;
@@ -25,13 +26,18 @@ interface Props {
 
 export function CreateChatModal({ show, onClose, onCreated }: Props) {
   const qc = useQueryClient();
+  const currentUserId = useAuthStore((s) => s.userId);
 
   const [selected, setSelected] = useState<UserDto | null>(null);
   const [keyword, setKeyword] = useState("");
   const [debouncedKeyword] = useDebounceValue(keyword, 350);
 
   const userQ = useInfiniteQuery(
-    userQueries.infinite({ keyword: debouncedKeyword || undefined, limit: 20 })
+    userQueries.infinite({
+      keyword: debouncedKeyword || undefined,
+      limit: 20,
+      excludeUserId: currentUserId ?? undefined
+    })
   );
 
   const users: UserDto[] = useMemo(
