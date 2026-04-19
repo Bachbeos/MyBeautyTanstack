@@ -15,6 +15,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { set } from "zod";
 import { toast } from "sonner";
+import { usePermission } from "@/hooks/use-permission";
 
 type MenuType = "product" | "service";
 
@@ -245,6 +246,8 @@ function RouteComponent() {
     setCart([]);
   };
 
+  const { canView } = usePermission("SALE")
+
   const buildDraftUpdatePayload = (values?: {
     discount?: number;
     discountCode?: string;
@@ -354,6 +357,20 @@ function RouteComponent() {
       // TODO: Show error popup/toast
     }
   };
+
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-wrapper sale-page">
