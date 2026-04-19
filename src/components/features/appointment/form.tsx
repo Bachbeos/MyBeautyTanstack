@@ -7,7 +7,7 @@ const scheduleSchema = z
   .object({
     id: z.number().optional(),
     title: z.string().min(1, "Tiêu đề không được để trống"),
-    type: z.number().default(1),
+    type: z.number("Vui lòng chọn loại lịch hẹn").default(1),
     customerId: z.number().optional(),
     userId: z.number().optional(),
     startTime: z.string().min(1, "Vui lòng chọn thời gian bắt đầu"),
