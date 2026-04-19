@@ -7,10 +7,10 @@ const callHistorySchema = z.object({
   id: z.custom<callHistoryDto["id"]>().or(z.undefined()),
   userId: z.number().min(1, "Vui lòng chọn nhân viên"),
   customerId: z.number().min(1, "Vui lòng chọn khách hàng"),
-  callType: z.number(),
-  outcome: z.number(),
-  duration: z.number().int().min(0),
-  interestLevel: z.number().int().min(0).max(5),
+  callType: z.number("Vui lòng chọn loại cuộc gọi"),
+  outcome: z.number("Vui lòng chọn kết quả cuộc gọi"),
+  duration: z.coerce.number().int().min(0, "Thời lượng cuộc gọi phải là số nguyên không âm"),
+  interestLevel: z.coerce.number().int().min(0).max(5),
   note: z.string(),
   status: z.number()
 });
@@ -56,7 +56,7 @@ export function CallHistoryForm({
       note: callHistory?.note ?? "",
       status: callHistory?.status ?? 1
     },
-    validators: { onSubmit: callHistorySchema },
+    validators: { onSubmit: callHistorySchema as any },
     onSubmit: async ({ value }) => {
       const payload = { ...value };
       if (payload.outcome === 3) {

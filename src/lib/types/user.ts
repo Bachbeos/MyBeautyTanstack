@@ -16,6 +16,7 @@ export type UserDto = {
   roleId: number;
   active: number;
   regisDate: string;
+  isOperator: number;
   [key: string]: unknown;
 };
 
