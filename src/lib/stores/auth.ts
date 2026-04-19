@@ -12,6 +12,7 @@ interface AuthState {
   email?: string | null;
   phone?: string | null;
   roleId?: number | null;
+  isOperator?: number | null;
   branchName?: string | null;
 
   set: (data: {
@@ -24,8 +25,8 @@ interface AuthState {
     email?: string | null;
     phone?: string | null;
     roleId?: number | null;
+    isOperator?: number | null;
     branchName?: string | null;
-
   }) => void;
   clear: () => void;
 }
@@ -43,8 +44,21 @@ export const useAuthStore = create<AuthState>()(
       phone: null,
       roleId: null,
       branchName: null,
+      isOperator: null,
 
-      set: ({ accessToken, refreshToken, userId, name, avatar, roleName, email, phone, roleId, branchName }) =>
+      set: ({
+        accessToken,
+        refreshToken,
+        userId,
+        name,
+        avatar,
+        roleName,
+        email,
+        phone,
+        roleId,
+        branchName,
+        isOperator
+      }) =>
         set((state) => ({
           accessToken: accessToken !== undefined ? accessToken : state.accessToken,
           refreshToken: refreshToken !== undefined ? refreshToken : state.refreshToken,
@@ -55,6 +69,7 @@ export const useAuthStore = create<AuthState>()(
           email: email !== undefined ? email : state.email,
           phone: phone !== undefined ? phone : state.phone,
           roleId: roleId !== undefined ? roleId : state.roleId,
+          isOperator: isOperator !== undefined ? isOperator : state.isOperator,
           branchName: branchName !== undefined ? branchName : state.branchName
         })),
 
@@ -69,6 +84,7 @@ export const useAuthStore = create<AuthState>()(
           email: null,
           phone: null,
           roleId: null,
+          isOperator: null,
           branchName: null
         }))
     }),
@@ -84,6 +100,7 @@ export const useAuthStore = create<AuthState>()(
         email: state.email,
         phone: state.phone,
         roleId: state.roleId,
+        isOperator: state.isOperator,
         branchName: state.branchName
       })
     }

@@ -1,6 +1,8 @@
+import type { PermissionAction } from "@/hooks/use-permission";
 import { forgotPassword, login, loginGoogle, register, resetPassword } from "@/lib/api/auth";
 import { getMyResources } from "@/lib/api/permission";
 import { useAuthStore } from "@/lib/stores/auth";
+import { queryClient } from "@/lib/tanstack/query-client";
 import { createKeys } from "@/lib/tanstack/query-key";
 import type {
   ForgotPasswordRequest,
@@ -10,12 +12,13 @@ import type {
   ResetPasswordRequest
 } from "@/lib/types/auth";
 import { UserId } from "@/lib/types/user";
-import { mutationOptions } from "@tanstack/react-query";
+import { mutationOptions, queryOptions } from "@tanstack/react-query";
 
 export const authKeys = createKeys("auth", {
   login: () => ["login"] as const,
   register: () => ["register"] as const,
-  logout: () => ["logout"] as const
+  logout: () => ["logout"] as const,
+  permissions: () => ["permissions"] as const
 });
 
 export const authMutations = {
@@ -45,43 +48,13 @@ export const authMutations = {
             phone: data.result.phone,
             roleId: data.result.roleId
           });
-          try {
-            const response = await getMyResources();
-            if (response && Array.isArray(response.result)) {
-              const map: Record<string, number> = {};
-              response.result.forEach((item) => {
-                const code = item.code;
-                let actions: string | string[] = item.actions;
-                if (
-                  typeof actions === "string" &&
-                  actions.trim().startsWith("[") &&
-                  actions.trim().endsWith("]")
-                ) {
-                  try {
-                    const parsed = JSON.parse(actions);
-                    if (Array.isArray(parsed)) actions = parsed;
-                  } catch (e) {
-                  }
-                }
-                if (code && Array.isArray(actions)) {
-                  actions.forEach((act) => {
-                    const key = `${code}_${act}`;
-                    map[key] = 1;
-                  });
-                }
-              });
-              Object.keys(map).forEach((k) => {
-                localStorage.setItem(k, String(map[k]));
-              });
-            }
-          } catch (err) {
-            console.error("Failed to sync permissions:", err);
-          }
         }
+        await queryClient.prefetchQuery(authQueries.permissions());
       },
       meta: {
         successMessage: "Đăng nhập thành công",
-        redirectTo: "/report"
+        redirectTo: "/report",
+        invalidatesQuery: [authKeys.permissions()]
       }
     }),
 
@@ -92,52 +65,15 @@ export const authMutations = {
       onSuccess: async (data) => {
         if (data.result?.token) {
           useAuthStore.getState().set({
-            accessToken: data.result.token,
-            userId: UserId(data.result.userId),
-            name: data.result.name,
-            avatar: data.result.avatar,
-            roleName: data.result.roleName,
-            email: data.result.email,
-            phone: data.result.phone,
-            roleId: data.result.roleId
+            accessToken: data.result.token
           });
-          try {
-            const response = await getMyResources();
-            if (response && Array.isArray(response.result)) {
-              const map: Record<string, number> = {};
-              response.result.forEach((item) => {
-                const code = item.code;
-                let actions: string | string[] = item.actions;
-                if (
-                  typeof actions === "string" &&
-                  actions.trim().startsWith("[") &&
-                  actions.trim().endsWith("]")
-                ) {
-                  try {
-                    const parsed = JSON.parse(actions);
-                    if (Array.isArray(parsed)) actions = parsed;
-                  } catch (e) {
-                  }
-                }
-                if (code && Array.isArray(actions)) {
-                  actions.forEach((act) => {
-                    const key = `${code}_${act}`;
-                    map[key] = 1;
-                  });
-                }
-              });
-              Object.keys(map).forEach((k) => {
-                localStorage.setItem(k, String(map[k]));
-              });
-            }
-          } catch (err) {
-            console.error("Failed to sync permissions:", err);
-          }
         }
+        await queryClient.prefetchQuery(authQueries.permissions());
       },
       meta: {
         successMessage: "Đăng nhập thành công",
-        redirectTo: "/report"
+        redirectTo: "/report",
+        invalidatesQuery: [authKeys.permissions()]
       }
     }),
 
@@ -158,5 +94,41 @@ export const authMutations = {
         successMessage: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
         redirectTo: "/login"
       }
+    })
+};
+
+export const authQueries = {
+  permissions: () =>
+    queryOptions({
+      queryKey: authKeys.permissions(),
+      queryFn: () => getMyResources(),
+      staleTime: Infinity,
+      select: (res) => {
+        const map: Record<string, Set<PermissionAction>> = {};
+
+        res.result?.forEach((item) => {
+          let actions = item.actions;
+
+          if (typeof actions === "string") {
+            try {
+              actions = JSON.parse(actions);
+            } catch {}
+          }
+
+          if (!Array.isArray(actions)) return;
+
+          if (!map[item.code]) {
+            map[item.code] = new Set();
+          }
+
+          actions.forEach((act: PermissionAction) => {
+            map[item.code].add(act);
+          });
+        });
+
+        return map;
+      },
+      refetchOnWindowFocus: false,
+      refetchOnMount: false
     })
 };

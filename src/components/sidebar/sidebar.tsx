@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useMemo, useState } from "react";
-import { usePermission } from "@/hooks/use-permission";
 import SimpleBar from "simplebar-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import "simplebar-react/dist/simplebar.min.css";
@@ -8,6 +7,7 @@ import SubMenuMotion from "./SubMenuMotion";
 import logo from "@assets/img/logo.svg";
 import logoSmall from "@assets/img/logo-small.svg";
 import logoWhite from "@assets/img/logo-white.svg";
+import { useViewPermission } from "@/hooks/use-permission";
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<string>("");
@@ -113,28 +113,28 @@ export default function Sidebar() {
     document.body.classList.toggle("mini-sidebar");
   };
 
-  const check = (resource?: string) => {
-    if (!resource) return true;
-    return localStorage.getItem(`${resource}_VIEW`) === "1";
-  };
+  const { canViewAny, canView } = useViewPermission();
 
-  const showApp = check("CALL_HISTORY") || check("SCHEDULE");
-  const showCRM =
-    check("CUSTOMER") ||
-    check("OPPORTUNITY") ||
-    check("CUSTOMER_SOURCE") ||
-    check("BRANCH") ||
-    check("VOUCHER") ||
-    check("UNIT") ||
-    check("CATEGORY_ITEM") ||
-    check("PRODUCT") ||
-    check("SERVICE") ||
-    check("SALE") ||
-    check("INVOICE") ||
-    check("REPORT");
+  const showApp = canViewAny(["CALL_HISTORY", "SCHEDULE"]);
 
-  const showUserMgmt = check("USER") || check("ROLE");
-  const showSettings = check("RESOURCE") || check("CUSTOMER_ATTRIBUTE") || check("EMAIL_TEMPLATE") || true;
+  const showCRM = canViewAny([
+    "CUSTOMER",
+    "OPPORTUNITY",
+    "CUSTOMER_SOURCE",
+    "BRANCH",
+    "VOUCHER",
+    "UNIT",
+    "CATEGORY_ITEM",
+    "PRODUCT",
+    "SERVICE",
+    "SALE",
+    "INVOICE",
+    "REPORT"
+  ]);
+
+  const showUserMgmt = canViewAny(["USER", "ROLE"]);
+
+  const showSettings = canViewAny(["RESOURCE", "CUSTOMER_ATTRIBUTE", "EMAIL_TEMPLATE"]) || true;
 
   return (
     <div className="sidebar" id="sidebar">
@@ -185,7 +185,7 @@ export default function Sidebar() {
                     <span className="menu-arrow"></span>
                   </a>
                   <SubMenuMotion open={openSubmenus.application}>
-                    {check("CALL_HISTORY") && (
+                    {canView("CALL_HISTORY") && (
                       <li>
                         <Link
                           to="/call-history"
@@ -196,7 +196,7 @@ export default function Sidebar() {
                         </Link>
                       </li>
                     )}
-                    {check("SCHEDULE") && (
+                    {canView("SCHEDULE") && (
                       <li>
                         <Link
                           to="/appointment"
@@ -207,24 +207,24 @@ export default function Sidebar() {
                         </Link>
                       </li>
                     )}
-                      <li>
-                        <Link
-                          to="/chat"
-                          className={activeTab === "chat" ? "active" : ""}
-                          onClick={() => handleTabClick("chat")}
-                        >
-                          Chat
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/notification"
-                          className={activeTab === "notification" ? "active" : ""}
-                          onClick={() => handleTabClick("notification")}
-                        >
-                          Thông báo
-                        </Link>
-                      </li>
+                    <li>
+                      <Link
+                        to="/chat"
+                        className={activeTab === "chat" ? "active" : ""}
+                        onClick={() => handleTabClick("chat")}
+                      >
+                        Chat
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/notification"
+                        className={activeTab === "notification" ? "active" : ""}
+                        onClick={() => handleTabClick("notification")}
+                      >
+                        Thông báo
+                      </Link>
+                    </li>
                   </SubMenuMotion>
                 </li>
               </ul>
@@ -235,7 +235,7 @@ export default function Sidebar() {
             </li>
             <li style={{ display: showCRM ? "block" : "none" }}>
               <ul>
-                {check("CUSTOMER") && (
+                {canView("CUSTOMER") && (
                   <li>
                     <Link
                       to="/customer"
@@ -247,7 +247,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {check("OPPORTUNITY") && (
+                {canView("OPPORTUNITY") && (
                   <>
                     <li>
                       <Link
@@ -271,7 +271,7 @@ export default function Sidebar() {
                     </li>
                   </>
                 )}
-                {check("CUSTOMER_SOURCE") && (
+                {canView("CUSTOMER_SOURCE") && (
                   <li>
                     <Link
                       to="/customer-source"
@@ -283,7 +283,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {check("BRANCH") && (
+                {canView("BRANCH") && (
                   <li>
                     <Link
                       to="/branch"
@@ -295,7 +295,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {check("VOUCHER") && (
+                {canView("VOUCHER") && (
                   <li>
                     <Link
                       to="/voucher"
@@ -307,7 +307,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {check("UNIT") && (
+                {canView("UNIT") && (
                   <li>
                     <Link
                       to="/unit"
@@ -319,7 +319,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {check("CATEGORY_ITEM") && (
+                {canView("CATEGORY_ITEM") && (
                   <li>
                     <Link
                       to="/category"
@@ -331,7 +331,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {check("PRODUCT") && (
+                {canView("PRODUCT") && (
                   <li>
                     <Link
                       to="/product"
@@ -343,7 +343,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {check("SERVICE") && (
+                {canView("SERVICE") && (
                   <li>
                     <Link
                       to="/service"
@@ -355,7 +355,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {check("SALE") && (
+                {canView("SALE") && (
                   <li>
                     <Link
                       to="/sale"
@@ -368,7 +368,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {check("INVOICE") && (
+                {canView("INVOICE") && (
                   <>
                     <li>
                       <Link
@@ -392,7 +392,7 @@ export default function Sidebar() {
                     </li>
                   </>
                 )}
-                {check("REPORT") && (
+                {canView("REPORT") && (
                   <li>
                     <Link
                       to="/report"
@@ -413,7 +413,7 @@ export default function Sidebar() {
             </li>
             <li style={{ display: showUserMgmt ? "block" : "none" }}>
               <ul>
-                {check("USER") && (
+                {canView("USER") && (
                   <li>
                     <Link
                       to="/user"
@@ -426,7 +426,7 @@ export default function Sidebar() {
                   </li>
                 )}
 
-                {check("ROLE") && (
+                {canView("ROLE") && (
                   <li>
                     <Link
                       to="/role"
@@ -447,7 +447,7 @@ export default function Sidebar() {
             </li>
             <li style={{ display: showSettings ? "block" : "none" }}>
               <ul>
-                {check("RESOURCE") && (
+                {canView("RESOURCE") && (
                   <li>
                     <Link
                       to="/resource"
@@ -459,32 +459,31 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {check("EMAIL_TEMPLATE") && (
+                {canView("EMAIL_TEMPLATE") && (
                   <>
-                  <li>
-                          <Link
-                            to="/send"
-                            className={activeTab === "email" ? "active" : ""}
-                            onClick={() => handleTabClick("email")}
-                            style={{ background: "none" }}
-                          >
-                            <i className="ti ti-file-report"></i>
-                            <span>Gửi email</span>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            to="/template"
-                            className={activeTab === "template" ? "active" : ""}
-                            onClick={() => handleTabClick("template")}
-                            style={{ background: "none" }}
-                          >
-                            <i className="ti ti-steam"></i>
-                            <span>Quản lý template</span>
-                          </Link>
-                        </li>
+                    <li>
+                      <Link
+                        to="/send"
+                        className={activeTab === "email" ? "active" : ""}
+                        onClick={() => handleTabClick("email")}
+                        style={{ background: "none" }}
+                      >
+                        <i className="ti ti-file-report"></i>
+                        <span>Gửi email</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/template"
+                        className={activeTab === "template" ? "active" : ""}
+                        onClick={() => handleTabClick("template")}
+                        style={{ background: "none" }}
+                      >
+                        <i className="ti ti-steam"></i>
+                        <span>Quản lý template</span>
+                      </Link>
+                    </li>
                   </>
-                        
                 )}
                 <li className="submenu">
                   <a
@@ -513,7 +512,7 @@ export default function Sidebar() {
                   </SubMenuMotion>
                 </li>
 
-                {(check("CUSTOMER_ATTRIBUTE") || check("EMAIL_TEMPLATE")) && (
+                {(canView("CUSTOMER_ATTRIBUTE") || canView("EMAIL_TEMPLATE")) && (
                   <li className="submenu">
                     <a
                       href="#"
@@ -528,7 +527,7 @@ export default function Sidebar() {
                       <span className="menu-arrow"></span>
                     </a>
                     <SubMenuMotion open={openSubmenus.system_settings}>
-                      {check("CUSTOMER_ATTRIBUTE") && (
+                      {canView("CUSTOMER_ATTRIBUTE") && (
                         <li>
                           <Link
                             to="/customer-attribute"
