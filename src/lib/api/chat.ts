@@ -22,6 +22,11 @@ export const searchChats = (
 export const createChat = (body: CreateChatRequest) =>
   axiosInstance.post<ApiResponse<ChatView>>(ENDPOINTS.chat.create, body).then((r) => r.data);
 
+export const getChatViewById = (chatId: number) =>
+  axiosInstance
+    .get<ApiResponse<ChatView>>(ENDPOINTS.chat.view, { params: { id: chatId } })
+    .then((r) => r.data);
+
 export const getMessageListCursor = (
   p: { chatId: number; beforeMessageId?: number; limit?: number },
   signal?: AbortSignal

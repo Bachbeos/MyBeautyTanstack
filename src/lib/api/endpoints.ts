@@ -190,7 +190,9 @@ export const ENDPOINTS = {
   chat: {
     listCursor: "/chat/list-cursor",
     search: "/chat/search",
-    create: "/chat/create"
+    create: "/chat/create",
+    getById: "/chat/get",
+    view: "/chat/view"
   },
   message: {
     listCursor: "/message/list-cursor",

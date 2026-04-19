@@ -3,6 +3,7 @@ import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { initSocket, disconnectSocket } from "@/lib/socket/socket";
 import { chatKeys } from "@/lib/tanstack/options/chat";
 import { useChatStore } from "@/lib/stores/chat";
+import { getChatViewById } from "@/lib/api/chat";
 import type { MessageReceivedEvent, MessageReadEvent } from "@/lib/socket/types";
 import type { ApiResponse } from "@/lib/types/common";
 import type { ChatView, MessageDto, CursorResult } from "@/lib/types/chat";
@@ -28,7 +29,7 @@ export function useChatSocket(userId: number, userName: string) {
     console.log("[useChatSocket] Init socket for userId:", userId);
     const socket = initSocket(userId, userName);
 
-    const onMessageReceived = (event: MessageReceivedEvent) => {
+    const onMessageReceived = async (event: MessageReceivedEvent) => {
       console.log("[Socket] message_received:", event);
 
       if (event.senderId !== userId && event.chatId === activeChatIdRef.current) {
@@ -78,36 +79,82 @@ export function useChatSocket(userId: number, userName: string) {
       });
 
       // 2. Update chat list preview + unread
-      qc.setQueryData<ChatCache>(chatKeys.listCursor(), (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            result: page.result
-              ? {
-                  ...page.result,
-                  data: page.result.data.map((chat) =>
-                    chat.id !== event.chatId
-                      ? chat
-                      : {
-                          ...chat,
-                          lastMessageContent: event.content,
-                          lastMessageSenderId: event.senderId,
-                          lastMessageSenderName: event.senderName,
-                          lastMessageType: event.messageType,
-                          lastMessageAt: event.createdAt,
-                          unreadCount:
-                            event.senderId !== userId && event.chatId !== activeChatIdRef.current
-                              ? chat.unreadCount + 1
-                              : chat.unreadCount
+      // Check if chat exists in current cached pages
+      const existingChatCache = qc.getQueryData<ChatCache>(chatKeys.listCursor());
+      const chatExistsInCache = existingChatCache?.pages.some((page) =>
+        page.result?.data.some((chat) => chat.id === event.chatId)
+      );
+
+      if (chatExistsInCache) {
+        // Chat exists - update in place
+        qc.setQueryData<ChatCache>(chatKeys.listCursor(), (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              result: page.result
+                ? {
+                    ...page.result,
+                    data: page.result.data.map((chat) =>
+                      chat.id !== event.chatId
+                        ? chat
+                        : {
+                            ...chat,
+                            lastMessageContent: event.content,
+                            lastMessageSenderId: event.senderId,
+                            lastMessageSenderName: event.senderName,
+                            lastMessageType: event.messageType,
+                            lastMessageAt: event.createdAt,
+                            unreadCount:
+                              event.senderId !== userId && event.chatId !== activeChatIdRef.current
+                                ? chat.unreadCount + 1
+                                : chat.unreadCount
+                          }
+                    )
+                  }
+                : page.result
+            }))
+          };
+        });
+      } else {
+        try {
+          const chatView = await getChatViewById(event.chatId);
+          if (chatView?.result) {
+            const newChat: ChatView = {
+              ...chatView.result,
+              lastMessageContent: event.content,
+              lastMessageSenderId: event.senderId,
+              lastMessageSenderName: event.senderName,
+              lastMessageType: event.messageType,
+              lastMessageAt: event.createdAt,
+              unreadCount:
+                event.senderId !== userId && event.chatId !== activeChatIdRef.current ? 1 : 0
+            };
+            qc.setQueryData<ChatCache>(chatKeys.listCursor(), (old) => {
+              if (!old) return old;
+              const [first, ...rest] = old.pages;
+              return {
+                ...old,
+                pages: [
+                  {
+                    ...first,
+                    result: first.result
+                      ? {
+                          ...first.result,
+                          data: [newChat, ...(first.result.data ?? [])]
                         }
-                  )
-                }
-              : page.result
-          }))
-        };
-      });
+                      : first.result
+                  },
+                  ...rest
+                ]
+              };
+            });
+          }
+        } catch (err) {
+          console.error("[Socket] Failed to fetch chat view:", err);
+        }
+      }
     };
 
     const onMessageRead = ({ chatId, userId: readerId }: MessageReadEvent) => {

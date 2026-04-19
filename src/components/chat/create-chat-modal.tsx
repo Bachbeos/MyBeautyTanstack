@@ -59,24 +59,56 @@ export function CreateChatModal({ show, onClose, onCreated }: Props) {
       const chat = res.result;
       if (!chat) return;
 
-      // Prepend chat mới vào list cache
       type CC = InfiniteData<ApiResponse<CursorResult<ChatView>>>;
-      qc.setQueryData<CC>(chatKeys.listCursor(), (old) => {
-        if (!old) return old;
-        const [first, ...rest] = old.pages;
-        return {
-          ...old,
-          pages: [
-            {
-              ...first,
-              result: first.result
-                ? { ...first.result, data: [chat, ...(first.result.data ?? [])] }
-                : first.result
-            },
-            ...rest
-          ]
-        };
-      });
+      const existingChats =
+        qc.getQueryData<CC>(chatKeys.listCursor())?.pages.flatMap((p) => p.result?.data ?? []) ??
+        [];
+
+      const existingChat = existingChats.find((c) => c.id === chat.id);
+      if (existingChat) {
+        qc.setQueryData<CC>(chatKeys.listCursor(), (old) => {
+          if (!old) return old;
+          const filtered = old.pages.map((page) => ({
+            ...page,
+            result: page.result
+              ? {
+                  ...page.result,
+                  data: page.result.data.filter((c) => c.id !== chat.id)
+                }
+              : page.result
+          }));
+          const [first, ...rest] = filtered;
+          return {
+            ...old,
+            pages: [
+              {
+                ...first,
+                result: first.result
+                  ? { ...first.result, data: [chat, ...(first.result.data ?? [])] }
+                  : first.result
+              },
+              ...rest
+            ]
+          };
+        });
+      } else {
+        qc.setQueryData<CC>(chatKeys.listCursor(), (old) => {
+          if (!old) return old;
+          const [first, ...rest] = old.pages;
+          return {
+            ...old,
+            pages: [
+              {
+                ...first,
+                result: first.result
+                  ? { ...first.result, data: [chat, ...(first.result.data ?? [])] }
+                  : first.result
+              },
+              ...rest
+            ]
+          };
+        });
+      }
 
       handleClose();
       onCreated(chat);
