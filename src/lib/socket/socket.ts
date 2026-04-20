@@ -1,5 +1,10 @@
 import { io, type Socket } from "socket.io-client";
-import type { MessageReceivedEvent, TypingEvent, MessageReadEvent } from "./types";
+import type {
+  MessageReceivedEvent,
+  TypingEvent,
+  MessageReadEvent,
+  PaymentDoneEvent
+} from "./types";
 import env from "@/lib/env";
 import { useSocketStore } from "@/lib/stores/socket";
 
@@ -7,6 +12,7 @@ interface ServerToClient {
   message_received: (d: MessageReceivedEvent) => void;
   typing: (d: TypingEvent) => void;
   message_read: (d: MessageReadEvent) => void;
+  payment_done: (d: PaymentDoneEvent) => void;
 }
 
 interface ClientToServer {

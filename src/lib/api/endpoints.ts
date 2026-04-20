@@ -223,8 +223,13 @@ export const ENDPOINTS = {
     recomputeSegmentLatest: "/segment/recompute/latest",
     recomputeSegmentProgress: (runId: string) => `/segment/recompute/progress?runId=${runId}`
   },
+<<<<<<< HEAD
   campaign: {
     generate: (id: number) => `/campaign/generate/${id}`,
     list: () => `/campaign/list`
+=======
+  payment: {
+    create: "/payment/create"
+>>>>>>> 5ff0a25c38c6def3b01e0eab1cac0380c53e8b04
   }
 } as const;

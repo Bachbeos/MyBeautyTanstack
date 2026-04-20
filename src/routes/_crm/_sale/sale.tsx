@@ -1,21 +1,29 @@
 import { useAppForm } from "@/components/form/hooks";
 import ModalSale from "@/components/features/sale/modal";
+import { PaymentQrModal } from "@/components/features/sale/payment-qr-modal";
 import { createDraftInvoice, createInvoice, updateDraftInvoice } from "@/lib/api/invoice";
+import { createPayment } from "@/lib/api/payment";
 import { batchUpsertBoughtProducts } from "@/lib/api/bought-product";
 import { customerQueries } from "@/lib/tanstack/options/customer";
 import { productQueries } from "@/lib/tanstack/options/product";
 import { serviceQueries } from "@/lib/tanstack/options/service";
 import { invoiceQueries } from "@/lib/tanstack/options/invoice";
 import type { InvoiceDto, InvoiceId } from "@/lib/types/invoice";
-import type { BoughtProductCreateRequest, BoughtProductId, BoughtProductUpdateRequest } from "@/lib/types/bought-product";
+import type {
+  BoughtProductCreateRequest,
+  BoughtProductId,
+  BoughtProductUpdateRequest
+} from "@/lib/types/bought-product";
 import type { ProductDto } from "@/lib/types/product";
 import type { ServiceDto } from "@/lib/types/service";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { set } from "zod";
 import { toast } from "sonner";
 import { usePermission } from "@/hooks/use-permission";
+
+// paymentType từ InvoiceConstant
+const PAYMENT_TRANSFER = 2;
 
 type MenuType = "product" | "service";
 
@@ -33,6 +41,13 @@ type MenuItem = {
 type CartItem = MenuItem & {
   boughtProductId?: BoughtProductId;
   quantity: number;
+};
+
+type QrModalState = {
+  invoiceId: number;
+  qrCode: string;
+  checkoutUrl: string;
+  amount: number;
 };
 
 const PRODUCT_ACCENT = "#e0f2fe";
@@ -63,13 +78,13 @@ const mapServiceToMenuItem = (item: ServiceDto): MenuItem => ({
 const formatPrice = (value: number) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
 
+const isApiOk = (res: any) => res?.success === true || res?.code === 200;
+
 export const Route = createFileRoute("/_crm/_sale/sale")({
   component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      invoiceId: Number(search.invoiceId) || undefined
-    };
-  }
+  validateSearch: (search: Record<string, unknown>) => ({
+    invoiceId: Number(search.invoiceId) || undefined
+  })
 });
 
 function RouteComponent() {
@@ -84,7 +99,8 @@ function RouteComponent() {
   const [draftInvoice, setDraftInvoice] = useState<InvoiceDto | null>(null);
   const [isLoadingCustomer, setIsLoadingCustomer] = useState(false);
 
-  const isApiOk = (res: any) => res?.success === true || res?.code === 200;
+  // QR Payment modal
+  const [qrModal, setQrModal] = useState<QrModalState | null>(null);
 
   const customersInf = useInfiniteQuery(customerQueries.infinite({ limit: 10 }));
 
@@ -99,33 +115,27 @@ function RouteComponent() {
   });
 
   const filteredItems = useMemo(() => {
-    if (activeTab === "product") {
+    if (activeTab === "product")
       return (productQuery.data?.result?.items ?? []).map(mapProductToMenuItem);
-    }
-
     return (serviceQuery.data?.result?.items ?? []).map(mapServiceToMenuItem);
   }, [activeTab, productQuery.data?.result?.items, serviceQuery.data?.result?.items]);
 
   const isLoadingItems = activeTab === "product" ? productQuery.isLoading : serviceQuery.isLoading;
   const isErrorItems = activeTab === "product" ? productQuery.isError : serviceQuery.isError;
 
-  const totalAmount = useMemo(
-    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [cart]
-  );
-
-  const totalQuantity = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
+  const totalAmount = useMemo(() => cart.reduce((s, i) => s + i.price * i.quantity, 0), [cart]);
+  const totalQuantity = useMemo(() => cart.reduce((s, i) => s + i.quantity, 0), [cart]);
 
   const customerOptions = useMemo(() => {
-    const options = customersInf.data?.pages.flatMap((page) => page.result?.items ?? []) ?? [];
+    const options = customersInf.data?.pages.flatMap((p) => p.result?.items ?? []) ?? [];
     return [
       { label: "Khách vãng lai", value: 0 },
-      ...options.map((customer) => ({ label: customer.name, value: Number(customer.id) }))
+      ...options.map((c) => ({ label: c.name, value: Number(c.id) }))
     ];
   }, [customersInf.data]);
 
   const invoiceDetailQuery = useQuery({
-    ...invoiceQueries.draftDetail((invoiceIdParam as unknown) as InvoiceId),
+    ...invoiceQueries.draftDetail(invoiceIdParam as unknown as InvoiceId),
     enabled: !!invoiceIdParam
   }) as any;
 
@@ -135,11 +145,8 @@ function RouteComponent() {
       const invoice = data.result.invoice || data.result;
       const products = data.result.products || [];
       const services = data.result.services || [];
-      
-      if (invoice.customerId) {
-        customerForm.setFieldValue("customerId", invoice.customerId);
-      }
 
+      if (invoice.customerId) customerForm.setFieldValue("customerId", invoice.customerId);
       setDraftInvoiceId(invoice.id);
       setDraftInvoice(invoice);
 
@@ -177,9 +184,7 @@ function RouteComponent() {
   };
 
   const customerForm = useAppForm({
-    defaultValues: {
-      customerId: "" as string | number
-    },
+    defaultValues: { customerId: "" as string | number },
     onSubmit: async () => {}
   });
 
@@ -192,14 +197,12 @@ function RouteComponent() {
       setIsLoadingCustomer(false);
       return;
     }
-
     const customerId = Number(value);
     if (!Number.isFinite(customerId) || customerId < 0) {
       setDraftInvoiceId(null);
       setDraftInvoice(null);
       return;
     }
-
     setIsLoadingCustomer(true);
     setDraftInvoiceId(null);
     setDraftInvoice(null);
@@ -217,16 +220,10 @@ function RouteComponent() {
   };
 
   const addToCart = (item: MenuItem) => {
-    if (item.type === "service") {
-      // TODO: Handle services later
-      console.log("Service will be handled later");
-      return;
-    }
-
+    if (item.type === "service") return; // TODO
     setCart((prev) => {
-      const index = prev.findIndex((cartItem) => cartItem.key === item.key);
+      const index = prev.findIndex((c) => c.key === item.key);
       if (index === -1) return [...prev, { ...item, quantity: 1 }];
-
       const next = [...prev];
       next[index] = { ...next[index], quantity: next[index].quantity + 1 };
       return next;
@@ -234,19 +231,16 @@ function RouteComponent() {
   };
 
   const updateQuantity = (key: string, delta: number) => {
-    setCart((prev) => {
-      const next = prev
-        .map((item) => (item.key === key ? { ...item, quantity: item.quantity + delta } : item))
-        .filter((item) => item.quantity > 0);
-      return next;
-    });
+    setCart((prev) =>
+      prev
+        .map((i) => (i.key === key ? { ...i, quantity: i.quantity + delta } : i))
+        .filter((i) => i.quantity > 0)
+    );
   };
 
-  const clearCart = () => {
-    setCart([]);
-  };
+  const clearCart = () => setCart([]);
 
-  const { canView } = usePermission("SALE")
+  const { canView } = usePermission("SALE");
 
   const buildDraftUpdatePayload = (values?: {
     discount?: number;
@@ -256,7 +250,6 @@ function RouteComponent() {
     voucherId?: number;
   }) => {
     if (!draftInvoiceId || !draftInvoice) return null;
-
     return {
       ...draftInvoice,
       id: draftInvoiceId as any,
@@ -270,91 +263,86 @@ function RouteComponent() {
 
   const handleOpenModal = async () => {
     const payload = buildDraftUpdatePayload();
-    const currentDraftInvoiceId = draftInvoiceId;
-
-    if (!payload || currentDraftInvoiceId == null) {
-      console.error("No draft invoice. Please select a customer first.");
-      return;
-    }
+    if (!payload || draftInvoiceId == null) return;
 
     try {
-      const productPayload: (BoughtProductCreateRequest| BoughtProductUpdateRequest)[] = cart
-        .filter((item) => item.type === "product")
-        .map((item) => ({
-          invoiceId: currentDraftInvoiceId,
-          productId: item.id,
+      const productPayload: (BoughtProductCreateRequest | BoughtProductUpdateRequest)[] = cart
+        .filter((i) => i.type === "product")
+        .map((i) => ({
+          invoiceId: draftInvoiceId,
+          productId: i.id,
           unitId: 1,
-          qty: item.quantity,
-          price: item.price,
-          fee: item.price * item.quantity,
+          qty: i.quantity,
+          price: i.price,
+          fee: i.price * i.quantity,
           customerId: selectedCustomerId || 0,
           status: 0,
           note: "",
-          id: item.boughtProductId ? item.boughtProductId : undefined
+          id: i.boughtProductId ? i.boughtProductId : undefined
         }));
 
       const batchRes = await batchUpsertBoughtProducts(productPayload);
-      const map = new Map(
-        batchRes.result?.map((p) => [p.productId, p.id])
+      const map = new Map(batchRes.result?.map((p) => [p.productId, p.id]));
+      setCart((prev) =>
+        prev.map((i) => (i.type === "product" ? { ...i, boughtProductId: map.get(i.id) } : i))
       );
 
-      setCart((prev) => {
-        return prev.map((item) => {
-          if (item.type === "product") {
-            return {
-              ...item,
-              boughtProductId: map.get(item.id),
-            };
-          }
-          return item;
-        });
-      });
-
-      if (!isApiOk(batchRes)) {
-        console.error("Batch upsert bought products failed:", batchRes);
-        return;
-      }
+      if (!isApiOk(batchRes)) return;
 
       const draftRes = await updateDraftInvoice(payload);
-      if (isApiOk(draftRes)) {
-        setModalShown(true);
-      }
+      if (isApiOk(draftRes)) setModalShown(true);
     } catch (error) {
-      console.error("Error updating draft invoice before opening modal:", error);
+      console.error("Error before opening modal:", error);
     }
   };
 
-  const handleCloseModal = () => {
-    setModalShown(false);
-  };
-
+  // ── Xử lý submit form hóa đơn ─────────────────────────────────────────────
+  // Flow:
+  //   1. createInvoice → invoice UNPAID
+  //   2. Nếu TRANSFER → createPayment → lấy QR → hiện PaymentQrModal
+  //      Socket server sẽ emit "payment_done" khi PayOS webhook về
+  //   3. Nếu CASH     → done ngay, toast success
   const handleSubmitModal = async (values: any) => {
     const payload = buildDraftUpdatePayload(values);
-    if (!payload) {
-      console.error("No draft invoice. Please select a customer first.");
-      return;
-    }
+    if (!payload) return;
 
     try {
-      const createPayload = {
-        ...(payload as any),
-        voucherId: values?.voucherId
-      };
-
+      const createPayload = { ...(payload as any), voucherId: values?.voucherId };
       const res = await createInvoice(createPayload);
 
-      if (isApiOk(res)) {
-        handleCloseModal();
-        clearCart();
-        setDraftInvoiceId(null);
-        setDraftInvoice(null);
+      if (!isApiOk(res)) return;
+
+      const invoice = res.result as InvoiceDto;
+      const invoiceId = Number(invoice.id);
+      const paymentType = Number(invoice.paymentType ?? createPayload.paymentType);
+
+      setModalShown(false);
+      clearCart();
+      setDraftInvoiceId(null);
+      setDraftInvoice(null);
+
+      if (paymentType === PAYMENT_TRANSFER) {
+        // Gọi API tạo PayOS payment → lấy QR
+        const payRes = await createPayment(invoiceId);
+
+        if (isApiOk(payRes) && payRes.result?.qrCode) {
+          setQrModal({
+            invoiceId,
+            qrCode: payRes.result.qrCode,
+            checkoutUrl: payRes.result.checkoutUrl ?? "",
+            amount: invoice.fee ?? totalAmount
+          });
+        } else {
+          // PayOS lỗi nhưng invoice đã tạo → vẫn báo thành công
+          toast.success("Hóa đơn đã tạo. Vui lòng liên hệ để thanh toán.");
+        }
+      } else {
+        // Tiền mặt → done ngay
         toast.success("Đơn hàng đã được tạo thành công!");
-        // TODO: Show success popup/toast
-        console.log("Invoice created successfully:", res.result);
       }
     } catch (error) {
       console.error("Error creating invoice:", error);
-      // TODO: Show error popup/toast
+      toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
     }
   };
 
@@ -363,7 +351,7 @@ function RouteComponent() {
       <div className="page-wrapper">
         <div className="content py-5 text-center">
           <div className="mb-3">
-            <i className="ti ti-lock fs-48 text-danger"></i>
+            <i className="ti ti-lock fs-48 text-danger" />
           </div>
           <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
           <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
@@ -384,6 +372,7 @@ function RouteComponent() {
         </div>
 
         <div className="row g-3">
+          {/* ── Danh mục ────────────────────────────────────────────────────── */}
           <div className="col-12 col-xxl-7">
             <div className="card border-0 shadow-sm h-100">
               <div className="card-header bg-white border-0 pt-3 px-3 pb-2">
@@ -402,8 +391,7 @@ function RouteComponent() {
                     </span>
                   </div>
                 </div>
-
-                <div className="btn-group" role="group" aria-label="Lọc loại mặt hàng">
+                <div className="btn-group" role="group">
                   <button
                     type="button"
                     className={`btn btn-sm ${activeTab === "product" ? "btn-primary" : "btn-light"}`}
@@ -422,84 +410,82 @@ function RouteComponent() {
               </div>
 
               <div className="card-body p-3">
-                {isLoadingItems ? (
+                {isLoadingItems && (
                   <div className="text-center py-5 text-muted">
                     <i className="ti ti-loader-2 fs-1 d-block mb-2" />
                     Đang tải dữ liệu...
                   </div>
-                ) : null}
-
-                {isErrorItems ? (
+                )}
+                {isErrorItems && (
                   <div className="text-center py-5 text-danger">
                     <i className="ti ti-alert-circle fs-1 d-block mb-2" />
                     Không tải được danh sách mặt hàng. Vui lòng thử lại.
                   </div>
-                ) : null}
-
-                {!isLoadingItems && !isErrorItems ? (
-                  <div className="row g-3">
-                    {filteredItems.map((item) => (
-                      <div className="col-12 col-sm-6 col-xl-4" key={item.key}>
-                        <button
-                          type="button"
-                          className="card border-0 shadow-sm text-start w-100 h-100 p-0 overflow-hidden sale-item-card"
-                          onClick={() => void addToCart(item)}
-                          disabled={isLoadingCustomer}
-                        >
-                          <div
-                            className="d-flex align-items-center justify-content-center sale-item-cover"
-                            style={{ 
-                              backgroundColor: item.accent, 
-                              height: 92,
-                              backgroundImage: item.avatar ? `url(${item.avatar})` : 'none',
-                              backgroundSize: 'cover',
-                              backgroundPosition: 'center',
-                              backgroundRepeat: 'no-repeat'
-                            }}
+                )}
+                {!isLoadingItems && !isErrorItems && (
+                  <>
+                    <div className="row g-3">
+                      {filteredItems.map((item) => (
+                        <div className="col-12 col-sm-6 col-xl-4" key={item.key}>
+                          <button
+                            type="button"
+                            className="card border-0 shadow-sm text-start w-100 h-100 p-0 overflow-hidden sale-item-card"
+                            onClick={() => addToCart(item)}
+                            disabled={isLoadingCustomer}
                           >
-                            {!item.avatar && (
-                              <i
-                                className={`ti ${item.type === "product" ? "ti-tools-kitchen-2" : "ti-user-star"} fs-28 text-primary`}
-                                aria-hidden="true"
-                              />
-                            )}
-                          </div>
-                          <div className="p-3">
-                            <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
-                              <h6 className="mb-0 text-truncate">{item.name}</h6>
-                              <span className="badge badge-soft-primary">
-                                {formatPrice(item.price)}
-                              </span>
+                            <div
+                              className="d-flex align-items-center justify-content-center sale-item-cover"
+                              style={{
+                                backgroundColor: item.accent,
+                                height: 92,
+                                backgroundImage: item.avatar ? `url(${item.avatar})` : "none",
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                backgroundRepeat: "no-repeat"
+                              }}
+                            >
+                              {!item.avatar && (
+                                <i
+                                  className={`ti ${item.type === "product" ? "ti-tools-kitchen-2" : "ti-user-star"} fs-28 text-primary`}
+                                  aria-hidden="true"
+                                />
+                              )}
                             </div>
-                            <div className="d-flex align-items-center justify-content-between">
-                              <span
-                                className={`badge ${
-                                  item.type === "product" ? "badge-soft-info" : "badge-soft-warning"
-                                }`}
-                              >
-                                {item.category}
-                              </span>
-                              <span className="text-primary small fw-medium sale-add-label">
-                                Thêm vào đơn
-                              </span>
+                            <div className="p-3">
+                              <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
+                                <h6 className="mb-0 text-truncate">{item.name}</h6>
+                                <span className="badge badge-soft-primary">
+                                  {formatPrice(item.price)}
+                                </span>
+                              </div>
+                              <div className="d-flex align-items-center justify-content-between">
+                                <span
+                                  className={`badge ${item.type === "product" ? "badge-soft-info" : "badge-soft-warning"}`}
+                                >
+                                  {item.category}
+                                </span>
+                                <span className="text-primary small fw-medium sale-add-label">
+                                  Thêm vào đơn
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        </button>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {filteredItems.length === 0 && (
+                      <div className="text-center py-5 text-muted">
+                        <i className="ti ti-package-off fs-1 d-block mb-2" />
+                        Không có mặt hàng phù hợp với bộ lọc hiện tại.
                       </div>
-                    ))}
-                  </div>
-                ) : null}
-
-                {!isLoadingItems && !isErrorItems && filteredItems.length === 0 ? (
-                  <div className="text-center py-5 text-muted">
-                    <i className="ti ti-package-off fs-1 d-block mb-2" />
-                    Không có mặt hàng phù hợp với bộ lọc hiện tại.
-                  </div>
-                ) : null}
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>
 
+          {/* ── Giỏ hàng ────────────────────────────────────────────────────── */}
           <div className="col-12 col-xxl-5">
             <div className="card border-0 shadow-sm h-100">
               <div className="card-header bg-white border-0 px-3 pt-3 pb-2">
@@ -524,11 +510,11 @@ function RouteComponent() {
                       />
                     )}
                   </customerForm.AppField>
-                  {customersInf.isError ? (
+                  {customersInf.isError && (
                     <div className="small text-danger mt-1">
                       Không tải được danh sách khách hàng. Vui lòng thử lại.
                     </div>
-                  ) : null}
+                  )}
                 </div>
 
                 {cart.length === 0 ? (
@@ -557,7 +543,6 @@ function RouteComponent() {
                                     type="button"
                                     className="sale-qty-btn sale-qty-btn-minus"
                                     onClick={() => updateQuantity(item.key, -1)}
-                                    title="Giảm số lượng"
                                   >
                                     <i className="ti ti-minus" />
                                   </button>
@@ -566,7 +551,6 @@ function RouteComponent() {
                                     type="button"
                                     className="sale-qty-btn sale-qty-btn-plus"
                                     onClick={() => updateQuantity(item.key, 1)}
-                                    title="Tăng số lượng"
                                   >
                                     <i className="ti ti-plus" />
                                   </button>
@@ -613,13 +597,25 @@ function RouteComponent() {
         </div>
       </div>
 
+      {/* ── Modals ─────────────────────────────────────────────────────────── */}
       <ModalSale
         shown={modalShown}
         initialAmount={totalAmount}
         invoiceId={draftInvoiceId || undefined}
-        onClose={handleCloseModal}
+        onClose={() => setModalShown(false)}
         onSubmit={handleSubmitModal}
       />
+
+      {qrModal && (
+        <PaymentQrModal
+          shown
+          invoiceId={qrModal.invoiceId}
+          qrCode={qrModal.qrCode}
+          checkoutUrl={qrModal.checkoutUrl}
+          amount={qrModal.amount}
+          onClose={() => setQrModal(null)}
+        />
+      )}
     </div>
   );
 }
