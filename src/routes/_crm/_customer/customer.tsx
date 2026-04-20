@@ -62,7 +62,7 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
- 
+
   const { canAdd, canEdit, canDelete, canView } = usePermission("CUSTOMER");
 
   const rawNameFilter = useMemo(() => {
@@ -79,7 +79,10 @@ function RouteComponent() {
     item: null
   });
   const [opportunityModalShown, setOpportunityModalShown] = useState(false);
-  const [campaignModal, setCampaignModal] = useState<{ type: "list" | null; item: CustomerDto | null }>({
+  const [campaignModal, setCampaignModal] = useState<{
+    type: "detail" | null;
+    item: CustomerDto | null;
+  }>({
     type: null,
     item: null
   });
@@ -94,7 +97,7 @@ function RouteComponent() {
     setOpportunityModal(state as any)
   );
   const closeCampaignModal = useCloseModal(setCampaignModalShown, (state) =>
-    setCampaignModal(state as { type: "list" | null; item: CustomerDto | null })
+    setCampaignModal(state as { type: "detail" | null; item: CustomerDto | null })
   );
 
   const openModal = (type: any, item: any) => {
@@ -106,7 +109,7 @@ function RouteComponent() {
   };
 
   const openCampaignModal = (item: CustomerDto) => {
-    setCampaignModal({ type: "list", item });
+    setCampaignModal({ type: "detail", item });
   };
 
   const params = useMemo(
@@ -557,7 +560,10 @@ function RouteComponent() {
             <div className="text-muted">Chưa có chiến dịch nào cho khách hàng này.</div>
           ) : (
             campaignItems.map((item, index) => (
-              <div key={`${item.id ?? "campaign"}-${index}`} className="card border-0 bg-light-subtle">
+              <div
+                key={`${item.id ?? "campaign"}-${index}`}
+                className="card border-0 bg-light-subtle"
+              >
                 <div className="card-body py-3 px-3">
                   <div className="d-flex align-items-start justify-content-between gap-2">
                     <div>

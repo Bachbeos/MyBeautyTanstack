@@ -103,7 +103,7 @@ export const ENDPOINTS = {
     list: "/campaign/list"
   },
   customerAi: {
-    generateCampaign: (id: CustomerId | number) => `/customer/ai/campaign/generate/${id}`
+    generateCampaign: (id: CustomerId | number) => `/campaign/generate/${id}`
   },
   voucher: {
     list: "/voucher/list",
@@ -224,7 +224,7 @@ export const ENDPOINTS = {
     recomputeSegmentProgress: (runId: string) => `/segment/recompute/progress?runId=${runId}`
   },
   campaign: {
-    generate: (id: number) => `/customer/ai/${id}/campaign/generate`,
+    generate: (id: number) => `/campaign/generate/${id}`,
     list: () => `/campaign/list`
   }
 } as const;
