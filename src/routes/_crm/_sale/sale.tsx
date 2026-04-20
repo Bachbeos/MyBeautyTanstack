@@ -4,6 +4,7 @@ import { PaymentQrModal } from "@/components/features/sale/payment-qr-modal";
 import { createDraftInvoice, createInvoice, updateDraftInvoice } from "@/lib/api/invoice";
 import { createPayment } from "@/lib/api/payment";
 import { batchUpsertBoughtProducts } from "@/lib/api/bought-product";
+import { batchUpsertBoughtServices } from "@/lib/api/bought-service";
 import { customerQueries } from "@/lib/tanstack/options/customer";
 import { productQueries } from "@/lib/tanstack/options/product";
 import { serviceQueries } from "@/lib/tanstack/options/service";
@@ -14,8 +15,14 @@ import type {
   BoughtProductId,
   BoughtProductUpdateRequest
 } from "@/lib/types/bought-product";
+import type {
+  BoughtServiceId,
+  BoughtServiceCreateRequest,
+  BoughtServiceUpdateRequest
+} from "@/lib/types/bought-service";
 import type { ProductDto } from "@/lib/types/product";
-import type { ServiceDto } from "@/lib/types/service";
+import type { ServiceDto, ServiceVariation } from "@/lib/types/service";
+import { VariationModal } from "@/components/features/sale/variation-modal";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
@@ -36,11 +43,19 @@ type MenuItem = {
   price: number;
   accent: string;
   avatar?: string;
+  isCombo?: number;
+  priceVariation?: string;
 };
 
 type CartItem = MenuItem & {
   boughtProductId?: BoughtProductId;
+  boughtServiceId?: BoughtServiceId;
   quantity: number;
+  variation?: ServiceVariation;
+  variationDesc?: string;
+  amount?: number;
+  discount?: number;
+  fee?: number;
 };
 
 type QrModalState = {
@@ -72,7 +87,9 @@ const mapServiceToMenuItem = (item: ServiceDto): MenuItem => ({
   category: item.categoryName || "Dịch vụ",
   price: Number(item.price) || 0,
   accent: SERVICE_ACCENT,
-  avatar: item.avatar
+  avatar: item.avatar,
+  isCombo: item.isCombo,
+  priceVariation: item.priceVariation
 });
 
 const formatPrice = (value: number) =>
@@ -101,6 +118,9 @@ function RouteComponent() {
 
   // QR Payment modal
   const [qrModal, setQrModal] = useState<QrModalState | null>(null);
+
+  // Variation modal
+  const [variationModalItem, setVariationModalItem] = useState<MenuItem | null>(null);
 
   const customersInf = useInfiniteQuery(customerQueries.infinite({ limit: 10 }));
 
@@ -164,14 +184,18 @@ function RouteComponent() {
 
       const newServicesCart: CartItem[] = services.map((item: any) => ({
         id: item.serviceId || item.id,
-        key: `service-${item.serviceId || item.id}`,
+        key: `service-${item.serviceId || item.id}-${item.variation || ""}`,
         name: item.serviceName || item.name || "Dịch vụ",
         type: "service",
         category: item.unitName || "Dịch vụ",
         price: Number(item.price) || 0,
         accent: SERVICE_ACCENT,
         quantity: item.qty || 1,
-        boughtProductId: item.id
+        boughtServiceId: item.id,
+        variationDesc: item.variation,
+        amount: item.amount,
+        discount: item.discount,
+        fee: item.fee
       }));
 
       setCart([...newProductsCart, ...newServicesCart]);
@@ -220,14 +244,50 @@ function RouteComponent() {
   };
 
   const addToCart = (item: MenuItem) => {
-    if (item.type === "service") return; // TODO
+    if (item.type === "service" && item.isCombo === 1) {
+      setVariationModalItem(item);
+      return;
+    }
+
     setCart((prev) => {
       const index = prev.findIndex((c) => c.key === item.key);
-      if (index === -1) return [...prev, { ...item, quantity: 1 }];
+      if (index === -1) return [...prev, { ...item, quantity: 1, amount: item.price, fee: item.price }];
       const next = [...prev];
       next[index] = { ...next[index], quantity: next[index].quantity + 1 };
       return next;
     });
+  };
+
+  const handleSelectVariation = (variation: ServiceVariation) => {
+    if (!variationModalItem) return;
+    const item = variationModalItem;
+    const variationDesc = `${variation.name}: giá ${formatPrice(variation.price)}, giảm giá ${formatPrice(variation.discount)}, ${variation.treatmentNum} buổi`;
+    const key = `service-${item.id}-${variation.name}`;
+    const fee = variation.price - variation.discount;
+
+    setCart((prev) => {
+      const index = prev.findIndex((c) => c.key === key);
+      if (index === -1) {
+        return [
+          ...prev,
+          {
+            ...item,
+            key,
+            quantity: 1,
+            variation,
+            variationDesc,
+            price: fee, // Sử dụng fee làm price hiển thị trong giỏ hàng cơ bản
+            amount: variation.price,
+            discount: variation.discount,
+            fee: fee
+          }
+        ];
+      }
+      const next = [...prev];
+      next[index] = { ...next[index], quantity: next[index].quantity + 1 };
+      return next;
+    });
+    setVariationModalItem(null);
   };
 
   const updateQuantity = (key: string, delta: number) => {
@@ -281,13 +341,38 @@ function RouteComponent() {
           id: i.boughtProductId ? i.boughtProductId : undefined
         }));
 
-      const batchRes = await batchUpsertBoughtProducts(productPayload);
-      const map = new Map(batchRes.result?.map((p) => [p.productId, p.id]));
+      const productBatchRes = await batchUpsertBoughtProducts(productPayload);
+      const productMap = new Map(productBatchRes.result?.map((p) => [p.productId, p.id]));
+
+      const servicePayload: (BoughtServiceCreateRequest | BoughtServiceUpdateRequest)[] = cart
+        .filter((i) => i.type === "service")
+        .map((i) => ({
+          invoiceId: draftInvoiceId,
+          serviceId: i.id,
+          qty: i.quantity,
+          price: i.price,
+          fee: (i.fee || i.price) * i.quantity,
+          amount: i.amount || i.price,
+          discount: i.discount || 0,
+          variation: i.variationDesc || "",
+          customerId: selectedCustomerId || 0,
+          status: 0,
+          note: i.variationDesc || "",
+          id: i.boughtServiceId ? i.boughtServiceId : undefined
+        }));
+
+      const serviceBatchRes = await batchUpsertBoughtServices(servicePayload);
+      const serviceMap = new Map(serviceBatchRes.result?.map((s) => [s.serviceId, s.id]));
+
       setCart((prev) =>
-        prev.map((i) => (i.type === "product" ? { ...i, boughtProductId: map.get(i.id) } : i))
+        prev.map((i) => {
+          if (i.type === "product") return { ...i, boughtProductId: productMap.get(i.id) };
+          if (i.type === "service") return { ...i, boughtServiceId: serviceMap.get(i.id) };
+          return i;
+        })
       );
 
-      if (!isApiOk(batchRes)) return;
+      if (!isApiOk(productBatchRes) || !isApiOk(serviceBatchRes)) return;
 
       const draftRes = await updateDraftInvoice(payload);
       if (isApiOk(draftRes)) setModalShown(true);
@@ -296,12 +381,6 @@ function RouteComponent() {
     }
   };
 
-  // ── Xử lý submit form hóa đơn ─────────────────────────────────────────────
-  // Flow:
-  //   1. createInvoice → invoice UNPAID
-  //   2. Nếu TRANSFER → createPayment → lấy QR → hiện PaymentQrModal
-  //      Socket server sẽ emit "payment_done" khi PayOS webhook về
-  //   3. Nếu CASH     → done ngay, toast success
   const handleSubmitModal = async (values: any) => {
     const payload = buildDraftUpdatePayload(values);
     if (!payload) return;
@@ -446,7 +525,7 @@ function RouteComponent() {
                             >
                               {!item.avatar && (
                                 <i
-                                  className={`ti ${item.type === "product" ? "ti-tools-kitchen-2" : "ti-user-star"} fs-28 text-primary`}
+                                  className={`ti ${item.type === "product" ? "ti-shopping-cart" : "ti-user-star"} fs-28 text-primary`}
                                   aria-hidden="true"
                                 />
                               )}
@@ -534,7 +613,12 @@ function RouteComponent() {
                           {cart.map((item) => (
                             <tr key={item.key}>
                               <td className="ps-0">
-                                <div className="fw-medium">{item.name}</div>
+                                <div className="fw-medium text-truncate" style={{ maxWidth: "200px" }}>
+                                  {item.name}
+                                </div>
+                                {item.variationDesc && (
+                                  <div className="small text-primary fw-medium">{item.variationDesc}</div>
+                                )}
                                 <div className="small text-muted">{formatPrice(item.price)}</div>
                               </td>
                               <td className="text-center sale-qty-col">
@@ -614,6 +698,16 @@ function RouteComponent() {
           checkoutUrl={qrModal.checkoutUrl}
           amount={qrModal.amount}
           onClose={() => setQrModal(null)}
+        />
+      )}
+
+      {variationModalItem && (
+        <VariationModal
+          shown
+          serviceName={variationModalItem.name}
+          variations={JSON.parse(variationModalItem.priceVariation || "[]")}
+          onClose={() => setVariationModalItem(null)}
+          onSelect={handleSelectVariation}
         />
       )}
     </div>

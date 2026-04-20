@@ -135,7 +135,8 @@ export const ENDPOINTS = {
   boughtService: {
     list: "/boughtService/list",
     update: "/boughtService/update",
-    delete: (id: BoughtServiceId) => `/boughtService/delete/${id}`
+    delete: (id: BoughtServiceId) => `/boughtService/delete/${id}`,
+    batch: "/boughtService/batch-upsert"
   },
   branch: {
     list: "/branch/list",

@@ -34,6 +34,16 @@ export const upsertBoughtService = async (
   return res.data;
 };
 
+export const batchUpsertBoughtServices = async (
+  body: (BoughtServiceCreateRequest | BoughtServiceUpdateRequest)[]
+): Promise<ApiResponse<BoughtServiceDto[]>> => {
+  const res = await axiosInstance.post<ApiResponse<BoughtServiceDto[]>>(
+    ENDPOINTS.boughtService.batch,
+    body
+  );
+  return res.data;
+};
+
 export const deleteBoughtService = async (id: BoughtServiceId): Promise<ApiResponse<void>> => {
   const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.boughtService.delete(id));
   return res.data;
