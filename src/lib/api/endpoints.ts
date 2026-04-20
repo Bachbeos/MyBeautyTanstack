@@ -2,7 +2,6 @@ import type { ResourceId } from "@/lib/types/resource";
 import type { RoleId } from "../types/role";
 import type { UnitId } from "../types/unit";
 import type { CategoryId } from "../types/category";
-import type { UserId } from "../types/user";
 import type { ProductId } from "../types/product";
 import type { CustomerSourceId } from "../types/customer-source";
 import type { callHistoryId } from "../types/call-history";
@@ -99,6 +98,12 @@ export const ENDPOINTS = {
     update: "/customer/update",
     delete: (id: CustomerId) => `/customer/delete/${id}`,
     detail: "/customer/get"
+  },
+  campaignSnapshot: {
+    list: "/campaign/list"
+  },
+  customerAi: {
+    generateCampaign: (id: CustomerId | number) => `/customer/ai/campaign/generate/${id}`
   },
   voucher: {
     list: "/voucher/list",
