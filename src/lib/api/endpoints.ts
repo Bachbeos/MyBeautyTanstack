@@ -217,5 +217,8 @@ export const ENDPOINTS = {
     recomputeSegmentRestart: "/segment/recompute/restart",
     recomputeSegmentLatest: "/segment/recompute/latest",
     recomputeSegmentProgress: (runId: string) => `/segment/recompute/progress?runId=${runId}`
+  },
+  payment: {
+    create: "/payment/create"
   }
 } as const;

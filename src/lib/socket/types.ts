@@ -28,3 +28,7 @@ export interface MessageReadEvent {
   messageId: number | null;
   userId: number;
 }
+
+export interface PaymentDoneEvent {
+  invoiceId: number;
+}
