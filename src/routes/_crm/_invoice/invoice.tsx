@@ -36,7 +36,7 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
- 
+
   const { canAdd, canEdit, canDelete, canView } = usePermission("INVOICE");
 
   const rawNameFilter = useMemo(() => {
@@ -62,7 +62,7 @@ function RouteComponent() {
       page: pageIndex + 1,
       limit: pageSize,
       keyword: nameFilter || undefined,
-      status:1
+      status: 3
     }),
     [pageIndex, pageSize, nameFilter]
   );

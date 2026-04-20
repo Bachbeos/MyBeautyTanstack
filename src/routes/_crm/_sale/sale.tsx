@@ -7,7 +7,11 @@ import { productQueries } from "@/lib/tanstack/options/product";
 import { serviceQueries } from "@/lib/tanstack/options/service";
 import { invoiceQueries } from "@/lib/tanstack/options/invoice";
 import type { InvoiceDto, InvoiceId } from "@/lib/types/invoice";
-import type { BoughtProductCreateRequest, BoughtProductId, BoughtProductUpdateRequest } from "@/lib/types/bought-product";
+import type {
+  BoughtProductCreateRequest,
+  BoughtProductId,
+  BoughtProductUpdateRequest
+} from "@/lib/types/bought-product";
 import type { ProductDto } from "@/lib/types/product";
 import type { ServiceDto } from "@/lib/types/service";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -125,7 +129,7 @@ function RouteComponent() {
   }, [customersInf.data]);
 
   const invoiceDetailQuery = useQuery({
-    ...invoiceQueries.draftDetail((invoiceIdParam as unknown) as InvoiceId),
+    ...invoiceQueries.draftDetail(invoiceIdParam as unknown as InvoiceId),
     enabled: !!invoiceIdParam
   }) as any;
 
@@ -135,7 +139,7 @@ function RouteComponent() {
       const invoice = data.result.invoice || data.result;
       const products = data.result.products || [];
       const services = data.result.services || [];
-      
+
       if (invoice.customerId) {
         customerForm.setFieldValue("customerId", invoice.customerId);
       }
@@ -217,11 +221,11 @@ function RouteComponent() {
   };
 
   const addToCart = (item: MenuItem) => {
-    if (item.type === "service") {
-      // TODO: Handle services later
-      console.log("Service will be handled later");
-      return;
-    }
+    // if (item.type === "service") {
+    //   // TODO: Handle services later
+    //   console.log("Service will be handled later");
+    //   return;
+    // }
 
     setCart((prev) => {
       const index = prev.findIndex((cartItem) => cartItem.key === item.key);
@@ -246,7 +250,7 @@ function RouteComponent() {
     setCart([]);
   };
 
-  const { canView } = usePermission("SALE")
+  const { canView } = usePermission("SALE");
 
   const buildDraftUpdatePayload = (values?: {
     discount?: number;
@@ -278,7 +282,7 @@ function RouteComponent() {
     }
 
     try {
-      const productPayload: (BoughtProductCreateRequest| BoughtProductUpdateRequest)[] = cart
+      const productPayload: (BoughtProductCreateRequest | BoughtProductUpdateRequest)[] = cart
         .filter((item) => item.type === "product")
         .map((item) => ({
           invoiceId: currentDraftInvoiceId,
@@ -294,16 +298,14 @@ function RouteComponent() {
         }));
 
       const batchRes = await batchUpsertBoughtProducts(productPayload);
-      const map = new Map(
-        batchRes.result?.map((p) => [p.productId, p.id])
-      );
+      const map = new Map(batchRes.result?.map((p) => [p.productId, p.id]));
 
       setCart((prev) => {
         return prev.map((item) => {
           if (item.type === "product") {
             return {
               ...item,
-              boughtProductId: map.get(item.id),
+              boughtProductId: map.get(item.id)
             };
           }
           return item;
@@ -348,8 +350,8 @@ function RouteComponent() {
         clearCart();
         setDraftInvoiceId(null);
         setDraftInvoice(null);
+        customerForm.setFieldValue("customerId", "");
         toast.success("Đơn hàng đã được tạo thành công!");
-        // TODO: Show success popup/toast
         console.log("Invoice created successfully:", res.result);
       }
     } catch (error) {
@@ -374,7 +376,7 @@ function RouteComponent() {
 
   return (
     <div className="page-wrapper sale-page">
-      <div className="content pb-0">
+      <div className="content pb-3">
         <div className="d-flex align-items-center justify-content-between gap-2 mb-4 flex-wrap">
           <div>
             <h4 className="mb-1 fw-bold">Bán hàng</h4>
@@ -384,8 +386,8 @@ function RouteComponent() {
         </div>
 
         <div className="row g-3">
-          <div className="col-12 col-xxl-7">
-            <div className="card border-0 shadow-sm h-100">
+          <div className="col-12 col-xxl-7 sale-col-menu">
+            <div className="card border-0 shadow-sm">
               <div className="card-header bg-white border-0 pt-3 px-3 pb-2">
                 <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
                   <h6 className="mb-0">Danh mục sản phẩm và dịch vụ</h6>
@@ -440,51 +442,71 @@ function RouteComponent() {
                   <div className="row g-3">
                     {filteredItems.map((item) => (
                       <div className="col-12 col-sm-6 col-xl-4" key={item.key}>
-                        <button
-                          type="button"
-                          className="card border-0 shadow-sm text-start w-100 h-100 p-0 overflow-hidden sale-item-card"
-                          onClick={() => void addToCart(item)}
-                          disabled={isLoadingCustomer}
+                        <div
+                          className="sale-item-card card border-0 shadow-sm h-100"
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Thêm ${item.name} vào đơn`}
+                          onClick={() => !isLoadingCustomer && void addToCart(item)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              if (!isLoadingCustomer) void addToCart(item);
+                            }
+                          }}
+                          style={{ cursor: isLoadingCustomer ? "not-allowed" : "pointer" }}
                         >
+                          {/* Cover */}
                           <div
-                            className="d-flex align-items-center justify-content-center sale-item-cover"
-                            style={{ 
-                              backgroundColor: item.accent, 
-                              height: 92,
-                              backgroundImage: item.avatar ? `url(${item.avatar})` : 'none',
-                              backgroundSize: 'cover',
-                              backgroundPosition: 'center',
-                              backgroundRepeat: 'no-repeat'
+                            className="sale-item-cover"
+                            style={{
+                              backgroundColor: item.accent,
+                              backgroundImage: item.avatar ? `url(${item.avatar})` : "none",
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
+                              backgroundRepeat: "no-repeat"
                             }}
                           >
                             {!item.avatar && (
-                              <i
-                                className={`ti ${item.type === "product" ? "ti-tools-kitchen-2" : "ti-user-star"} fs-28 text-primary`}
-                                aria-hidden="true"
-                              />
+                              <div className="sale-item-icon-wrap">
+                                <i
+                                  className={`ti ${item.type === "product" ? "ti-box" : "ti-sparkles"}`}
+                                  aria-hidden="true"
+                                />
+                              </div>
                             )}
+                            <span
+                              className={`sale-item-type-badge badge ${
+                                item.type === "product" ? "badge-soft-info" : "badge-soft-warning"
+                              }`}
+                            >
+                              {item.category}
+                            </span>
                           </div>
-                          <div className="p-3">
-                            <div className="d-flex align-items-start justify-content-between gap-2 mb-2">
-                              <h6 className="mb-0 text-truncate">{item.name}</h6>
-                              <span className="badge badge-soft-primary">
-                                {formatPrice(item.price)}
-                              </span>
+
+                          {/* Body */}
+                          <div className="card-body d-flex flex-column p-3">
+                            <h6 className="sale-item-name mb-1" title={item.name}>
+                              {item.name}
+                            </h6>
+                            <div className="sale-item-price mt-auto mb-3">
+                              {formatPrice(item.price)}
                             </div>
-                            <div className="d-flex align-items-center justify-content-between">
-                              <span
-                                className={`badge ${
-                                  item.type === "product" ? "badge-soft-info" : "badge-soft-warning"
-                                }`}
-                              >
-                                {item.category}
-                              </span>
-                              <span className="text-primary small fw-medium sale-add-label">
-                                Thêm vào đơn
-                              </span>
-                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-primary btn-sm w-100 sale-item-add-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void addToCart(item);
+                              }}
+                              disabled={isLoadingCustomer}
+                              tabIndex={-1}
+                            >
+                              <i className="ti ti-shopping-cart-plus me-1" aria-hidden="true" />
+                              Thêm vào đơn
+                            </button>
                           </div>
-                        </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -500,8 +522,8 @@ function RouteComponent() {
             </div>
           </div>
 
-          <div className="col-12 col-xxl-5">
-            <div className="card border-0 shadow-sm h-100">
+          <div className="col-12 col-xxl-5 sale-col-cart">
+            <div className="card border-0 shadow-sm">
               <div className="card-header bg-white border-0 px-3 pt-3 pb-2">
                 <div className="d-flex align-items-center justify-content-between">
                   <h5 className="mb-0">Đơn hàng hiện tại</h5>
@@ -509,7 +531,7 @@ function RouteComponent() {
                 </div>
               </div>
 
-              <div className="card-body d-flex flex-column p-3 sale-cart-body">
+              <div className="card-body d-flex flex-column p-3">
                 <div className="mb-3">
                   <customerForm.AppField name="customerId">
                     {(f) => (
@@ -541,49 +563,47 @@ function RouteComponent() {
                     </p>
                   </div>
                 ) : (
-                  <div className="flex-grow-1 d-flex flex-column">
-                    <div className="table-responsive flex-grow-1 sale-cart-scroll">
-                      <table className="table align-middle mb-0">
-                        <tbody>
-                          {cart.map((item) => (
-                            <tr key={item.key}>
-                              <td className="ps-0">
-                                <div className="fw-medium">{item.name}</div>
-                                <div className="small text-muted">{formatPrice(item.price)}</div>
-                              </td>
-                              <td className="text-center sale-qty-col">
-                                <div className="sale-qty-spinner">
-                                  <button
-                                    type="button"
-                                    className="sale-qty-btn sale-qty-btn-minus"
-                                    onClick={() => updateQuantity(item.key, -1)}
-                                    title="Giảm số lượng"
-                                  >
-                                    <i className="ti ti-minus" />
-                                  </button>
-                                  <span className="sale-qty-value">{item.quantity}</span>
-                                  <button
-                                    type="button"
-                                    className="sale-qty-btn sale-qty-btn-plus"
-                                    onClick={() => updateQuantity(item.key, 1)}
-                                    title="Tăng số lượng"
-                                  >
-                                    <i className="ti ti-plus" />
-                                  </button>
-                                </div>
-                              </td>
-                              <td className="text-end pe-0 fw-semibold">
-                                {formatPrice(item.price * item.quantity)}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                  <div className="sale-cart-scroll">
+                    <table className="table align-middle mb-0">
+                      <tbody>
+                        {cart.map((item) => (
+                          <tr key={item.key}>
+                            <td className="ps-0">
+                              <div className="fw-medium">{item.name}</div>
+                              <div className="small text-muted">{formatPrice(item.price)}</div>
+                            </td>
+                            <td className="text-center sale-qty-col">
+                              <div className="sale-qty-spinner">
+                                <button
+                                  type="button"
+                                  className="sale-qty-btn sale-qty-btn-minus"
+                                  onClick={() => updateQuantity(item.key, -1)}
+                                  title="Giảm số lượng"
+                                >
+                                  <i className="ti ti-minus" />
+                                </button>
+                                <span className="sale-qty-value">{item.quantity}</span>
+                                <button
+                                  type="button"
+                                  className="sale-qty-btn sale-qty-btn-plus"
+                                  onClick={() => updateQuantity(item.key, 1)}
+                                  title="Tăng số lượng"
+                                >
+                                  <i className="ti ti-plus" />
+                                </button>
+                              </div>
+                            </td>
+                            <td className="text-end pe-0 fw-semibold">
+                              {formatPrice(item.price * item.quantity)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
 
-                <div className="border-top mt-3 pt-3">
+                <div className="border-top mt-3 pt-3 sale-cart-footer">
                   <div className="d-flex align-items-center justify-content-between mb-3">
                     <span className="fs-5 fw-bold">Tổng cộng</span>
                     <span className="fs-4 fw-bold text-primary">{formatPrice(totalAmount)}</span>

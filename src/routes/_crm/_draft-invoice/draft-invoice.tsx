@@ -54,7 +54,7 @@ function RouteComponent() {
       page: pageIndex + 1,
       limit: pageSize,
       keyword: nameFilter || undefined,
-      status: 0
+      status: [0]
     }),
     [pageIndex, pageSize, nameFilter]
   );
