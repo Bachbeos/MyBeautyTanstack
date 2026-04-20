@@ -1,4 +1,5 @@
 import { AsyncBoundary } from "@/components/async-boundary";
+import { Can } from "@/components/auth/can";
 import CollapseButton from "@/components/collapse/collapse-button";
 import ExportButton from "@/components/export/export";
 import ModalCustomer from "@/components/features/customer/modal";
@@ -7,18 +8,22 @@ import RefreshButton from "@/components/refresh/refresh";
 import ActionsTable from "@/components/table/actions-table";
 import { DataTable } from "@/components/table/data-table";
 import AddButton from "@/components/ui/add-button";
-import { usePermission } from "@/hooks/use-permission";
-import { Can } from "@/components/auth/can";
+import { BaseModal } from "@/components/ui/modal";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { useCloseModal, useModalFade } from "@/hooks/use-modal-animation";
+import { usePermission } from "@/hooks/use-permission";
+import { ENDPOINTS } from "@/lib/api/endpoints";
+import { axiosInstance } from "@/lib/axios/instance";
 import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
 import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
+import { customerAttributeQueries } from "@/lib/tanstack/options/customer-attribute";
 import { customerExtraInfoQueries, customerMutations } from "@/lib/tanstack/options/customer";
+import { customerSourceQueries } from "@/lib/tanstack/options/customer-source";
 import { opportunityMutations } from "@/lib/tanstack/options/opportunity";
 import { userQueries } from "@/lib/tanstack/options/user";
-import { customerAttributeQueries } from "@/lib/tanstack/options/customer-attribute";
-import { customerSourceQueries } from "@/lib/tanstack/options/customer-source";
+import type { ApiResponse } from "@/lib/types/common";
 import type { CustomerDto } from "@/lib/types/customer";
+import type { Page } from "@/lib/types/paging";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -30,6 +35,13 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 const columnHelper = createColumnHelper<CustomerDto>();
+
+type CampaignSnapshotDto = {
+  id?: number;
+  campaign?: string;
+  createdAt?: string;
+  customerId?: number;
+};
 
 export const Route = createFileRoute("/_crm/_customer/customer")({
   component: RouteComponent
@@ -67,13 +79,22 @@ function RouteComponent() {
     item: null
   });
   const [opportunityModalShown, setOpportunityModalShown] = useState(false);
+  const [campaignModal, setCampaignModal] = useState<{ type: "list" | null; item: CustomerDto | null }>({
+    type: null,
+    item: null
+  });
+  const [campaignModalShown, setCampaignModalShown] = useState(false);
 
   useModalFade(modal.type, setModalShown);
   useModalFade(opportunityModal.type, setOpportunityModalShown);
+  useModalFade(campaignModal.type, setCampaignModalShown);
 
   const closeModal = useCloseModal(setModalShown, (state) => setModal(state as any));
   const closeOpportunityModal = useCloseModal(setOpportunityModalShown, (state) =>
     setOpportunityModal(state as any)
+  );
+  const closeCampaignModal = useCloseModal(setCampaignModalShown, (state) =>
+    setCampaignModal(state as { type: "list" | null; item: CustomerDto | null })
   );
 
   const openModal = (type: any, item: any) => {
@@ -82,6 +103,10 @@ function RouteComponent() {
 
   const openOpportunityModal = (type: any, item: any) => {
     setOpportunityModal({ type, item });
+  };
+
+  const openCampaignModal = (item: CustomerDto) => {
+    setCampaignModal({ type: "list", item });
   };
 
   const params = useMemo(
@@ -108,6 +133,51 @@ function RouteComponent() {
   const updateMutation = useMutation(customerMutations.update());
   const deleteMutation = useMutation(customerMutations.delete());
   const createOpportunityMutation = useMutation(opportunityMutations.create());
+
+  const campaignListQuery = useInfiniteQuery({
+    queryKey: ["campaign-snapshot", campaignModal.item?.id],
+    enabled: campaignModalShown && !!campaignModal.item?.id,
+    initialPageParam: 1,
+    queryFn: async ({ pageParam = 1, signal }) => {
+      const res = await axiosInstance.get<ApiResponse<Page<CampaignSnapshotDto>>>(
+        ENDPOINTS.campaignSnapshot.list,
+        {
+          params: {
+            customerId: Number(campaignModal.item?.id),
+            page: pageParam,
+            limit: 1
+          },
+          signal
+        }
+      );
+      return res.data;
+    },
+    getNextPageParam: (lastPage, pages) => {
+      const totalCampaign = Number(lastPage?.result?.total ?? 0);
+      const loaded = pages.reduce((sum, page) => sum + (page.result?.items?.length ?? 0), 0);
+      return loaded < totalCampaign ? pages.length + 1 : undefined;
+    }
+  });
+
+  const generateCampaignMutation = useMutation({
+    mutationFn: async (customerId: number) => {
+      const res = await axiosInstance.post<ApiResponse<Object>>(
+        ENDPOINTS.customerAi.generateCampaign(customerId)
+      );
+      return res.data;
+    },
+    onSuccess: async () => {
+      await campaignListQuery.refetch();
+    },
+    meta: {
+      successMessage: "Tạo chiến dịch mới thành công"
+    }
+  });
+
+  const campaignItems = useMemo(
+    () => campaignListQuery.data?.pages.flatMap((p) => p?.result?.items ?? []) ?? [],
+    [campaignListQuery.data]
+  );
 
   const columns = useMemo(() => {
     const staticCols = [
@@ -217,15 +287,37 @@ function RouteComponent() {
         id: "actions",
         header: "Thao tác",
         meta: { className: "text-center w-1" },
-        cell: (info) => (
-          <ActionsTable
-            row={info.row}
-            onView={(data) => openModal("detail", data)}
-            onEdit={(data) => openModal("edit", data)}
-            onDelete={(data) => openModal("delete", data)}
-            resource="CUSTOMER"
-          />
-        )
+        cell: (info) => {
+          const row = info.row.original;
+          return (
+            <div className="d-flex align-items-center justify-content-center gap-2">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                title="Tạo chiến dịch mới"
+                onClick={() => {
+                  openCampaignModal(row);
+                  generateCampaignMutation.mutate(Number(row.id));
+                }}
+                disabled={generateCampaignMutation.isPending}
+              >
+                {generateCampaignMutation.isPending ? (
+                  <span className="spinner-border spinner-border-sm" />
+                ) : (
+                  <i className="ti ti-sparkles" />
+                )}
+              </button>
+
+              <ActionsTable
+                row={info.row}
+                onView={(data) => openModal("detail", data)}
+                onEdit={(data) => openModal("edit", data)}
+                onDelete={(data) => openModal("delete", data)}
+                resource="CUSTOMER"
+              />
+            </div>
+          );
+        }
       })
     ];
   }, [pageIndex, pageSize, dynamicAttributes]);
@@ -412,6 +504,84 @@ function RouteComponent() {
         hideExpectedCloseDateField
         forceStatusActive
       />
+
+      <BaseModal
+        title={`Chiến dịch tạo cơ hội${campaignModal.item?.name ? ` - ${campaignModal.item.name}` : ""}`}
+        shown={campaignModalShown}
+        onClose={closeCampaignModal}
+        size="lg"
+        footer={
+          <div className="d-flex justify-content-between align-items-center w-100 gap-2 flex-wrap">
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={() => {
+                if (!campaignModal.item?.id || generateCampaignMutation.isPending) return;
+                generateCampaignMutation.mutate(Number(campaignModal.item.id));
+              }}
+              disabled={!campaignModal.item?.id || generateCampaignMutation.isPending}
+            >
+              {generateCampaignMutation.isPending ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  Đang tạo chiến dịch...
+                </>
+              ) : (
+                <>
+                  <i className="ti ti-sparkles me-1" />
+                  Tạo chiến dịch mới
+                </>
+              )}
+            </button>
+
+            <div className="d-flex align-items-center gap-2">
+              <button type="button" className="btn btn-light" onClick={closeCampaignModal}>
+                Đóng
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => campaignListQuery.fetchNextPage()}
+                disabled={!campaignListQuery.hasNextPage || campaignListQuery.isFetchingNextPage}
+              >
+                {campaignListQuery.isFetchingNextPage ? "Đang tải..." : "Tải thêm"}
+              </button>
+            </div>
+          </div>
+        }
+      >
+        <div className="d-grid gap-2">
+          {campaignListQuery.isLoading ? (
+            <div className="text-muted">Đang tải danh sách chiến dịch...</div>
+          ) : campaignItems.length === 0 ? (
+            <div className="text-muted">Chưa có chiến dịch nào cho khách hàng này.</div>
+          ) : (
+            campaignItems.map((item, index) => (
+              <div key={`${item.id ?? "campaign"}-${index}`} className="card border-0 bg-light-subtle">
+                <div className="card-body py-3 px-3">
+                  <div className="d-flex align-items-start justify-content-between gap-2">
+                    <div>
+                      <div className="fw-semibold">Chiến dịch #{item.id ?? index + 1}</div>
+                      <div className="text-muted small mt-1" style={{ whiteSpace: "pre-wrap" }}>
+                        {item.campaign || "(Không có nội dung)"}
+                      </div>
+                    </div>
+                    {item.createdAt ? (
+                      <span className="badge badge-soft-primary">
+                        {new Date(item.createdAt).toLocaleString("vi-VN")}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+
+          {campaignListQuery.isRefetching ? (
+            <div className="text-muted small">Đang cập nhật danh sách...</div>
+          ) : null}
+        </div>
+      </BaseModal>
     </div>
   );
 }
