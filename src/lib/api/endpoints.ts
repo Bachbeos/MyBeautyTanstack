@@ -215,5 +215,9 @@ export const ENDPOINTS = {
     recomputeSegmentRestart: "/segment/recompute/restart",
     recomputeSegmentLatest: "/segment/recompute/latest",
     recomputeSegmentProgress: (runId: string) => `/segment/recompute/progress?runId=${runId}`
+  },
+  campaign: {
+    generate: (id: number) => `/customer/ai/${id}/campaign/generate`,
+    list: () => `/campaign/list`
   }
 } as const;
