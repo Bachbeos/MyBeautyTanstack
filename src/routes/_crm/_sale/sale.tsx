@@ -220,7 +220,6 @@ function RouteComponent() {
   };
 
   const addToCart = (item: MenuItem) => {
-    if (item.type === "service") return; // TODO
     setCart((prev) => {
       const index = prev.findIndex((c) => c.key === item.key);
       if (index === -1) return [...prev, { ...item, quantity: 1 }];
