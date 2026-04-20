@@ -25,10 +25,10 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const user = { 
-    name: name || "User", 
-    roleName: roleName || "Thành viên", 
-    avatar: avatar || "", 
+  const user = {
+    name: name || "User",
+    roleName: roleName || "Thành viên",
+    avatar: avatar || "",
     branchName: branchName || "N/A"
   };
 
@@ -81,6 +81,12 @@ export default function Header() {
     }
   };
 
+  const handleMobileSidebarToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.querySelector(".main-wrapper")?.classList.toggle("slide-nav");
+    document.documentElement.classList.toggle("menu-opened");
+  };
+
   const { data: notifyPages, refetch: refetchNotifications } = useInfiniteQuery(
     notificationQueries.infinite({ size: 10 })
   );
@@ -109,11 +115,25 @@ export default function Header() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+      const target = event.target;
+
+      if (notifRef.current && !notifRef.current.contains(target as Node)) {
         setNotifOpen(false);
       }
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(target as Node)) {
         setDropdownOpen(false);
+      }
+
+      if (!(target instanceof Element)) return;
+
+      const mainWrapper = document.querySelector(".main-wrapper");
+      const isMobileSidebarOpen = mainWrapper?.classList.contains("slide-nav");
+      const clickedInsideSidebar = !!target.closest(".sidebar");
+      const clickedMobileButton = !!target.closest("#mobile_btn");
+
+      if (isMobileSidebarOpen && !clickedInsideSidebar && !clickedMobileButton) {
+        mainWrapper?.classList.remove("slide-nav");
+        document.documentElement.classList.remove("menu-opened");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -140,7 +160,12 @@ export default function Header() {
             </span>
           </Link>
 
-          <a id="mobile_btn" className="mobile-btn" href="#sidebar">
+          <a
+            id="mobile_btn"
+            className="mobile-btn"
+            href="#sidebar"
+            onClick={handleMobileSidebarToggle}
+          >
             <i className="ti ti-menu-deep fs-24"></i>
           </a>
 

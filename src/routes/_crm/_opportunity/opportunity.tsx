@@ -21,6 +21,7 @@ import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useAuthStore } from "@/lib/stores/auth";
 
 export const Route = createFileRoute("/_crm/_opportunity/opportunity")({
   component: RouteComponent
@@ -105,7 +106,7 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
- 
+
   const { canAdd, canEdit, canDelete, canView } = usePermission("OPPORTUNITY");
 
   const [keywordInput, setKeywordInput] = useState("");
@@ -147,15 +148,7 @@ function RouteComponent() {
       page: kanbanPage,
       limit: kanbanLimit
     }),
-    [
-      keyword,
-      customerId,
-      userId,
-      selectedStages,
-      selectedPriorities,
-      kanbanPage,
-      kanbanLimit
-    ]
+    [keyword, customerId, userId, selectedStages, selectedPriorities, kanbanPage, kanbanLimit]
   );
 
   const kanbanQuery = useQuery(opportunityQueries.kanban(params));
@@ -164,13 +157,28 @@ function RouteComponent() {
 
   const moveStageMutation = useMutation(opportunityMutations.moveStage());
 
-  const usersInf = useInfiniteQuery(userQueries.infinite({ limit: 20 }));
+  const me = useAuthStore();
+
+  const usersInf = useInfiniteQuery({
+    ...userQueries.infinite({
+      limit: 20
+    })
+  });
   const customersInf = useInfiniteQuery(customerQueries.infinite({ limit: 20 }));
 
-  const userOptions: AppSelectOption[] =
-    usersInf.data?.pages
-      .flatMap((page) => page.result?.items ?? [])
-      .map((u) => ({ label: String(u.name), value: Number(u.id) })) ?? [];
+  const userOptions: AppSelectOption[] = !me.isOperator
+    ? [
+        {
+          label: String(me.name),
+          value: Number(me.userId)
+        }
+      ]
+    : (usersInf.data?.pages
+        .flatMap((page) => page.result?.items ?? [])
+        .map((u) => ({
+          label: String(u.name),
+          value: Number(u.id)
+        })) ?? []);
 
   const customerOptions: AppSelectOption[] =
     customersInf.data?.pages
@@ -179,15 +187,17 @@ function RouteComponent() {
 
   const stageOptions: AppSelectOption[] = useMemo(
     () =>
-      (metaQuery.data?.result?.stages ?? [
-        { id: 1, name: "Tiềm năng" },
-        { id: 2, name: "Đã liên hệ" },
-        { id: 3, name: "Tư vấn" },
-        { id: 4, name: "Đề xuất" },
-        { id: 5, name: "Đàm phán" },
-        { id: 6, name: "Thành công" },
-        { id: 7, name: "Thất bại" }
-      ]).map((s) => ({
+      (
+        metaQuery.data?.result?.stages ?? [
+          { id: 1, name: "Tiềm năng" },
+          { id: 2, name: "Đã liên hệ" },
+          { id: 3, name: "Tư vấn" },
+          { id: 4, name: "Đề xuất" },
+          { id: 5, name: "Đàm phán" },
+          { id: 6, name: "Thành công" },
+          { id: 7, name: "Thất bại" }
+        ]
+      ).map((s) => ({
         value: Number(s.id),
         label: stageNameMapVi[Number(s.id)] || String(s.name)
       })),
@@ -263,7 +273,8 @@ function RouteComponent() {
         total: found?.total,
         hasMore: found?.hasMore,
         totalExpectedValue:
-          found?.totalExpectedValue ?? serverItems.reduce((sum, x) => sum + Number(x.expectedValue || 0), 0),
+          found?.totalExpectedValue ??
+          serverItems.reduce((sum, x) => sum + Number(x.expectedValue || 0), 0),
         totalWeightedValue: found?.totalWeightedValue ?? 0,
         items: serverItems
       } satisfies OpportunityKanbanColumn;
@@ -277,7 +288,9 @@ function RouteComponent() {
 
   const rulesMap = useMemo(() => {
     const map = new Map<number, string[]>();
-    metaQuery.data?.result?.rules?.forEach((r) => map.set(Number(r.toStage), r.requiredFields || []));
+    metaQuery.data?.result?.rules?.forEach((r) =>
+      map.set(Number(r.toStage), r.requiredFields || [])
+    );
     return map;
   }, [metaQuery.data]);
 
@@ -287,7 +300,11 @@ function RouteComponent() {
     await kanbanQuery.refetch();
   };
 
-  const applyLocalMove = (card: OpportunityDto, fromStage: OpportunityStage, toStage: OpportunityStage) => {
+  const applyLocalMove = (
+    card: OpportunityDto,
+    fromStage: OpportunityStage,
+    toStage: OpportunityStage
+  ) => {
     setLocalColumns((prev) => {
       const base = (prev ?? columns).map((col) => ({ ...col, items: [...col.items] }));
       const fromCol = base.find((c) => Number(c.stage) === Number(fromStage));
@@ -297,14 +314,21 @@ function RouteComponent() {
       fromCol.items = fromCol.items.filter((i) => Number(i.id) !== Number(card.id));
       fromCol.count = fromCol.items.length;
 
-      toCol.items = [{ ...card, stage: toStage }, ...toCol.items.filter((i) => Number(i.id) !== Number(card.id))];
+      toCol.items = [
+        { ...card, stage: toStage },
+        ...toCol.items.filter((i) => Number(i.id) !== Number(card.id))
+      ];
       toCol.count = toCol.items.length;
 
       return base;
     });
   };
 
-  const rollbackMove = (card: OpportunityDto, fromStage: OpportunityStage, toStage: OpportunityStage) => {
+  const rollbackMove = (
+    card: OpportunityDto,
+    fromStage: OpportunityStage,
+    toStage: OpportunityStage
+  ) => {
     setLocalColumns((prev) => {
       if (!prev) return prev;
       const base = prev.map((col) => ({ ...col, items: [...col.items] }));
@@ -315,7 +339,10 @@ function RouteComponent() {
       fromCol.items = fromCol.items.filter((i) => Number(i.id) !== Number(card.id));
       fromCol.count = fromCol.items.length;
 
-      toCol.items = [{ ...card, stage: fromStage }, ...toCol.items.filter((i) => Number(i.id) !== Number(card.id))];
+      toCol.items = [
+        { ...card, stage: fromStage },
+        ...toCol.items.filter((i) => Number(i.id) !== Number(card.id))
+      ];
       toCol.count = toCol.items.length;
 
       return base;
@@ -333,7 +360,9 @@ function RouteComponent() {
         if (v === "") return;
         if (["expectedValue", "probability", "priority", "userId"].includes(k)) {
           (payload as Record<string, unknown>)[k] = Number(v);
-        } else if (["expectedCloseDate", "lastActivityDate", "actualCloseDate", "nextActionDate"].includes(k)) {
+        } else if (
+          ["expectedCloseDate", "lastActivityDate", "actualCloseDate", "nextActionDate"].includes(k)
+        ) {
           (payload as Record<string, unknown>)[k] = v.length === 10 ? `${v}T00:00:00` : v;
         } else {
           (payload as Record<string, unknown>)[k] = v;
@@ -358,7 +387,9 @@ function RouteComponent() {
 
     applyLocalMove(card, fromStage, toStage);
 
-    const requiredFields = (rulesMap.get(Number(toStage)) || []).filter((f) => isMissingField(card, f));
+    const requiredFields = (rulesMap.get(Number(toStage)) || []).filter((f) =>
+      isMissingField(card, f)
+    );
 
     if (requiredFields.length > 0) {
       setPendingMove({ card, fromStage, toStage, requiredFields });
@@ -430,11 +461,16 @@ function RouteComponent() {
               </div>
               <div className="col-md-4 col-lg-2">
                 <AppSelect
-                  value={customerOptions.find((opt) => Number(opt.value) === Number(customerId ?? -1)) ?? null}
+                  value={
+                    customerOptions.find((opt) => Number(opt.value) === Number(customerId ?? -1)) ??
+                    null
+                  }
                   options={customerOptions}
                   placeholder="Tất cả khách hàng"
                   onMenuScrollToBottom={() =>
-                    customersInf.hasNextPage && !customersInf.isFetchingNextPage && customersInf.fetchNextPage()
+                    customersInf.hasNextPage &&
+                    !customersInf.isFetchingNextPage &&
+                    customersInf.fetchNextPage()
                   }
                   onChange={(option) => {
                     const selected = Array.isArray(option) ? option[0] : option;
@@ -445,7 +481,12 @@ function RouteComponent() {
               </div>
               <div className="col-md-4 col-lg-2">
                 <AppSelect
-                  value={userOptions.find((opt) => Number(opt.value) === Number(userId ?? -1)) ?? null}
+                  value={
+                    !me.isOperator
+                      ? userOptions[0] || null
+                      : (userOptions.find((opt) => Number(opt.value) === Number(userId ?? -1)) ??
+                        null)
+                  }
                   options={userOptions}
                   placeholder="Tất cả sale phụ trách"
                   onMenuScrollToBottom={() =>
@@ -456,6 +497,7 @@ function RouteComponent() {
                     const nextId = Number(selected?.value ?? 0);
                     setUserId(nextId || undefined);
                   }}
+                  isDisabled={!me.isOperator}
                 />
               </div>
               <div className="col-md-6 col-lg-3">
@@ -472,13 +514,17 @@ function RouteComponent() {
               </div>
               <div className="col-md-6 col-lg-3">
                 <AppSelect
-                  value={priorityOptions.filter((opt) => selectedPriorities.includes(Number(opt.value)))}
+                  value={priorityOptions.filter((opt) =>
+                    selectedPriorities.includes(Number(opt.value))
+                  )}
                   options={priorityOptions}
                   placeholder="Tất cả mức độ ưu tiên"
                   isMulti
                   onChange={(option) => {
                     const selected = Array.isArray(option) ? option : option ? [option] : [];
-                    setSelectedPriorities(selected.map((x) => Number(x.value)).filter((x) => !Number.isNaN(x)));
+                    setSelectedPriorities(
+                      selected.map((x) => Number(x.value)).filter((x) => !Number.isNaN(x))
+                    );
                   }}
                 />
               </div>
@@ -507,7 +553,10 @@ function RouteComponent() {
               }}
               onMouseDown={(e) => {
                 const target = e.target as HTMLElement;
-                if (target.closest(".kanban-card") || target.closest("input,button,select,textarea,a")) {
+                if (
+                  target.closest(".kanban-card") ||
+                  target.closest("input,button,select,textarea,a")
+                ) {
                   return;
                 }
 
@@ -590,14 +639,24 @@ function RouteComponent() {
                               <i className={cn(icon, "text-white fs-14")} />
                             </span>
                             <div>
-                              <div className="fw-semibold">{stageNameMapVi[Number(column.stage)] || column.stageName}</div>
-                              <div className="text-muted small">{Number(column.total ?? cards.length)} cơ hội</div>
+                              <div className="fw-semibold">
+                                {stageNameMapVi[Number(column.stage)] || column.stageName}
+                              </div>
+                              <div className="text-muted small">
+                                {Number(column.total ?? cards.length)} cơ hội
+                              </div>
                             </div>
                           </div>
-                          <span className={cn("badge", `badge-soft-${color}`)}>{Number(column.total ?? cards.length)}</span>
+                          <span className={cn("badge", `badge-soft-${color}`)}>
+                            {Number(column.total ?? cards.length)}
+                          </span>
                         </div>
                         <div className="small text-muted mt-2">
-                          Dự kiến: {new Intl.NumberFormat("vi-VN").format(Number(column.totalExpectedValue || 0))}₫
+                          Dự kiến:{" "}
+                          {new Intl.NumberFormat("vi-VN").format(
+                            Number(column.totalExpectedValue || 0)
+                          )}
+                          ₫
                         </div>
                       </div>
 
@@ -606,7 +665,8 @@ function RouteComponent() {
                         style={{ maxHeight: "58vh", overflowY: "auto" }}
                         onScroll={async (e) => {
                           const target = e.currentTarget;
-                          const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 24;
+                          const nearBottom =
+                            target.scrollTop + target.clientHeight >= target.scrollHeight - 24;
                           if (nearBottom && hasMore && !kanbanQuery.isFetching) {
                             await loadMoreKanban();
                           }
@@ -681,19 +741,36 @@ function RouteComponent() {
                                     label: "Không xác định",
                                     className: "badge-soft-secondary"
                                   };
-                                  return <span className={cn("badge", mapped.className)}>{mapped.label}</span>;
+                                  return (
+                                    <span className={cn("badge", mapped.className)}>
+                                      {mapped.label}
+                                    </span>
+                                  );
                                 })()}
                               </div>
 
-                              <div className="small text-muted d-flex align-items-center mb-1" style={{ minWidth: 0 }}>
+                              <div
+                                className="small text-muted d-flex align-items-center mb-1"
+                                style={{ minWidth: 0 }}
+                              >
                                 <i className="ti ti-user me-1" />
-                                <span className="text-truncate">{item.customerName || "Chưa có khách hàng"}</span>
+                                <span className="text-truncate">
+                                  {item.customerName || "Chưa có khách hàng"}
+                                </span>
                               </div>
-                              <div className="small text-muted d-flex align-items-center mb-1" style={{ minWidth: 0 }}>
+                              <div
+                                className="small text-muted d-flex align-items-center mb-1"
+                                style={{ minWidth: 0 }}
+                              >
                                 <i className="ti ti-user-circle me-1" />
-                                <span className="text-truncate">{item.userName || "Chưa phân công"}</span>
+                                <span className="text-truncate">
+                                  {item.userName || "Chưa phân công"}
+                                </span>
                               </div>
-                              <div className="small text-muted d-flex align-items-center" style={{ minWidth: 0 }}>
+                              <div
+                                className="small text-muted d-flex align-items-center"
+                                style={{ minWidth: 0 }}
+                              >
                                 <i className="ti ti-calendar-event me-1" />
                                 <span className="text-truncate">
                                   {item.expectedCloseDate
@@ -704,7 +781,10 @@ function RouteComponent() {
 
                               <div className="d-flex align-items-center justify-content-between mt-auto pt-2 border-top">
                                 <span className="small text-muted">Giá trị dự kiến</span>
-                                <div className="fw-bold text-primary text-truncate" style={{ maxWidth: 120 }}>
+                                <div
+                                  className="fw-bold text-primary text-truncate"
+                                  style={{ maxWidth: 120 }}
+                                >
                                   {new Intl.NumberFormat("vi-VN", {
                                     style: "currency",
                                     currency: "VND"
@@ -722,7 +802,9 @@ function RouteComponent() {
                         )}
 
                         {cards.length === 0 && (
-                          <div className="text-center text-muted small py-4">Chưa có cơ hội trong giai đoạn này</div>
+                          <div className="text-center text-muted small py-4">
+                            Chưa có cơ hội trong giai đoạn này
+                          </div>
                         )}
                       </div>
                     </div>
@@ -771,7 +853,11 @@ function RouteComponent() {
             </div>
             <div className="col-md-6">
               <label className="form-label text-muted">Trạng thái</label>
-              <div>{Number(detailQuery.data.result.status) === 1 ? "Đang hoạt động" : "Ngưng hoạt động"}</div>
+              <div>
+                {Number(detailQuery.data.result.status) === 1
+                  ? "Đang hoạt động"
+                  : "Ngưng hoạt động"}
+              </div>
             </div>
             <div className="col-md-6">
               <label className="form-label text-muted">Xác suất chốt</label>
@@ -781,8 +867,15 @@ function RouteComponent() {
               <label className="form-label text-muted">Mức độ ưu tiên</label>
               {(() => {
                 const p = Number((detailQuery.data.result as any).priority ?? 0);
-                const mapped = priorityMap[p] ?? { label: "Không xác định", className: "badge-soft-secondary" };
-                return <div><span className={cn("badge", mapped.className)}>{mapped.label}</span></div>;
+                const mapped = priorityMap[p] ?? {
+                  label: "Không xác định",
+                  className: "badge-soft-secondary"
+                };
+                return (
+                  <div>
+                    <span className={cn("badge", mapped.className)}>{mapped.label}</span>
+                  </div>
+                );
               })()}
             </div>
             <div className="col-md-6">
@@ -833,7 +926,8 @@ function RouteComponent() {
         shown={!!pendingMove}
         size="md"
         onClose={() => {
-          if (pendingMove) rollbackMove(pendingMove.card, pendingMove.fromStage, pendingMove.toStage);
+          if (pendingMove)
+            rollbackMove(pendingMove.card, pendingMove.fromStage, pendingMove.toStage);
           setPendingMove(null);
           setDynamicValues({});
         }}
@@ -842,7 +936,8 @@ function RouteComponent() {
             <button
               className="btn btn-light"
               onClick={() => {
-                if (pendingMove) rollbackMove(pendingMove.card, pendingMove.fromStage, pendingMove.toStage);
+                if (pendingMove)
+                  rollbackMove(pendingMove.card, pendingMove.fromStage, pendingMove.toStage);
                 setPendingMove(null);
                 setDynamicValues({});
               }}
@@ -868,7 +963,12 @@ function RouteComponent() {
       >
         <div className="d-flex flex-column gap-3">
           {pendingMove?.requiredFields.map((field) => {
-            const isDate = ["expectedCloseDate", "lastActivityDate", "actualCloseDate", "nextActionDate"].includes(field);
+            const isDate = [
+              "expectedCloseDate",
+              "lastActivityDate",
+              "actualCloseDate",
+              "nextActionDate"
+            ].includes(field);
             const isNumber = ["expectedValue", "probability", "priority"].includes(field);
             const isUser = field === "userId";
 
@@ -877,11 +977,17 @@ function RouteComponent() {
                 <div key={field}>
                   <label className="form-label">{fieldLabelMap[field] || field}</label>
                   <AppSelect
-                    value={userOptions.find((u) => String(u.value) === String(dynamicValues[field] ?? "")) ?? null}
+                    value={
+                      userOptions.find(
+                        (u) => String(u.value) === String(dynamicValues[field] ?? "")
+                      ) ?? null
+                    }
                     options={userOptions}
                     placeholder="Chọn người phụ trách"
                     onMenuScrollToBottom={() =>
-                      usersInf.hasNextPage && !usersInf.isFetchingNextPage && usersInf.fetchNextPage()
+                      usersInf.hasNextPage &&
+                      !usersInf.isFetchingNextPage &&
+                      usersInf.fetchNextPage()
                     }
                     onChange={(option) => {
                       const selected = Array.isArray(option) ? option[0] : option;

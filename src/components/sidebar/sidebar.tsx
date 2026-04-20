@@ -247,7 +247,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {canView("OPPORTUNITY") && (
+                {canView("OPPORTUNITY") && (	
                   <>
                     <li>
                       <Link

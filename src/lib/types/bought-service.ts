@@ -11,6 +11,9 @@ export type BoughtServiceDto = {
   qty: number;
   price: number;
   fee: number;
+  amount?: number;
+  discount?: number;
+  variation?: string;
   customerId: number;
   status: number;
   note?: string;
@@ -31,6 +34,9 @@ export type BoughtServiceCreateRequest = {
   qty: number;
   price: number;
   fee: number;
+  amount?: number;
+  discount?: number;
+  variation?: string;
   customerId: number;
   status: number;
   note?: string;
@@ -43,6 +49,9 @@ export type BoughtServiceUpdateRequest = {
   qty: number;
   price: number;
   fee: number;
+  amount?: number;
+  discount?: number;
+  variation?: string;
   customerId: number;
   status: number;
   note?: string;

@@ -23,6 +23,7 @@ export type UserDto = {
 export type UserListRequest = {
   keyword?: string;
   active?: number;
+  lstUserId? : UserId[];
   [key: string]: unknown;
 } & Partial<PageMeta>;
 

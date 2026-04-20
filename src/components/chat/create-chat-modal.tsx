@@ -13,6 +13,7 @@ import type { UserDto } from "@/lib/types/user";
 import type { ChatView, CursorResult } from "@/lib/types/chat";
 import type { ApiResponse } from "@/lib/types/common";
 import { userQueries } from "@/lib/tanstack/options/user";
+import { useAuthStore } from "@/lib/stores/auth";
 
 const avatar = (name: string) =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "?")}&background=random&color=fff`;
@@ -25,13 +26,18 @@ interface Props {
 
 export function CreateChatModal({ show, onClose, onCreated }: Props) {
   const qc = useQueryClient();
+  const currentUserId = useAuthStore((s) => s.userId);
 
   const [selected, setSelected] = useState<UserDto | null>(null);
   const [keyword, setKeyword] = useState("");
   const [debouncedKeyword] = useDebounceValue(keyword, 350);
 
   const userQ = useInfiniteQuery(
-    userQueries.infinite({ keyword: debouncedKeyword || undefined, limit: 20 })
+    userQueries.infinite({
+      keyword: debouncedKeyword || undefined,
+      limit: 20,
+      excludeUserId: currentUserId ?? undefined
+    })
   );
 
   const users: UserDto[] = useMemo(
@@ -53,24 +59,56 @@ export function CreateChatModal({ show, onClose, onCreated }: Props) {
       const chat = res.result;
       if (!chat) return;
 
-      // Prepend chat mới vào list cache
       type CC = InfiniteData<ApiResponse<CursorResult<ChatView>>>;
-      qc.setQueryData<CC>(chatKeys.listCursor(), (old) => {
-        if (!old) return old;
-        const [first, ...rest] = old.pages;
-        return {
-          ...old,
-          pages: [
-            {
-              ...first,
-              result: first.result
-                ? { ...first.result, data: [chat, ...(first.result.data ?? [])] }
-                : first.result
-            },
-            ...rest
-          ]
-        };
-      });
+      const existingChats =
+        qc.getQueryData<CC>(chatKeys.listCursor())?.pages.flatMap((p) => p.result?.data ?? []) ??
+        [];
+
+      const existingChat = existingChats.find((c) => c.id === chat.id);
+      if (existingChat) {
+        qc.setQueryData<CC>(chatKeys.listCursor(), (old) => {
+          if (!old) return old;
+          const filtered = old.pages.map((page) => ({
+            ...page,
+            result: page.result
+              ? {
+                  ...page.result,
+                  data: page.result.data.filter((c) => c.id !== chat.id)
+                }
+              : page.result
+          }));
+          const [first, ...rest] = filtered;
+          return {
+            ...old,
+            pages: [
+              {
+                ...first,
+                result: first.result
+                  ? { ...first.result, data: [chat, ...(first.result.data ?? [])] }
+                  : first.result
+              },
+              ...rest
+            ]
+          };
+        });
+      } else {
+        qc.setQueryData<CC>(chatKeys.listCursor(), (old) => {
+          if (!old) return old;
+          const [first, ...rest] = old.pages;
+          return {
+            ...old,
+            pages: [
+              {
+                ...first,
+                result: first.result
+                  ? { ...first.result, data: [chat, ...(first.result.data ?? [])] }
+                  : first.result
+              },
+              ...rest
+            ]
+          };
+        });
+      }
 
       handleClose();
       onCreated(chat);

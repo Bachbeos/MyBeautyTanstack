@@ -4,6 +4,13 @@ import type { Page, PageMeta } from "@/lib/types/paging";
 export type ServiceId = ID<"Service", number>;
 export const ServiceId = (v: number) => toId<"Service", number>(v);
 
+export type ServiceVariation = {
+  name: string;
+  price: number;
+  discount: number;
+  treatmentNum: number;
+};
+
 export type ServiceDto = {
   id: ServiceId;
   name: string;
@@ -15,7 +22,7 @@ export type ServiceDto = {
   cost: number;
   price: number;
   discount?: number;
-  priceVariation?: string[];
+  priceVariation?: string;
   totalTime?: number;
   isCombo: number;
   featured?: number;
@@ -42,7 +49,7 @@ export type ServiceCreateRequest = {
   cost: number;
   price: number;
   discount?: number;
-  priceVariation?: string[];
+  priceVariation?: string;
   totalTime?: number;
   isCombo?: number;
   featured?: number;
@@ -61,7 +68,7 @@ export type ServiceUpdateRequest = {
   cost?: number;
   price: number;
   discount?: number;
-  priceVariation?: string[];
+  priceVariation?: string;
   totalTime?: number;
   isCombo?: number;
   featured?: number;
