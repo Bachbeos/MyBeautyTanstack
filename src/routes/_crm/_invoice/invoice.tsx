@@ -62,7 +62,7 @@ function RouteComponent() {
       page: pageIndex + 1,
       limit: pageSize,
       keyword: nameFilter || undefined,
-      status: 3
+      status: "1, 2, 3"
     }),
     [pageIndex, pageSize, nameFilter]
   );
@@ -161,11 +161,10 @@ function RouteComponent() {
         header: "Trạng thái",
         cell: (info) => {
           const status = Number(info.getValue());
-          return status === 1 ? (
-            <span className="badge badge-soft-success">Hoàn tất</span>
-          ) : (
-            <span className="badge badge-soft-warning">Hóa đơn nháp</span>
-          );
+          if (status === 1) return <span className="badge badge-soft-success">Hoàn tất</span>;
+          if (status === 2) return <span className="badge badge-soft-danger">Hủy</span>;
+          if (status === 3) return <span className="badge badge-soft-warning">Chưa thanh toán</span>;
+          return <span className="badge badge-soft-secondary">N/A</span>;
         },
         meta: { className: "text-center align-middle w-1" }
       }),

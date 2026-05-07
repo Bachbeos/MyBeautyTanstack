@@ -4,6 +4,7 @@ import { PaymentQrModal } from "@/components/features/sale/payment-qr-modal";
 import { createDraftInvoice, createInvoice, updateDraftInvoice } from "@/lib/api/invoice";
 import { createPayment } from "@/lib/api/payment";
 import { batchUpsertBoughtProducts } from "@/lib/api/bought-product";
+import { batchUpsertBoughtServices } from "@/lib/api/bought-service";
 import { customerQueries } from "@/lib/tanstack/options/customer";
 import { productQueries } from "@/lib/tanstack/options/product";
 import { serviceQueries } from "@/lib/tanstack/options/service";
@@ -16,6 +17,11 @@ import type {
 } from "@/lib/types/bought-product";
 import type { ProductDto } from "@/lib/types/product";
 import type { ServiceDto } from "@/lib/types/service";
+import type {
+  BoughtServiceCreateRequest,
+  BoughtServiceId,
+  BoughtServiceUpdateRequest
+} from "@/lib/types/bought-service";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
@@ -40,6 +46,7 @@ type MenuItem = {
 
 type CartItem = MenuItem & {
   boughtProductId?: BoughtProductId;
+  boughtServiceId?: BoughtServiceId;
   quantity: number;
 };
 
@@ -171,7 +178,7 @@ function RouteComponent() {
         price: Number(item.price) || 0,
         accent: SERVICE_ACCENT,
         quantity: item.qty || 1,
-        boughtProductId: item.id
+        boughtServiceId: item.id
       }));
 
       setCart([...newProductsCart, ...newServicesCart]);
@@ -280,13 +287,39 @@ function RouteComponent() {
           id: i.boughtProductId ? i.boughtProductId : undefined
         }));
 
-      const batchRes = await batchUpsertBoughtProducts(productPayload);
-      const map = new Map(batchRes.result?.map((p) => [p.productId, p.id]));
-      setCart((prev) =>
-        prev.map((i) => (i.type === "product" ? { ...i, boughtProductId: map.get(i.id) } : i))
-      );
+      const servicePayload: (BoughtServiceCreateRequest | BoughtServiceUpdateRequest)[] = cart
+        .filter((i) => i.type === "service")
+        .map((i) => ({
+          invoiceId: draftInvoiceId,
+          serviceId: i.id,
+          qty: i.quantity,
+          price: i.price,
+          fee: i.price * i.quantity,
+          customerId: selectedCustomerId || 0,
+          status: 0,
+          note: "",
+          id: i.boughtServiceId ? i.boughtServiceId : undefined
+        }));
 
-      if (!isApiOk(batchRes)) return;
+      const [productBatchRes, serviceBatchRes] = await Promise.all([
+        productPayload.length > 0 ? batchUpsertBoughtProducts(productPayload) : Promise.resolve(null),
+        servicePayload.length > 0 ? batchUpsertBoughtServices(servicePayload) : Promise.resolve(null)
+      ]);
+
+      if (productBatchRes && !isApiOk(productBatchRes)) return;
+      if (serviceBatchRes && !isApiOk(serviceBatchRes)) return;
+
+      const productMap = new Map(productBatchRes?.result?.map((p) => [p.productId, p.id]) ?? []);
+      const serviceMap = new Map(serviceBatchRes?.result?.map((s) => [s.serviceId, s.id]) ?? []);
+
+      setCart((prev) =>
+        prev.map((i) => {
+          if (i.type === "product") {
+            return { ...i, boughtProductId: productMap.get(i.id) ?? i.boughtProductId };
+          }
+          return { ...i, boughtServiceId: serviceMap.get(i.id) ?? i.boughtServiceId };
+        })
+      );
 
       const draftRes = await updateDraftInvoice(payload);
       if (isApiOk(draftRes)) setModalShown(true);

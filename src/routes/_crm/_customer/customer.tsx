@@ -37,10 +37,12 @@ import { useEffect, useMemo, useState } from "react";
 const columnHelper = createColumnHelper<CustomerDto>();
 
 type CampaignSnapshotDto = {
-  id?: number;
-  campaign?: string;
-  createdAt?: string;
-  customerId?: number;
+  id?: number | null;
+  campaign?: string | null;
+  createdAt?: string | null;
+  createdTime?: string | null;
+  customerId?: number | null;
+  status?: number | null;
 };
 
 export const Route = createFileRoute("/_crm/_customer/customer")({
@@ -182,6 +184,14 @@ function RouteComponent() {
     [campaignListQuery.data]
   );
 
+  const isCampaignListLoading =
+    campaignListQuery.isLoading ||
+    (campaignListQuery.isFetching && !campaignListQuery.isFetchingNextPage && campaignItems.length === 0);
+
+  const isGeneratingCampaign = generateCampaignMutation.isPending;
+  const isCampaignGeneratingInBackend = campaignItems.some((item) => item.status === 0);
+  const isGenerateButtonLocked = isGeneratingCampaign || isCampaignGeneratingInBackend || isCampaignListLoading;
+
   const columns = useMemo(() => {
     const staticCols = [
       columnHelper.display({
@@ -297,11 +307,8 @@ function RouteComponent() {
               <button
                 type="button"
                 className="btn btn-sm btn-outline-primary"
-                title="Tạo chiến dịch mới"
-                onClick={() => {
-                  openCampaignModal(row);
-                  generateCampaignMutation.mutate(Number(row.id));
-                }}
+                title="Xem chiến dịch"
+                onClick={() => openCampaignModal(row)}
                 disabled={generateCampaignMutation.isPending}
               >
                 {generateCampaignMutation.isPending ? (
@@ -519,12 +526,12 @@ function RouteComponent() {
               type="button"
               className="btn btn-outline-primary"
               onClick={() => {
-                if (!campaignModal.item?.id || generateCampaignMutation.isPending) return;
+                if (!campaignModal.item?.id || isGenerateButtonLocked) return;
                 generateCampaignMutation.mutate(Number(campaignModal.item.id));
               }}
-              disabled={!campaignModal.item?.id || generateCampaignMutation.isPending}
+              disabled={!campaignModal.item?.id || isGenerateButtonLocked}
             >
-              {generateCampaignMutation.isPending ? (
+              {isGeneratingCampaign ? (
                 <>
                   <span className="spinner-border spinner-border-sm me-2" />
                   Đang tạo chiến dịch...
@@ -547,45 +554,81 @@ function RouteComponent() {
                 onClick={() => campaignListQuery.fetchNextPage()}
                 disabled={!campaignListQuery.hasNextPage || campaignListQuery.isFetchingNextPage}
               >
-                {campaignListQuery.isFetchingNextPage ? "Đang tải..." : "Tải thêm"}
+                {campaignListQuery.isFetchingNextPage ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" />
+                    Đang tải...
+                  </>
+                ) : (
+                  "Tải thêm"
+                )}
               </button>
             </div>
           </div>
         }
       >
         <div className="d-grid gap-2">
-          {campaignListQuery.isLoading ? (
-            <div className="text-muted">Đang tải danh sách chiến dịch...</div>
+          {isCampaignListLoading ? (
+            <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
+              <div className="spinner-border text-primary" role="status" style={{ width: "2rem", height: "2rem" }} />
+              <div className="text-muted small">Đang tải danh sách chiến dịch...</div>
+            </div>
           ) : campaignItems.length === 0 ? (
-            <div className="text-muted">Chưa có chiến dịch nào cho khách hàng này.</div>
+            <div className="d-flex flex-column align-items-center justify-content-center py-5 gap-3">
+              <div className="text-muted text-center">
+                <i className="ti ti-inbox fs-48 d-block mb-2 opacity-50" />
+                Chưa có chiến dịch nào cho khách hàng này.
+                <br />
+                <span className="small">Nhấn "Tạo chiến dịch mới" để bắt đầu.</span>
+              </div>
+            </div>
           ) : (
-            campaignItems.map((item, index) => (
-              <div
-                key={`${item.id ?? "campaign"}-${index}`}
-                className="card border-0 bg-light-subtle"
-              >
-                <div className="card-body py-3 px-3">
-                  <div className="d-flex align-items-start justify-content-between gap-2">
-                    <div>
-                      <div className="fw-semibold">Chiến dịch #{item.id ?? index + 1}</div>
-                      <div className="text-muted small mt-1" style={{ whiteSpace: "pre-wrap" }}>
-                        {item.campaign || "(Không có nội dung)"}
+            <>
+              {campaignItems.map((item, index) => (
+                <div
+                  key={`${item.id ?? "campaign"}-${index}`}
+                  className="card border-0 bg-light-subtle"
+                >
+                  <div className="card-body py-3 px-3">
+                    {item.status === 0 ? (
+                    <div className="d-flex flex-column align-items-center justify-content-center py-4 gap-3 w-100">
+                      <div className="spinner-border text-primary" role="status" style={{ width: "2.5rem", height: "2.5rem" }} />
+                      <div className="text-muted text-center small">
+                        Hệ thống đang khởi tạo chiến dịch...
                       </div>
                     </div>
-                    {item.createdAt ? (
-                      <span className="badge badge-soft-primary">
-                        {new Date(item.createdAt).toLocaleString("vi-VN")}
-                      </span>
-                    ) : null}
+                  ) : (
+                    <div className="d-flex align-items-start justify-content-between gap-2">
+                      <div>
+                        <div className="fw-semibold">Chiến dịch #{item.id ?? index + 1}</div>
+                        <div className="text-muted small mt-1" style={{ whiteSpace: "pre-wrap" }}>
+                          {item.campaign || "(Không có nội dung)"}
+                        </div>
+                      </div>
+                      {(() => {
+                        const createdAtValue = item.createdTime ?? item.createdAt;
+                        if (!createdAtValue) return null;
+
+                        return (
+                          <span className="badge badge-soft-primary">
+                            {new Date(createdAtValue).toLocaleString("vi-VN")}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  )}
                   </div>
                 </div>
-              </div>
-            ))
-          )}
+              ))}
 
-          {campaignListQuery.isRefetching ? (
-            <div className="text-muted small">Đang cập nhật danh sách...</div>
-          ) : null}
+              {campaignListQuery.isRefetching ? (
+                <div className="d-flex align-items-center justify-content-center gap-2 text-muted small py-2">
+                  <span className="spinner-border spinner-border-sm" />
+                  Đang cập nhật...
+                </div>
+              ) : null}
+            </>
+          )}
         </div>
       </BaseModal>
     </div>
