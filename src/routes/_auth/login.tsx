@@ -23,9 +23,7 @@ const loginSchema = z.object({
   phone: z
     .string()
     .regex(/^0[0-9]{9}$/, "Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số"),
-  password: z
-    .string()
-    .min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+  password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
   remember: z.boolean().optional()
 });
 
@@ -151,14 +149,14 @@ function LoginForm() {
                     </div>
 
                     <div className="d-flex align-items-center justify-content-center flex-wrap gap-2 mb-3">
-                      <div className="text-center flex-fill">
+                      {/* <div className="text-center flex-fill">
                         <a
                           href="javascript:void(0);"
                           className="p-2 btn btn-info d-flex align-items-center justify-content-center"
                         >
                           <img className="img-fluid m-1" src={facebookLogo} alt="Facebook" />
                         </a>
-                      </div>
+                      </div> */}
 
                       <div className="text-center flex-fill">
                         <button
@@ -174,14 +172,14 @@ function LoginForm() {
                         </button>
                       </div>
 
-                      <div className="text-center flex-fill">
+                      {/* <div className="text-center flex-fill">
                         <a
                           href="javascript:void(0);"
                           className="p-2 btn btn-dark d-flex align-items-center justify-content-center"
                         >
                           <img className="img-fluid m-1" src={appleLogo} alt="Apple" />
                         </a>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
