@@ -147,14 +147,14 @@ function RouteComponent() {
                     </div>
 
                     <div className="d-flex align-items-center justify-content-center flex-wrap gap-2 mb-3">
-                      <div className="text-center flex-fill">
+                      {/* <div className="text-center flex-fill">
                         <a
                           href="#"
                           className="p-2 btn btn-info d-flex align-items-center justify-content-center"
                         >
                           <img className="img-fluid m-1" src={facebookLogo} alt="Facebook" />
                         </a>
-                      </div>
+                      </div> */}
 
                       <div className="text-center flex-fill">
                         <a
@@ -165,14 +165,14 @@ function RouteComponent() {
                         </a>
                       </div>
 
-                      <div className="text-center flex-fill">
+                      {/* <div className="text-center flex-fill">
                         <a
                           href="#"
                           className="p-2 btn btn-dark d-flex align-items-center justify-content-center"
                         >
                           <img className="img-fluid m-1" src={appleLogo} alt="Apple" />
                         </a>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 

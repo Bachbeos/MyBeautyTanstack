@@ -85,6 +85,8 @@ const mapServiceToMenuItem = (item: ServiceDto): MenuItem => ({
 const formatPrice = (value: number) =>
   new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
 
+const toCssImageUrl = (value: string) => `url("${encodeURI(value)}")`;
+
 const isApiOk = (res: any) => res?.success === true || res?.code === 200;
 
 export const Route = createFileRoute("/_crm/_sale/sale")({
@@ -302,8 +304,12 @@ function RouteComponent() {
         }));
 
       const [productBatchRes, serviceBatchRes] = await Promise.all([
-        productPayload.length > 0 ? batchUpsertBoughtProducts(productPayload) : Promise.resolve(null),
-        servicePayload.length > 0 ? batchUpsertBoughtServices(servicePayload) : Promise.resolve(null)
+        productPayload.length > 0
+          ? batchUpsertBoughtProducts(productPayload)
+          : Promise.resolve(null),
+        servicePayload.length > 0
+          ? batchUpsertBoughtServices(servicePayload)
+          : Promise.resolve(null)
       ]);
 
       if (productBatchRes && !isApiOk(productBatchRes)) return;
@@ -478,7 +484,7 @@ function RouteComponent() {
                               className="sale-item-cover"
                               style={{
                                 backgroundColor: item.accent,
-                                backgroundImage: item.avatar ? `url(${item.avatar})` : "none",
+                                backgroundImage: item.avatar ? toCssImageUrl(item.avatar) : "none",
                                 backgroundSize: "cover",
                                 backgroundPosition: "center",
                                 backgroundRepeat: "no-repeat"
