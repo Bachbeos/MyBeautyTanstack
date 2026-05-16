@@ -28,7 +28,8 @@ export function CreateChatModal({ show, onClose, onCreated }: Props) {
   const qc = useQueryClient();
   const currentUserId = useAuthStore((s) => s.userId);
 
-  const [selected, setSelected] = useState<UserDto | null>(null);
+  const [selected, setSelected] = useState<UserDto[]>([]);
+  const [groupChatName, setGroupChatName] = useState("");
   const [keyword, setKeyword] = useState("");
   const [debouncedKeyword] = useDebounceValue(keyword, 350);
 
@@ -117,7 +118,8 @@ export function CreateChatModal({ show, onClose, onCreated }: Props) {
 
   const handleClose = () => {
     setKeyword("");
-    setSelected(null);
+    setSelected([]);
+    setGroupChatName("");
     onClose();
   };
 
@@ -138,7 +140,12 @@ export function CreateChatModal({ show, onClose, onCreated }: Props) {
           <div className="modal-content border-0 shadow">
             {/* Header */}
             <div className="modal-header border-bottom px-4 py-3">
-              <h6 className="modal-title fw-bold mb-0">Tạo cuộc trò chuyện</h6>
+              <h6 className="modal-title fw-bold mb-0">
+                Tạo cuộc trò chuyện
+                {selected.length > 0 && (
+                  <span className="badge bg-primary ms-2">{selected.length}</span>
+                )}
+              </h6>
               <button className="btn btn-sm btn-icon border-0 text-muted" onClick={handleClose}>
                 <i className="ti ti-x" />
               </button>
@@ -167,22 +174,47 @@ export function CreateChatModal({ show, onClose, onCreated }: Props) {
                 </div>
               </div>
 
-              {/* Selected preview */}
-              {selected && (
-                <div className="px-4 py-2 bg-primary bg-opacity-10 border-bottom d-flex align-items-center gap-2">
-                  <img
-                    src={selected.avatar || avatar(selected.name)}
-                    className="rounded-circle flex-shrink-0"
-                    style={{ width: 26, height: 26, objectFit: "cover" }}
-                    alt=""
+              {/* Group chat name */}
+              {selected.length > 1 && (
+                <div className="px-4 py-3 border-bottom">
+                  <input
+                    className="form-control form-control-sm"
+                    placeholder="Tên nhóm (không bắt buộc)"
+                    value={groupChatName}
+                    onChange={(e) => setGroupChatName(e.target.value)}
                   />
-                  <span className="small fw-medium flex-1 text-truncate">{selected.name}</span>
-                  <button
-                    className="btn btn-sm btn-icon border-0 text-muted p-0"
-                    onClick={() => setSelected(null)}
-                  >
-                    <i className="ti ti-x" style={{ fontSize: 12 }} />
-                  </button>
+                </div>
+              )}
+
+              {/* Selected preview */}
+              {selected.length > 0 && (
+                <div className="px-4 py-2 bg-primary bg-opacity-10 border-bottom d-flex align-items-center gap-2 flex-wrap">
+                  {selected.map((user) => (
+                    <div
+                      key={String(user.id)}
+                      className="d-flex align-items-center gap-1 bg-white rounded-pill px-2 py-1 border"
+                      style={{ fontSize: 12 }}
+                    >
+                      <img
+                        src={user.avatar || avatar(user.name)}
+                        className="rounded-circle flex-shrink-0"
+                        style={{ width: 18, height: 18, objectFit: "cover" }}
+                        alt=""
+                      />
+                      <span className="fw-medium text-truncate" style={{ maxWidth: 100 }}>
+                        {user.name}
+                      </span>
+                      <button
+                        className="btn btn-sm btn-icon border-0 text-muted p-0"
+                        style={{ lineHeight: 1 }}
+                        onClick={() =>
+                          setSelected((prev) => prev.filter((u) => u.id !== user.id))
+                        }
+                      >
+                        <i className="ti ti-x" style={{ fontSize: 10 }} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -202,7 +234,7 @@ export function CreateChatModal({ show, onClose, onCreated }: Props) {
                 )}
 
                 {users.map((user) => {
-                  const isSelected = Number(selected?.id) === Number(user.id);
+                  const isSelected = selected.some((u) => Number(u.id) === Number(user.id));
                   return (
                     <div
                       key={String(user.id)}
@@ -211,7 +243,13 @@ export function CreateChatModal({ show, onClose, onCreated }: Props) {
                         isSelected && "bg-primary bg-opacity-10"
                       )}
                       style={{ cursor: "pointer", minHeight: 56 }}
-                      onClick={() => setSelected(isSelected ? null : user)}
+                      onClick={() =>
+                        setSelected((prev) =>
+                          isSelected
+                            ? prev.filter((u) => Number(u.id) !== Number(user.id))
+                            : [...prev, user]
+                        )
+                      }
                     >
                       <img
                         src={user.avatar || avatar(user.name)}
@@ -264,12 +302,13 @@ export function CreateChatModal({ show, onClose, onCreated }: Props) {
               </button>
               <button
                 className="btn btn-primary btn-sm d-flex align-items-center gap-2"
-                disabled={!selected || createMutation.isPending}
+                disabled={selected.length === 0 || createMutation.isPending}
                 onClick={() =>
-                  selected &&
+                  selected.length > 0 &&
                   createMutation.mutate({
-                    isGroupChat: false,
-                    memberIds: [Number(selected.id)]
+                    isGroupChat: selected.length > 1,
+                    groupChatName: selected.length > 1 ? groupChatName : undefined,
+                    memberIds: selected.map((u) => Number(u.id))
                   })
                 }
               >

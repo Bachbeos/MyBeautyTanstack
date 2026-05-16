@@ -25,6 +25,7 @@ export interface MessageDto {
   fileSize: number | null;
   replyToMessageId: number | null;
   replyToMessageContent: string | null;
+  replyToMessageFilePath: string | null;
   replyToMessageType: number | null;
   replyToMessageSenderId: number | null;
   isReplyMessageEdited: boolean;

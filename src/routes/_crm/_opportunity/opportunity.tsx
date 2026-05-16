@@ -280,9 +280,21 @@ function RouteComponent() {
       } satisfies OpportunityKanbanColumn;
     });
 
-    if (selectedStages.length === 0) return combined;
-    return combined.filter((c) => selectedStages.includes(Number(c.stage)));
-  }, [localColumns, serverColumns, metaQuery.data, selectedStages]);
+    let result = combined;
+    if (selectedStages.length > 0) {
+      result = result.filter((c) => selectedStages.includes(Number(c.stage)));
+    }
+    if (selectedPriorities.length > 0) {
+      result = result.map((col) => ({
+        ...col,
+        items: col.items.filter((item) => {
+          const p = Number((item as any).priority ?? 0);
+          return selectedPriorities.includes(p);
+        })
+      }));
+    }
+    return result;
+  }, [localColumns, serverColumns, metaQuery.data, selectedStages, selectedPriorities]);
 
   const total = columns.reduce((sum, c) => sum + Number(c.total ?? c.count ?? c.items.length), 0);
 

@@ -685,16 +685,51 @@ function MsgBubble({
 
   return (
     <div className="position-relative msg-bubble-wrapper">
-      {msg.replyToMessageContent && (
+      {(msg.replyToMessageContent || msg.replyToMessageFilePath) && (
         <div
           className={cn(
             "small rounded px-2 py-1 mb-1",
             isOwn ? "bg-primary bg-opacity-25" : "bg-white border"
           )}
-          style={{ borderLeft: isOwn ? undefined : "3px solid var(--bs-primary)", fontSize: 11 }}
+          style={{
+            borderLeft: isOwn ? undefined : "3px solid var(--bs-primary)",
+            fontSize: 11,
+            maxWidth: "100%"
+          }}
         >
-          <div className="text-primary fw-medium">Đã trả lời</div>
-          <div className="text-muted text-truncate">{msg.replyToMessageContent}</div>
+          <div className="text-primary fw-medium mb-1">
+            {msg.replyToMessageType === 2 ? "Đã trả lời ảnh" : "Đã trả lời"}
+          </div>
+
+          {msg.replyToMessageType === 1 && (
+            <div className="text-muted text-truncate overflow-hidden" style={{ maxWidth: "220px" }}>
+              {msg.replyToMessageContent}
+            </div>
+          )}
+
+          {msg.replyToMessageType === 2 && msg.replyToMessageFilePath && (
+            <div className="d-flex align-items-center gap-2">
+              <img
+                src={msg.replyToMessageFilePath}
+                alt="Ảnh trả lời"
+                className="rounded flex-shrink-0"
+                style={{
+                  width: 52,
+                  height: 52,
+                  objectFit: "cover"
+                }}
+              />
+
+              {msg.replyToMessageContent && (
+                <div
+                  className="text-muted text-truncate overflow-hidden"
+                  style={{ maxWidth: "160px" }}
+                >
+                  {msg.replyToMessageContent}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
       <div
