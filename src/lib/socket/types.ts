@@ -11,6 +11,8 @@ export interface MessageReceivedEvent {
   replyToMessageId: number | null;
   replyToMessageContent: string | null;
   replyToMessageSenderId: number | null;
+  replyToMessageType: number | null;
+  replyToMessageFilePath: string | null;
   isEdited: boolean;
   isDeleted: boolean;
   createdAt: string;
