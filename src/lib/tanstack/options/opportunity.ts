@@ -139,7 +139,6 @@ export const opportunityMutations = {
       mutationKey: opportunityKeys.moveStage(),
       mutationFn: ({ id, body }) => moveOpportunityStage(id, body),
       meta: {
-        successMessage: "Chuyển giai đoạn thành công",
         invalidatesQuery: [opportunityKeys.kanban({ status: 1 })]
       }
     }),

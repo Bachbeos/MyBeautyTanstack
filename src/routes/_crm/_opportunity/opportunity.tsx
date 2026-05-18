@@ -168,17 +168,17 @@ function RouteComponent() {
 
   const userOptions: AppSelectOption[] = !me.isOperator
     ? [
-        {
-          label: String(me.name),
-          value: Number(me.userId)
-        }
-      ]
+      {
+        label: String(me.name),
+        value: Number(me.userId)
+      }
+    ]
     : (usersInf.data?.pages
-        .flatMap((page) => page.result?.items ?? [])
-        .map((u) => ({
-          label: String(u.name),
-          value: Number(u.id)
-        })) ?? []);
+      .flatMap((page) => page.result?.items ?? [])
+      .map((u) => ({
+        label: String(u.name),
+        value: Number(u.id)
+      })) ?? []);
 
   const customerOptions: AppSelectOption[] =
     customersInf.data?.pages
@@ -382,7 +382,7 @@ function RouteComponent() {
       });
 
       await moveStageMutation.mutateAsync({ id: move.card.id, body: payload });
-      toast.success("Chuyển stage thành công");
+      toast.success("Chuyển giai đoạn thành công");
       setPendingMove(null);
       setDynamicValues({});
       await resetLocalFromServer();
@@ -968,7 +968,7 @@ function RouteComponent() {
                 await submitMove(pendingMove, dynamicValues);
               }}
             >
-              Xác nhận chuyển stage
+              Xác nhận chuyển giai đoạn
             </button>
           </>
         }
