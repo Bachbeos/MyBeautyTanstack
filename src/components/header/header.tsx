@@ -202,41 +202,6 @@ export default function Header() {
             </button>
           </div>
 
-          <div className="header-item d-none d-sm-flex">
-            <div className="dropdown me-2">
-              <a href="#" className="btn topbar-link topbar-teal-link" data-bs-toggle="dropdown">
-                <i className="ti ti-layout-grid-add"></i>
-              </a>
-            </div>
-          </div>
-
-          <div className="header-item d-none d-sm-flex">
-            <div className="dropdown me-2">
-              <a href="#" className="btn topbar-link topbar-indigo-link">
-                <i className="ti ti-help-hexagon"></i>
-              </a>
-            </div>
-          </div>
-
-          <div className="header-item d-none d-sm-flex">
-            <div className="dropdown me-2">
-              <a href="#" className="btn topbar-link topbar-warning-link">
-                <i className="ti ti-chart-pie"></i>
-              </a>
-            </div>
-          </div>
-
-          <div className="header-line"></div>
-
-          <div className="header-item">
-            <div className="dropdown me-2">
-              <a href="#" className="btn topbar-link">
-                <i className="ti ti-message-circle-exclamation"></i>
-                <span className="badge rounded-pill">14</span>
-              </a>
-            </div>
-          </div>
-
           <div className="header-item dropdown mr-7" ref={notifRef}>
             <button
               className={cn("topbar-link btn dropdown-toggle drop-arrow-none", notifOpen && "show")}

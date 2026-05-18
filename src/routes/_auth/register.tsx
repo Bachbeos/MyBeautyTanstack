@@ -20,8 +20,7 @@ const registerSchema = z
     fullName: z.string().min(1, "Họ và tên là bắt buộc"),
     phone: z
       .string()
-      .min(9, "Số điện thoại không hợp lệ")
-      .regex(/^\+?\d+$/, "Chỉ được chứa số"),
+      .regex(/^0[0-9]{9}$/, "Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số"),
     password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
     confirmPassword: z.string().min(6, "Vui lòng nhập lại mật khẩu"),
     agree: z.boolean().refine((v) => v === true, {
