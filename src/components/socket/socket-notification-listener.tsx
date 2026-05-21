@@ -18,30 +18,6 @@ export function SocketNotificationListener() {
     const handleNotificationReceived = (payload: NotificationReceivedEvent) => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.list({ page: 1, size: 20 }) });
       queryClient.invalidateQueries({ queryKey: notificationKeys.infinite({ size: 20 }) });
-
-      toast.custom((t) => (
-        <div
-          className="shadow-lg border rounded-3 bg-white p-3 d-flex align-items-start gap-3"
-          style={{ minWidth: 320, maxWidth: 420 }}
-        >
-          <img
-            src={payload.image || "/assets/img/users/user-07.jpg"}
-            alt="notification"
-            className="rounded-circle flex-shrink-0"
-            style={{ width: 42, height: 42, objectFit: "cover" }}
-          />
-          <div className="flex-grow-1">
-            <div className="fw-semibold mb-1">{payload.title}</div>
-          </div>
-          <button
-            type="button"
-            className="btn btn-sm btn-link text-muted p-0"
-            onClick={() => toast.dismiss(t)}
-          >
-            <i className="ti ti-x" />
-          </button>
-        </div>
-      ));
     };
 
     const handleMessageReceived = (payload: MessageReceivedEvent) => {
