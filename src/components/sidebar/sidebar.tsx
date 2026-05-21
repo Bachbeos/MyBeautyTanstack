@@ -11,6 +11,7 @@ import logoWhite from "@assets/img/logo-white.svg";
 import { useViewPermission } from "@/hooks/use-permission";
 import { notificationQueries } from "@/lib/tanstack/options/notification";
 import { useSocketStore } from "@/lib/stores/socket";
+import type { NotificationReceivedEvent } from "@/lib/socket/types";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function Sidebar() {
@@ -79,7 +80,7 @@ export default function Sidebar() {
     const socket = useSocketStore.getState().getSocket();
     if (!socket) return;
 
-    const handleNotificationReceived = (payload: { type?: string; unreadCount?: number }) => {
+    const handleNotificationReceived = (payload: NotificationReceivedEvent) => {
       if (payload.type === "unread_count" && typeof payload.unreadCount === "number") {
         queryClient.setQueryData(["notification", "unreadCount"], {
           result: payload.unreadCount,

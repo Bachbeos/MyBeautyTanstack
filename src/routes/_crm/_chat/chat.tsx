@@ -622,7 +622,7 @@ function MessageGroup({
     >
       {!isOwn ? (
         <img
-          src={avatar("User " + group.senderId)}
+          src={ avatar("User " + group.senderId)}
           className="rounded-circle flex-shrink-0"
           style={{ width: 28, height: 28, objectFit: "cover", marginBottom: 2 }}
           alt=""

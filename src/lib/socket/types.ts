@@ -26,6 +26,7 @@ export interface NotificationReceivedEvent {
   createdTime?: string;
   image?: string | null;
   type?: string | null;
+  unreadCount?: number;
 }
 
 export interface TypingEvent {
