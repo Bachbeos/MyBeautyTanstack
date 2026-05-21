@@ -4,7 +4,6 @@ import { DataTable } from "@/components/table/data-table";
 import AppSelect, { type AppSelectOption } from "@/components/ui/app-select";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { opportunityMutations, opportunityQueries } from "@/lib/tanstack/options/opportunity";
-import { roleQueries } from "@/lib/tanstack/options/role";
 import { userQueries } from "@/lib/tanstack/options/user";
 import type { OpportunityDto, OpportunityId } from "@/lib/types/opportunity";
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
@@ -51,8 +50,6 @@ function RouteComponent() {
   const [pageSize, setPageSize] = useState(10);
   const [unassignedOnly, setUnassignedOnly] = useState(true);
 
-  const [dispatchMode, setDispatchMode] = useState<"role" | "users">("role");
-  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
 
   const rawNameFilter = useMemo(() => {
@@ -76,20 +73,9 @@ function RouteComponent() {
   const opportunities = query.data?.result?.items ?? [];
   const total = query.data?.result?.total ?? 0;
 
-  const rolesQuery = useQuery(roleQueries.list({ page: 1, limit: 200 }));
-  const roleOptions = useMemo<AppSelectOption[]>(
-    () =>
-      rolesQuery.data?.result?.items?.map((role) => ({
-        value: Number(role.id),
-        label: String(role.name)
-      })) ?? [],
-    [rolesQuery.data]
-  );
-
   const usersInf = useInfiniteQuery(
     userQueries.infinite({
-      limit: 50,
-      ...(selectedRoleId ? { roleId: selectedRoleId } : {})
+      limit: 50
     })
   );
 
@@ -106,8 +92,7 @@ function RouteComponent() {
     [userOptions, selectedUserIds]
   );
 
-  const assignMutation = useMutation(opportunityMutations.assign());
-  const assignAutoMutation = useMutation(opportunityMutations.assignAuto());
+  const distributeMutation = useMutation(opportunityMutations.distribute());
 
   useEffect(() => {
     setPageIndex(0);
@@ -118,11 +103,10 @@ function RouteComponent() {
   }, [pageIndex, pageSize, nameFilter, unassignedOnly]);
 
   useEffect(() => {
-    if (!selectedRoleId) return;
     setSelectedUserIds((prev) =>
       prev.filter((id) => userOptions.some((u) => Number(u.value) === id))
     );
-  }, [selectedRoleId, userOptions]);
+  }, [userOptions]);
 
   const selectedOpportunityIds = useMemo(() => {
     return Object.keys(rowSelection)
@@ -131,11 +115,7 @@ function RouteComponent() {
       .filter((id): id is OpportunityId => Boolean(id));
   }, [rowSelection, opportunities]);
 
-  const canDispatchByRole =
-    dispatchMode === "role" && !!selectedRoleId && selectedOpportunityIds.length > 0;
-  const canDispatchByUsers =
-    dispatchMode === "users" && selectedUserIds.length > 0 && selectedOpportunityIds.length > 0;
-  const canDispatch = canDispatchByRole || canDispatchByUsers;
+  const canDispatch = selectedUserIds.length > 0 && selectedOpportunityIds.length > 0;
 
   const formatCurrency = (value?: number) => {
     if (!value || Number.isNaN(value)) return "-";
@@ -233,42 +213,10 @@ function RouteComponent() {
       columnHelper.display({
         id: "action",
         header: "Điều phối nhanh",
-        cell: (info) => {
-          const row = info.row.original;
-          const selectedQuickUser =
-            userOptions.find((u) => Number(u.value) === Number(row.userId ?? -1)) ?? null;
-
-          return (
-            <div style={{ minWidth: 220 }}>
-              <AppSelect
-                value={selectedQuickUser}
-                options={userOptions}
-                placeholder="Chọn nhân viên"
-                onMenuScrollToBottom={() =>
-                  usersInf.hasNextPage && !usersInf.isFetchingNextPage && usersInf.fetchNextPage()
-                }
-                onChange={async (option) => {
-                  const selected = Array.isArray(option) ? option[0] : option;
-                  const userId = Number(selected?.value ?? 0);
-                  if (!userId) return;
-                  await assignMutation.mutateAsync({ id: row.id, userId });
-                  await query.refetch();
-                }}
-              />
-            </div>
-          );
-        }
+        cell: () => <span className="text-muted small">Chọn ở form bên trên</span>
       })
     ],
-    [
-      pageIndex,
-      pageSize,
-      assignMutation,
-      userOptions,
-      usersInf.hasNextPage,
-      usersInf.isFetchingNextPage,
-      query
-    ]
+    [pageIndex, pageSize]
   );
 
   const table = useReactTable({
@@ -296,28 +244,16 @@ function RouteComponent() {
     getCoreRowModel: getCoreRowModel()
   });
 
-  const handleRunAutoDispatch = async () => {
+  const handleRunDispatch = async () => {
     if (!canDispatch || selectedOpportunityIds.length === 0) return;
 
-    await Promise.all(
-      selectedOpportunityIds.map((id) =>
-        assignAutoMutation.mutateAsync({
-          id,
-          body:
-            dispatchMode === "role"
-              ? {
-                  roleId: selectedRoleId ?? undefined,
-                  opportunityIds: [id]
-                }
-              : {
-                  userIds: selectedUserIds,
-                  opportunityIds: [id]
-                }
-        })
-      )
-    );
+    await distributeMutation.mutateAsync({
+      opportunityIds: selectedOpportunityIds.map(Number),
+      userIds: selectedUserIds
+    });
 
     setRowSelection({});
+    setSelectedUserIds([]);
     await query.refetch();
   };
 
@@ -353,89 +289,50 @@ function RouteComponent() {
             </div>
 
             <div className="border rounded-2 p-3 bg-light-subtle">
-              <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
-                <label className="fw-semibold mb-0">Kiểu chia việc:</label>
-
-                <div className="form-check form-check-inline mb-0">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    id="dispatch-by-role"
-                    checked={dispatchMode === "role"}
-                    onChange={() => setDispatchMode("role")}
+              <div className="row g-3 align-items-end">
+                <div className="col-12 col-lg-6">
+                  <label className="form-label mb-1">Danh sách nhân viên</label>
+                  <AppSelect
+                    value={selectedUsersForDropdown}
+                    options={userOptions}
+                    isMulti
+                    placeholder="Tìm kiếm và chọn nhân viên"
+                    onMenuScrollToBottom={() =>
+                      usersInf.hasNextPage && !usersInf.isFetchingNextPage && usersInf.fetchNextPage()
+                    }
+                    onChange={(option) => {
+                      const selected = Array.isArray(option) ? option : option ? [option] : [];
+                      setSelectedUserIds(selected.map((item) => Number(item.value)).filter(Boolean));
+                    }}
                   />
-                  <label className="form-check-label" htmlFor="dispatch-by-role">
-                    Chia đều theo chức vụ
-                  </label>
                 </div>
 
-                <div className="form-check form-check-inline mb-0">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    id="dispatch-by-users"
-                    checked={dispatchMode === "users"}
-                    onChange={() => setDispatchMode("users")}
-                  />
-                  <label className="form-check-label" htmlFor="dispatch-by-users">
-                    Chia theo danh sách nhân viên chọn tay
-                  </label>
+                <div className="col-12 col-lg-6">
+                  <label className="form-label mb-1">Danh sách cơ hội đã chọn</label>
+                  <div className="border rounded-2 bg-white p-2 d-flex flex-wrap gap-2" style={{ minHeight: 42 }}>
+                    {selectedOpportunityIds.length > 0 ? (
+                      selectedOpportunityIds.map((id) => {
+                        const opportunity = opportunities.find((item) => Number(item.id) === Number(id));
+                        return (
+                          <span key={String(id)} className="badge bg-primary-subtle text-primary">
+                            {opportunity?.code || `#${String(id)}`}
+                          </span>
+                        );
+                      })
+                    ) : (
+                      <span className="text-muted small">Chưa chọn cơ hội nào</span>
+                    )}
+                  </div>
                 </div>
               </div>
-
-              {dispatchMode === "role" ? (
-                <div className="row g-2 align-items-end">
-                  <div className="col-12 col-md-8 col-lg-6">
-                    <label className="form-label mb-1">Chọn chức vụ</label>
-                    <AppSelect
-                      value={
-                        roleOptions.find(
-                          (role) => Number(role.value) === Number(selectedRoleId ?? -1)
-                        ) ?? null
-                      }
-                      options={roleOptions}
-                      placeholder="-- Chọn chức vụ --"
-                      onChange={(option) => {
-                        const selected = Array.isArray(option) ? option[0] : option;
-                        const roleId = Number(selected?.value ?? 0);
-                        setSelectedRoleId(roleId || null);
-                        setSelectedUserIds([]);
-                      }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="row g-2 align-items-end">
-                  <div className="col-12 col-md-10 col-lg-8">
-                    <label className="form-label mb-1">Danh sách nhân viên (customer/list)</label>
-                    <AppSelect
-                      value={selectedUsersForDropdown}
-                      options={userOptions}
-                      isMulti
-                      placeholder="Tìm kiếm và chọn nhân viên"
-                      onMenuScrollToBottom={() =>
-                        usersInf.hasNextPage &&
-                        !usersInf.isFetchingNextPage &&
-                        usersInf.fetchNextPage()
-                      }
-                      onChange={(option) => {
-                        const selected = Array.isArray(option) ? option : option ? [option] : [];
-                        setSelectedUserIds(
-                          selected.map((item) => Number(item.value)).filter(Boolean)
-                        );
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
 
               <div className="d-flex justify-content-end mt-3">
                 <button
                   className="btn btn-primary"
-                  disabled={!canDispatch || assignAutoMutation.isPending}
-                  onClick={handleRunAutoDispatch}
+                  disabled={!canDispatch || distributeMutation.isPending}
+                  onClick={handleRunDispatch}
                 >
-                  {assignAutoMutation.isPending ? "Đang chia đều..." : "Chia đều công việc"}
+                  {distributeMutation.isPending ? "Đang chia đều..." : "Chia đều công việc"}
                 </button>
               </div>
             </div>

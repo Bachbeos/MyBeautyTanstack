@@ -179,6 +179,7 @@ export const ENDPOINTS = {
     moveStage: (id: OpportunityId) => `/opportunity/move-stage/${id}`,
     assign: (id: OpportunityId) => `/opportunity/assign/${id}`,
     assignAuto: (id: OpportunityId) => `/opportunity/assign-auto/${id}`,
+    distribute: "/opportunity/distribute",
     update: "/opportunity/update",
     delete: (id: OpportunityId) => `/opportunity/delete/${id}`,
     detail: "/opportunity/get"

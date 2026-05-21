@@ -13,7 +13,8 @@ import {
   getOpportunityStageTransitionMeta,
   moveOpportunityStage,
   assignOpportunity,
-  autoAssignOpportunity
+  autoAssignOpportunity,
+  distributeOpportunities
 } from "@/lib/api/opportunity";
 
 import type {
@@ -163,6 +164,16 @@ export const opportunityMutations = {
       mutationFn: ({ id, body }) => autoAssignOpportunity(id, body),
       meta: {
         successMessage: "Đã tự động điều phối cơ hội",
+        invalidatesQuery: [opportunityKeys.list({})]
+      }
+    }),
+
+  distribute: () =>
+    mutationOptions<ApiResponse<number>, Error, { opportunityIds: number[]; userIds: number[] }>({
+      mutationKey: ["opportunity", "distribute"],
+      mutationFn: distributeOpportunities,
+      meta: {
+        successMessage: "Đã chia đều cơ hội cho nhân viên",
         invalidatesQuery: [opportunityKeys.list({})]
       }
     })

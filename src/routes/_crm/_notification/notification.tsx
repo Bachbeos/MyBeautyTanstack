@@ -73,9 +73,6 @@ function RouteComponent() {
               >
                 <i className="ti ti-checks me-1"></i>Đánh dấu đã đọc tất cả
               </button>
-              <button className="btn btn-danger" type="button" onClick={handleRemoveAll}>
-                <i className="ti ti-trash me-1"></i>Xóa tất cả
-              </button>
             </div>
           </div>
 
@@ -88,13 +85,13 @@ function RouteComponent() {
                   <div className="card-body">
                     <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
                       <div className="d-flex align-items-center">
-                        <a href="#" className="avatar flex-shrink-0">
+                        {/* <a href="#" className="avatar flex-shrink-0">
                           <img
                             src={n.image || "/assets/img/users/user-07.jpg"}
                             alt="img"
                             className="rounded-circle"
                           />
-                        </a>
+                        </a> */}
                         <div className="ms-2">
                           <div>
                             <p className="mb-1">
@@ -122,13 +119,6 @@ function RouteComponent() {
                             <i className="ti ti-check me-1"></i>Đánh dấu đã đọc
                           </button>
                         )}
-                        <button
-                          className="btn btn-danger d-inline-flex align-items-center"
-                          type="button"
-                          onClick={() => handleRemoveItem(n.id)}
-                        >
-                          <i className="ti ti-trash me-1"></i>Xóa
-                        </button>
                       </div>
                     </div>
                   </div>

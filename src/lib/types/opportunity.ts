@@ -112,3 +112,8 @@ export type OpportunityAutoAssignRequest = {
   roleId?: number;
   userIds?: number[];
 };
+
+export type OpportunityDistributeRequest = {
+  opportunityIds: number[];
+  userIds: number[];
+};
