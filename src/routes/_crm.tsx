@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_crm")({
 
 function CRMLayout() {
   const navigate = useNavigate();
-  const { userId, accessToken, set, clear } = useAuthStore();
+  const { userId, name, accessToken, set, clear } = useAuthStore();
 
   const {
     data: userInfo,
@@ -66,7 +66,7 @@ function CRMLayout() {
   }, [isError, isSuccess, userInfo, accessToken]);
 
   // useQuery(permissionQueries.myResources());
-  useChatSocket(userId ?? 0, "");
+  useChatSocket(userId ?? 0, name ?? "");
 
   return (
     <>

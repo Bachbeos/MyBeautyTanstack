@@ -61,3 +61,10 @@ export const markAllNotificationsRead = async (userId: number): Promise<ApiRespo
   );
   return res.data;
 };
+
+export const getUnreadNotificationCount = async (signal?: AbortSignal): Promise<ApiResponse<number>> => {
+  const res = await axiosInstance.get<ApiResponse<number>>(ENDPOINTS.notification.unreadCount, {
+    signal
+  });
+  return res.data;
+};

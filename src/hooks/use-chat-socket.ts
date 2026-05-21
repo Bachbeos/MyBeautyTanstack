@@ -96,24 +96,24 @@ export function useChatSocket(userId: number, userName: string) {
               ...page,
               result: page.result
                 ? {
-                    ...page.result,
-                    data: page.result.data.map((chat) =>
-                      chat.id !== event.chatId
-                        ? chat
-                        : {
-                            ...chat,
-                            lastMessageContent: event.content,
-                            lastMessageSenderId: event.senderId,
-                            lastMessageSenderName: event.senderName,
-                            lastMessageType: event.messageType,
-                            lastMessageAt: event.createdAt,
-                            unreadCount:
-                              event.senderId !== userId && event.chatId !== activeChatIdRef.current
-                                ? chat.unreadCount + 1
-                                : chat.unreadCount
-                          }
-                    )
-                  }
+                  ...page.result,
+                  data: page.result.data.map((chat) =>
+                    chat.id !== event.chatId
+                      ? chat
+                      : {
+                        ...chat,
+                        lastMessageContent: event.content,
+                        lastMessageSenderId: event.senderId,
+                        lastMessageSenderName: event.senderName,
+                        lastMessageType: event.messageType,
+                        lastMessageAt: event.createdAt,
+                        unreadCount:
+                          event.senderId !== userId && event.chatId !== activeChatIdRef.current
+                            ? chat.unreadCount + 1
+                            : chat.unreadCount
+                      }
+                  )
+                }
                 : page.result
             }))
           };
@@ -142,9 +142,9 @@ export function useChatSocket(userId: number, userName: string) {
                     ...first,
                     result: first.result
                       ? {
-                          ...first.result,
-                          data: [newChat, ...(first.result.data ?? [])]
-                        }
+                        ...first.result,
+                        data: [newChat, ...(first.result.data ?? [])]
+                      }
                       : first.result
                   },
                   ...rest
@@ -168,11 +168,11 @@ export function useChatSocket(userId: number, userName: string) {
             ...page,
             result: page.result
               ? {
-                  ...page.result,
-                  data: page.result.data.map((chat) =>
-                    chat.id === chatId ? { ...chat, unreadCount: 0 } : chat
-                  )
-                }
+                ...page.result,
+                data: page.result.data.map((chat) =>
+                  chat.id === chatId ? { ...chat, unreadCount: 0 } : chat
+                )
+              }
               : page.result
           }))
         };

@@ -2,12 +2,16 @@
 import { useEffect, useMemo, useState } from "react";
 import SimpleBar from "simplebar-react";
 import { Link, useLocation } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import "simplebar-react/dist/simplebar.min.css";
 import SubMenuMotion from "./SubMenuMotion";
 import logo from "@assets/img/logo.svg";
 import logoSmall from "@assets/img/logo-small.svg";
 import logoWhite from "@assets/img/logo-white.svg";
 import { useViewPermission } from "@/hooks/use-permission";
+import { notificationQueries } from "@/lib/tanstack/options/notification";
+import { useSocketStore } from "@/lib/stores/socket";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<string>("");
@@ -67,6 +71,30 @@ export default function Sidebar() {
   };
 
   const location = useLocation();
+  const queryClient = useQueryClient();
+  const unreadCountQ = useQuery(notificationQueries.unreadCount());
+  const unreadCount = unreadCountQ.data?.result ?? 0;
+
+  useEffect(() => {
+    const socket = useSocketStore.getState().getSocket();
+    if (!socket) return;
+
+    const handleNotificationReceived = (payload: { type?: string; unreadCount?: number }) => {
+      if (payload.type === "unread_count" && typeof payload.unreadCount === "number") {
+        queryClient.setQueryData(["notification", "unreadCount"], {
+          result: payload.unreadCount,
+          status: 200,
+          success: true,
+          message: "OK"
+        } as any);
+      }
+    };
+
+    socket.on("notification_received", handleNotificationReceived);
+    return () => {
+      socket.off("notification_received", handleNotificationReceived);
+    };
+  }, [queryClient]);
 
   useEffect(() => {
     const currentTab = pathToTabKey[location.pathname];
@@ -223,6 +251,7 @@ export default function Sidebar() {
                         onClick={() => handleTabClick("notification")}
                       >
                         Thông báo
+                        {unreadCount > 0 && <span className="badge bg-danger ms-2">{unreadCount}</span>}
                       </Link>
                     </li>
                   </SubMenuMotion>
@@ -247,7 +276,7 @@ export default function Sidebar() {
                     </Link>
                   </li>
                 )}
-                {canView("OPPORTUNITY") && (	
+                {canView("OPPORTUNITY") && (
                   <>
                     <li>
                       <Link

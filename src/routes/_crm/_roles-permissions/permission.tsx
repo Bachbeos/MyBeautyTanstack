@@ -64,7 +64,7 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
- 
+
   const { canAdd, canEdit, canDelete, canView } = usePermission("PERMISSION");
 
   const query = useQuery(permissionQueries.info({ roleId }));
@@ -217,7 +217,7 @@ function RouteComponent() {
       </div>
     );
   }
- 
+
   return (
     <div className="page-wrapper">
       <div className="content pb-0">

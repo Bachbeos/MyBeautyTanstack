@@ -1,6 +1,7 @@
 export interface MessageReceivedEvent {
   id: number;
   chatId: number;
+  chatName?: string | null;
   senderId: number;
   senderName: string;
   content: string | null;
@@ -16,6 +17,15 @@ export interface MessageReceivedEvent {
   isEdited: boolean;
   isDeleted: boolean;
   createdAt: string;
+}
+
+export interface NotificationReceivedEvent {
+  id: number;
+  title: string;
+  content: string | null;
+  createdTime?: string;
+  image?: string | null;
+  type?: string | null;
 }
 
 export interface TypingEvent {

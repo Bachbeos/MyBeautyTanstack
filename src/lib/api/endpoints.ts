@@ -167,6 +167,7 @@ export const ENDPOINTS = {
     list: "/notification/list",
     detail: "/notification/get",
     update: "/notification/update",
+    unreadCount: "/notification/unread-count",
     markRead: "/notification/mark-read",
     markAllRead: "/notification/mark-all-read",
     delete: (id: NotificationId) => `/notification/delete/${id}`

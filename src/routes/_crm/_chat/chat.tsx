@@ -671,17 +671,17 @@ function MsgBubble({
   const hasMedia = isImage || isVideo;
   const radius = isOwn
     ? {
-        borderTopLeftRadius: "16px",
-        borderTopRightRadius: isFirst ? "16px" : "4px",
-        borderBottomRightRadius: isLast ? "16px" : "4px",
-        borderBottomLeftRadius: "16px"
-      }
+      borderTopLeftRadius: "16px",
+      borderTopRightRadius: isFirst ? "16px" : "4px",
+      borderBottomRightRadius: isLast ? "16px" : "4px",
+      borderBottomLeftRadius: "16px"
+    }
     : {
-        borderTopLeftRadius: isFirst ? "16px" : "4px",
-        borderTopRightRadius: "16px",
-        borderBottomRightRadius: "16px",
-        borderBottomLeftRadius: isLast ? "16px" : "4px"
-      };
+      borderTopLeftRadius: isFirst ? "16px" : "4px",
+      borderTopRightRadius: "16px",
+      borderBottomRightRadius: "16px",
+      borderBottomLeftRadius: isLast ? "16px" : "4px"
+    };
 
   return (
     <div className="position-relative msg-bubble-wrapper">

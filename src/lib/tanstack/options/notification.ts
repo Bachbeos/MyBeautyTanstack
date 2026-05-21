@@ -9,7 +9,8 @@ import {
   getNotificationDetail,
   upsertNotification,
   markNotificationRead,
-  markAllNotificationsRead
+  markAllNotificationsRead,
+  getUnreadNotificationCount
 } from "@/lib/api/notification";
 
 import type {
@@ -66,6 +67,12 @@ export const notificationQueries = {
       queryKey: notificationKeys.detail(id),
       queryFn: ({ signal }) => getNotificationDetail(id, signal),
       enabled: !!id
+    }),
+
+  unreadCount: () =>
+    queryOptions<ApiResponse<number>>({
+      queryKey: ["notification", "unreadCount"],
+      queryFn: ({ signal }) => getUnreadNotificationCount(signal)
     })
 };
 
