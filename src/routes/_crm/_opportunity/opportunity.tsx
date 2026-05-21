@@ -848,10 +848,6 @@ function RouteComponent() {
               <div className="fw-semibold">{detailQuery.data.result.name || "-"}</div>
             </div>
             <div className="col-md-6">
-              <label className="form-label text-muted">Mã cơ hội</label>
-              <div>{detailQuery.data.result.code || "-"}</div>
-            </div>
-            <div className="col-md-6">
               <label className="form-label text-muted">Khách hàng</label>
               <div>{detailQuery.data.result.customerName || "-"}</div>
             </div>
