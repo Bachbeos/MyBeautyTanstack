@@ -1,23 +1,28 @@
-import { createFileRoute } from "@tanstack/react-router";
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-  type InfiniteData
-} from "@tanstack/react-query";
-import { useEffect, useRef, useState, useCallback, useMemo, useLayoutEffect } from "react";
+import { CreateChatModal } from "@/components/chat/create-chat-modal";
+import { MessageInput } from "@/components/chat/message-input";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
-import { chatQueries, chatMutations, chatKeys } from "@/lib/tanstack/options/chat";
 import { useTyping } from "@/hooks/use-typing";
 import { getSocket } from "@/lib/socket/socket";
 import { useAuthStore } from "@/lib/stores/auth";
 import { useChatStore } from "@/lib/stores/chat";
-import { cn } from "@/lib/utils";
-import type { ChatView, MessageDto, CursorResult } from "@/lib/types/chat";
+import { chatKeys, chatMutations, chatQueries } from "@/lib/tanstack/options/chat";
+import { userQueries } from "@/lib/tanstack/options/user";
+import { queryClient } from "@/lib/tanstack/query-client";
+import type { ChatView, CursorResult, MessageDto } from "@/lib/types/chat";
 import type { ApiResponse } from "@/lib/types/common";
-import { MessageInput } from "@/components/chat/message-input";
-import { CreateChatModal } from "@/components/chat/create-chat-modal";
+import { UserId, type UserDto } from "@/lib/types/user";
+import { cn } from "@/lib/utils";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+  useQuery,
+  useQueries
+} from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 export const Route = createFileRoute("/_crm/_chat/chat")({ component: ChatPage });
 
@@ -39,6 +44,21 @@ const sameDay = (a: string, b: string) => new Date(a).toDateString() === new Dat
 
 const avatar = (name: string) =>
   `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "?")}&background=random&color=fff`;
+
+export const getCachedUserInfo = (id: UserId) => {
+  const data = queryClient.getQueryData(userQueries.detail(id).queryKey) as
+    | ApiResponse<UserDto>
+    | undefined;
+
+  const user = data?.result;
+
+  const name = user?.name?.trim() || "Người dùng không xác định";
+
+  return {
+    name,
+    avatar: user?.avatar || avatar(name)
+  };
+};
 
 const FILE_ICON: Record<number, string> = {
   2: "ti ti-photo",
@@ -168,6 +188,15 @@ function ChatPage() {
     () => [...(activeMsgQ.data?.pages.flatMap((p) => p.result?.data ?? []) ?? [])].reverse(),
     [activeMsgQ.data]
   );
+
+  const userIds = useMemo(() => [...new Set(messages.map((x) => x.senderId))], [messages]);
+
+  useQueries({
+    queries: userIds.map((id) => ({
+      ...userQueries.detail(UserId(id)),
+      staleTime: 1000 * 60 * 5
+    }))
+  });
 
   const messageGroups = useMemo(
     () => groupMessages(messages, currentUserId),
@@ -616,13 +645,14 @@ function MessageGroup({
   onReply: (msg: MessageDto) => void;
 }) {
   const { messages, isOwn } = group;
+  const info = getCachedUserInfo(UserId(group.senderId));
   return (
     <div
       className={cn("d-flex align-items-end gap-2 mb-1", isOwn ? "flex-row-reverse" : "flex-row")}
     >
       {!isOwn ? (
         <img
-          src={ avatar("User " + group.senderId)}
+          src={info.avatar}
           className="rounded-circle flex-shrink-0"
           style={{ width: 28, height: 28, objectFit: "cover", marginBottom: 2 }}
           alt=""
@@ -634,6 +664,17 @@ function MessageGroup({
         className={cn("d-flex flex-column gap-1", isOwn ? "align-items-end" : "align-items-start")}
         style={{ maxWidth: "70%" }}
       >
+        {!isOwn && (
+          <div
+            className="small text-secondary px-1"
+            style={{
+              fontSize: 12,
+              lineHeight: 1.2
+            }}
+          >
+            {info.name}
+          </div>
+        )}
         {messages.map((msg, idx) => (
           <MsgBubble
             key={msg.id}
@@ -671,17 +712,17 @@ function MsgBubble({
   const hasMedia = isImage || isVideo;
   const radius = isOwn
     ? {
-      borderTopLeftRadius: "16px",
-      borderTopRightRadius: isFirst ? "16px" : "4px",
-      borderBottomRightRadius: isLast ? "16px" : "4px",
-      borderBottomLeftRadius: "16px"
-    }
+        borderTopLeftRadius: "16px",
+        borderTopRightRadius: isFirst ? "16px" : "4px",
+        borderBottomRightRadius: isLast ? "16px" : "4px",
+        borderBottomLeftRadius: "16px"
+      }
     : {
-      borderTopLeftRadius: isFirst ? "16px" : "4px",
-      borderTopRightRadius: "16px",
-      borderBottomRightRadius: "16px",
-      borderBottomLeftRadius: isLast ? "16px" : "4px"
-    };
+        borderTopLeftRadius: isFirst ? "16px" : "4px",
+        borderTopRightRadius: "16px",
+        borderBottomRightRadius: "16px",
+        borderBottomLeftRadius: isLast ? "16px" : "4px"
+      };
 
   return (
     <div className="position-relative msg-bubble-wrapper">
