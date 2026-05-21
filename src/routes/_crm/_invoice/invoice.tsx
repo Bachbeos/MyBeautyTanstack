@@ -163,7 +163,8 @@ function RouteComponent() {
           const status = Number(info.getValue());
           if (status === 1) return <span className="badge badge-soft-success">Hoàn tất</span>;
           if (status === 2) return <span className="badge badge-soft-danger">Hủy</span>;
-          if (status === 3) return <span className="badge badge-soft-warning">Chưa thanh toán</span>;
+          if (status === 3)
+            return <span className="badge badge-soft-warning">Chưa thanh toán</span>;
           return <span className="badge badge-soft-secondary">N/A</span>;
         },
         meta: { className: "text-center align-middle w-1" }
@@ -181,21 +182,21 @@ function RouteComponent() {
           );
         },
         meta: { className: "align-middle text-center" }
-      }),
-      columnHelper.display({
-        id: "actions",
-        header: "Thao tác",
-        meta: { className: "text-center w-1" },
-        cell: (info) => (
-          <ActionsTable
-            row={info.row}
-            onView={(data) => openModal("detail", data)}
-            onEdit={(data) => openModal("edit", data)}
-            onDelete={(data) => openModal("delete", data)}
-            resource="INVOICE"
-          />
-        )
       })
+      // columnHelper.display({
+      //   id: "actions",
+      //   header: "Thao tác",
+      //   meta: { className: "text-center w-1" },
+      //   cell: (info) => (
+      //     <ActionsTable
+      //       row={info.row}
+      //       onView={(data) => openModal("detail", data)}
+      //       onEdit={(data) => openModal("edit", data)}
+      //       onDelete={(data) => openModal("delete", data)}
+      //       resource="INVOICE"
+      //     />
+      //   )
+      // })
     ],
     [pageIndex, pageSize]
   );

@@ -1,6 +1,5 @@
 import { AsyncBoundary } from "@/components/async-boundary";
 import { usePermission } from "@/hooks/use-permission";
-import { Can } from "@/components/auth/can";
 import ExportButton from "@/components/export/export";
 import { BaseCheckbox } from "@/components/form/base-checkbox";
 import RefreshButton from "@/components/refresh/refresh";
@@ -260,6 +259,7 @@ function RouteComponent() {
                   filterable={true}
                   filterKey="name"
                   filterKeyPlaceholder="Tìm nhanh tài nguyên..."
+                  showPagination={false}
                 />
               )}
             </AsyncBoundary>

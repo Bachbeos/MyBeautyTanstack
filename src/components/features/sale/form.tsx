@@ -5,15 +5,42 @@ import { useAppForm } from "@/components/form/hooks";
 import { getVoucherByCode, applyVoucher } from "@/lib/api/voucher";
 
 const invoiceSchema = z.object({
-  amount: z.number().min(0, "Số tiền hóa đơn không hợp lệ"),
-  discount: z.number().min(0, "Tiền giảm giá không hợp lệ"),
+  amount: z.string().min(1, "Số tiền hóa đơn không hợp lệ"),
+  discount: z.string().optional(),
   discountCode: z.string().max(50, "Mã giảm giá tối đa 50 ký tự").optional(),
-  voucherId: z.number().optional(),
-  fee: z.number().min(0, "Tiền phải trả không hợp lệ"),
-  paymentMethod: z.number().min(1, "Vui lòng chọn phương thức thanh toán")
+  voucherId: z.coerce.number().optional(),
+  fee: z.string().min(1, "Tiền phải trả không hợp lệ"),
+  paymentMethod: z.coerce.number().min(1, "Vui lòng chọn phương thức thanh toán")
 });
 
-type InvoiceFormValues = z.infer<typeof invoiceSchema>;
+type InvoiceFormValues = {
+  amount: string;
+  discount: string;
+  discountCode?: string;
+  voucherId?: number;
+  fee: string;
+  paymentMethod: number;
+};
+type InvoiceSubmitValues = {
+  amount: number;
+  discount: number;
+  discountCode?: string;
+  voucherId?: number;
+  fee: number;
+  paymentMethod: number;
+};
+
+const formatMoney = (value: number | string | undefined): string => {
+  if (value === undefined || value === null || value === "") return "";
+  return String(value)
+    .replace(/\D/g, "")
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
+const parseMoney = (value: string | number | undefined): number => {
+  if (value === undefined || value === null || value === "") return 0;
+  return Number(String(value).replace(/\./g, ""));
+};
 
 type InvoiceFormProps = {
   mode?: "add" | "edit" | "detail";
@@ -37,21 +64,31 @@ export function SaleForm({
   const [discountCodeError, setDiscountCodeError] = useState<string>("");
   const [discountCodeSuccess, setDiscountCodeSuccess] = useState<string>("");
   const [isApplyingVoucher, setIsApplyingVoucher] = useState<boolean>(false);
+  const [voucherId, setVoucherId] = useState<number | undefined>(undefined);
 
   const form = useAppForm({
     defaultValues: {
-      amount: initialAmount,
-      discount: 0,
+      amount: formatMoney(initialAmount),
+      discount: formatMoney(0),
       discountCode: "",
-      voucherId: undefined,
-      fee: initialAmount,
+      fee: formatMoney(initialAmount),
       paymentMethod: 0
-    } satisfies InvoiceFormValues as InvoiceFormValues,
+    } satisfies InvoiceFormValues,
     validators: {
-      onSubmit: invoiceSchema
+      onSubmit: invoiceSchema as any
     },
     onSubmit: async ({ value }) => {
-      await onSubmit(value);
+      const parsedValue = invoiceSchema.parse(value);
+      const payload: InvoiceSubmitValues = {
+        amount: parseMoney(parsedValue.amount),
+        discount: parseMoney(parsedValue.discount),
+        discountCode: parsedValue.discountCode,
+        voucherId,
+        fee: parseMoney(parsedValue.fee),
+        paymentMethod: parsedValue.paymentMethod
+      };
+
+      await onSubmit(payload as any);
     }
   });
 
@@ -60,14 +97,14 @@ export function SaleForm({
     if (!code || code.trim() === "") {
       setDiscountCodeError("Vui lòng nhập mã giảm giá");
       setDiscountCodeSuccess("");
-      form.setFieldValue("voucherId", undefined);
+      setVoucherId(undefined);
       return;
     }
 
     if (!invoiceId) {
       setDiscountCodeError("Không tìm thấy hóa đơn. Vui lòng thử lại.");
       setDiscountCodeSuccess("");
-      form.setFieldValue("voucherId", undefined);
+      setVoucherId(undefined);
       return;
     }
 
@@ -81,7 +118,7 @@ export function SaleForm({
 
       if (!(voucherResponse?.success || voucherResponse?.code === 200)) {
         setDiscountCodeError(voucherResponse?.message || "Mã giảm giá không tồn tại");
-        form.setFieldValue("voucherId", undefined);
+        setVoucherId(undefined);
         setIsApplyingVoucher(false);
         return;
       }
@@ -94,45 +131,45 @@ export function SaleForm({
 
       if (applyResponse?.success || applyResponse?.code === 200) {
         const discountAmount = typeof applyResponse.result === "number" ? applyResponse.result : 0;
-        form.setFieldValue("voucherId", voucherId);
-        form.setFieldValue("discount", discountAmount);
+        setVoucherId(voucherId);
+        form.setFieldValue("discount", formatMoney(discountAmount));
 
         // Recalculate fee after discount is applied
-        const amount = form.getFieldValue("amount") || 0;
+        const amount = parseMoney(form.getFieldValue("amount"));
         const fee = Math.max(0, amount - discountAmount);
-        form.setFieldValue("fee", fee);
+        form.setFieldValue("fee", formatMoney(fee));
 
         setDiscountCodeSuccess(`✓ Áp dụng voucher "${voucherName}" thành công`);
         console.log("Voucher applied successfully");
       } else {
         setDiscountCodeError(applyResponse?.message || "Không thể áp dụng mã giảm giá");
-        form.setFieldValue("voucherId", undefined);
+        setVoucherId(undefined);
       }
     } catch (error: any) {
       console.error("Error applying voucher:", error);
       setDiscountCodeError(error?.response?.data?.message || "Mã giảm giá không hợp lệ");
-      form.setFieldValue("voucherId", undefined);
+      setVoucherId(undefined);
     } finally {
       setIsApplyingVoucher(false);
     }
   };
 
   const calculateFee = () => {
-    const amount = form.getFieldValue("amount") || 0;
-    const discount = form.getFieldValue("discount") || 0;
+    const amount = parseMoney(form.getFieldValue("amount"));
+    const discount = parseMoney(form.getFieldValue("discount"));
     return Math.max(0, amount - discount);
   };
 
   useEffect(() => {
-    const amount = form.getFieldValue("amount") || 0;
-    const discount = form.getFieldValue("discount") || 0;
+    const amount = parseMoney(form.getFieldValue("amount"));
+    const discount = parseMoney(form.getFieldValue("discount"));
     const fee = Math.max(0, amount - discount);
-    form.setFieldValue("fee", fee);
+    form.setFieldValue("fee", formatMoney(fee));
   }, []);
 
   useEffect(() => {
-    form.setFieldValue("amount", initialAmount);
-    form.setFieldValue("fee", initialAmount);
+    form.setFieldValue("amount", formatMoney(initialAmount));
+    form.setFieldValue("fee", formatMoney(initialAmount));
   }, [initialAmount]);
 
   return (
@@ -150,10 +187,12 @@ export function SaleForm({
             {(field) => (
               <field.Input
                 label="Tiền hóa đơn"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 required
                 disabled={isReadOnly}
                 placeholder="Nhập số tiền"
+                onChange={(e) => field.handleChange(formatMoney(e.target.value))}
               />
             )}
           </form.AppField>
@@ -165,9 +204,11 @@ export function SaleForm({
             {(field) => (
               <field.Input
                 label="Tiền giảm giá"
-                type="number"
+                type="text"
+                inputMode="numeric"
                 disabled={isReadOnly}
                 placeholder="Nhập tiền giảm giá"
+                onChange={(e) => field.handleChange(formatMoney(e.target.value))}
               />
             )}
           </form.AppField>
@@ -177,7 +218,13 @@ export function SaleForm({
         <div className="col-md-6 mb-3">
           <form.AppField name="fee">
             {(field) => (
-              <field.Input label="Tiền phải trả" type="number" disabled={true} placeholder="0" />
+              <field.Input
+                label="Tiền phải trả"
+                type="text"
+                inputMode="numeric"
+                disabled={true}
+                placeholder="0"
+              />
             )}
           </form.AppField>
         </div>
