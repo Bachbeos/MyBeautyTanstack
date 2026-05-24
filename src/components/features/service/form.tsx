@@ -282,18 +282,18 @@ export function ServiceForm({
                 )}
               </form.AppField>
             </div>
-            <div className="col-md-4 mb-3">
+            {/* <div className="col-md-4 mb-3">
               <form.AppField name="treatmentNum">
                 {(field) => <field.Input label="Số buổi" type="number" disabled={isReadOnly} />}
               </form.AppField>
-            </div>
-            <div className="col-md-4 mb-3">
+            </div> */}
+            {/* <div className="col-md-4 mb-3">
               <form.AppField name="totalTime">
                 {(field) => (
                   <field.Input label="Thời gian (phút)" type="number" disabled={isReadOnly} />
                 )}
               </form.AppField>
-            </div>
+            </div> */}
             <form.AppField name="type">
               {(typeField) => {
                 const serviceType = Number(typeField.state.value ?? 1);
@@ -311,7 +311,7 @@ export function ServiceForm({
                       />
                     </div>
 
-                    <div className="col-md-6 mb-3">
+                    {/* <div className="col-md-6 mb-3">
                       <form.AppField name="featured">
                         {(field) => (
                           <div className="">
@@ -323,7 +323,7 @@ export function ServiceForm({
                           </div>
                         )}
                       </form.AppField>
-                    </div>
+                    </div> */}
 
                     {serviceType === 2 && (
                       <div className="col-12 mb-3">

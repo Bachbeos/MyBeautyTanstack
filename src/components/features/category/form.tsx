@@ -191,7 +191,7 @@ export function CategoryForm({
               </form.AppField>
             </div>
 
-            <div className="col-md-6 mb-3">
+            {/* <div className="col-md-6 mb-3">
               <form.AppField name="parentId">
                 {(field) => (
                   <field.Select
@@ -202,17 +202,17 @@ export function CategoryForm({
                   />
                 )}
               </form.AppField>
-            </div>
+            </div> */}
 
-            <div className="col-12 mb-3">
+            {/* <div className="col-12 mb-3">
               <form.AppField name="position">
                 {(field) => (
                   <field.Input type="number" label="Thứ tự hiển thị" disabled={isReadOnly} />
                 )}
               </form.AppField>
-            </div>
+            </div> */}
 
-            <div className="col-12 mb-3">
+            <div className="col-md-6 mb-3">
               <form.AppField name="active">
                 {(field) => (
                   <field.Radio label="Trạng thái" options={statusOptions} disabled={isReadOnly} />
