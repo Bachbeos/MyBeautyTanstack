@@ -716,7 +716,39 @@ export function CustomerForm({
                               <div className="col-md-6 mb-3" key={attr.id}>
                                 <form.AppField name={`${baseName}.id`}>{() => null}</form.AppField>
 
-                                <form.AppField name={`${baseName}.attributeValue`}>
+                                <form.AppField
+                                  name={`${baseName}.attributeValue`}
+                                  validators={
+                                    isRequired
+                                      ? {
+                                          onChange: ({ value }) => {
+                                            if (attr.datatype === "checkbox") {
+                                              if (value !== true && value !== 1 && value !== "1" && value !== "true") {
+                                                return `${label} bắt buộc phải chọn`;
+                                              }
+                                            } else {
+                                              if (value === undefined || value === null || String(value).trim() === "") {
+                                                return `${label} không được để trống`;
+                                              }
+                                            }
+                                            return undefined;
+                                          },
+                                          onSubmit: ({ value }) => {
+                                            if (attr.datatype === "checkbox") {
+                                              if (value !== true && value !== 1 && value !== "1" && value !== "true") {
+                                                return `${label} bắt buộc phải chọn`;
+                                              }
+                                            } else {
+                                              if (value === undefined || value === null || String(value).trim() === "") {
+                                                return `${label} không được để trống`;
+                                              }
+                                            }
+                                            return undefined;
+                                          }
+                                        }
+                                      : undefined
+                                  }
+                                >
                                   {(f) => {
                                     if (attr.datatype === "text") {
                                       return (

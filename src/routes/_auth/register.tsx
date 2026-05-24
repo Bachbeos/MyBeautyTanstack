@@ -141,9 +141,9 @@ function RouteComponent() {
                       </p>
                     </div>
 
-                    <div className="or-login text-center position-relative mb-3">
+                    {/* <div className="or-login text-center position-relative mb-3">
                       <h6 className="fs-14 mb-0 position-relative text-body">HOẶC</h6>
-                    </div>
+                    </div> */}
 
                     <div className="d-flex align-items-center justify-content-center flex-wrap gap-2 mb-3">
                       {/* <div className="text-center flex-fill">
@@ -155,14 +155,14 @@ function RouteComponent() {
                         </a>
                       </div> */}
 
-                      <div className="text-center flex-fill">
+                      {/* <div className="text-center flex-fill">
                         <a
                           href="#"
                           className="p-2 btn btn-outline-light d-flex align-items-center justify-content-center"
                         >
                           <img className="img-fluid m-1" src={googleLogo} alt="Google" />
                         </a>
-                      </div>
+                      </div> */}
 
                       {/* <div className="text-center flex-fill">
                         <a

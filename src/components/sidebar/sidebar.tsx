@@ -180,7 +180,7 @@ export default function Sidebar() {
           </Link>{" "}
           <Link to="/resource" className="dark-logo">
             {" "}
-            <img src={logoWhite} alt="Logo" />{" "}
+            <img src={logoWhite} style={{ width: "107px", height: "22px" }} alt="Logo" />{" "}
           </Link>{" "}
         </div>
         <button
@@ -252,7 +252,9 @@ export default function Sidebar() {
                         onClick={() => handleTabClick("notification")}
                       >
                         Thông báo
-                        {unreadCount > 0 && <span className="badge bg-danger ms-2">{unreadCount}</span>}
+                        {unreadCount > 0 && (
+                          <span className="badge bg-danger ms-2">{unreadCount}</span>
+                        )}
                       </Link>
                     </li>
                   </SubMenuMotion>
