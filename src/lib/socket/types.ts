@@ -45,3 +45,13 @@ export interface MessageReadEvent {
 export interface PaymentDoneEvent {
   invoiceId: number;
 }
+
+export interface UserStatusEvent {
+  userId: number;
+  status: "online" | "offline";
+}
+
+export interface UserStatusEvent {
+  userId: number;
+  status: "online" | "offline";
+}

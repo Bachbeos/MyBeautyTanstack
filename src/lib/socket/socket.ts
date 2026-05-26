@@ -4,7 +4,8 @@ import type {
   TypingEvent,
   MessageReadEvent,
   PaymentDoneEvent,
-  NotificationReceivedEvent
+  NotificationReceivedEvent,
+  UserStatusEvent
 } from "./types";
 import env from "@/lib/env";
 import { useSocketStore } from "@/lib/stores/socket";
@@ -15,6 +16,7 @@ interface ServerToClient {
   typing: (d: TypingEvent) => void;
   message_read: (d: MessageReadEvent) => void;
   payment_done: (d: PaymentDoneEvent) => void;
+  user_status: (d: UserStatusEvent) => void;
 }
 
 interface ClientToServer {

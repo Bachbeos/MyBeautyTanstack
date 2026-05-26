@@ -411,12 +411,27 @@ function ChatPage() {
               {/* Header */}
               <div className="d-flex align-items-center justify-content-between px-3 py-2 border-bottom bg-white flex-shrink-0">
                 <div className="d-flex align-items-center gap-2">
-                  <img
-                    src={activeChat.chatAvatar ?? avatar(activeChat.chatName)}
-                    className="rounded-circle"
-                    style={{ width: 38, height: 38, objectFit: "cover" }}
-                    alt=""
-                  />
+                  <div className="position-relative">
+                    <img
+                      src={activeChat.chatAvatar && activeChat.chatAvatar.trim().length > 0 ? activeChat.chatAvatar : avatar(activeChat.chatName)}
+                      className="rounded-circle"
+                      style={{ width: 38, height: 38, objectFit: "cover" }}
+                      alt=""
+                      onError={(e) => {
+                        e.currentTarget.src = avatar(activeChat.chatName);
+                      }}
+                    />
+                    {!activeChat.isGroupChat && activeChat.otherUserId && (
+                      <span
+                        className={cn(
+                          "position-absolute rounded-circle border border-white",
+                          (activeChat.isOnline ?? false) ? "bg-success" : "bg-secondary"
+                        )}
+                        style={{ width: 10, height: 10, right: 0, bottom: 0 }}
+                        title={(activeChat.isOnline ?? false) ? "Online" : "Offline"}
+                      />
+                    )}
+                  </div>
                   <div>
                     <div className="fw-semibold" style={{ fontSize: 14 }}>
                       {activeChat.chatName}
@@ -425,8 +440,8 @@ function ChatPage() {
                       {typingLabel ? (
                         <span className="text-success">{typingLabel}</span>
                       ) : (
-                        <span className="text-muted">
-                          {activeChat.isGroupChat ? "Nhóm" : "Online"}
+                        <span className={activeChat.isOnline ? "text-success" : "text-muted"}>
+                          {activeChat.isGroupChat ? "Nhóm" : activeChat.isOnline ? "Online" : "Offline"}
                         </span>
                       )}
                     </div>
@@ -571,7 +586,10 @@ function ChatItem({
   active: boolean;
   onClick: () => void;
 }) {
+  const isUserOnline = useChatStore((s) => s.isUserOnline);
   const icon = chat.lastMessageType ? FILE_ICON[chat.lastMessageType] : null;
+  const showPresence = !chat.isGroupChat;
+  const resolvedOnline = chat.isGroupChat ? false : chat.isOnline ?? false;
   const preview = icon ? (
     <>
       <i className={`${icon} me-1`} />
@@ -580,6 +598,19 @@ function ChatItem({
   ) : (
     chat.lastMessageContent
   );
+  const avatarSrc = chat.chatAvatar && chat.chatAvatar.trim().length > 0 ? chat.chatAvatar : avatar(chat.chatName);
+
+  const presenceFromStore = chat.otherUserId ? isUserOnline(chat.otherUserId) : false;
+  const finalOnline = chat.isOnline ?? presenceFromStore;
+
+  console.log("[ChatItem] presence debug", {
+    chatId: chat.id,
+    otherUserId: chat.otherUserId,
+    isOnline: chat.isOnline,
+    presenceFromStore,
+    finalOnline,
+    showPresence
+  });
 
   return (
     <div
@@ -592,7 +623,7 @@ function ChatItem({
     >
       <div className="position-relative flex-shrink-0">
         <img
-          src={chat.chatAvatar ?? avatar(chat.chatName)}
+          src={avatarSrc}
           className="rounded-circle"
           style={{ width: 42, height: 42, objectFit: "cover" }}
           alt=""
@@ -600,6 +631,16 @@ function ChatItem({
             e.currentTarget.src = avatar(chat.chatName);
           }}
         />
+        {showPresence && (
+          <span
+            className={cn(
+              "position-absolute rounded-circle border border-white",
+              finalOnline ? "bg-success" : "bg-secondary"
+            )}
+            style={{ width: 10, height: 10, right: -1, bottom: -1 }}
+            title={finalOnline ? "Online" : "Offline"}
+          />
+        )}
         {chat.unreadCount > 0 && (
           <span
             className="position-absolute badge bg-danger rounded-pill"
@@ -712,17 +753,17 @@ function MsgBubble({
   const hasMedia = isImage || isVideo;
   const radius = isOwn
     ? {
-        borderTopLeftRadius: "16px",
-        borderTopRightRadius: isFirst ? "16px" : "4px",
-        borderBottomRightRadius: isLast ? "16px" : "4px",
-        borderBottomLeftRadius: "16px"
-      }
+      borderTopLeftRadius: "16px",
+      borderTopRightRadius: isFirst ? "16px" : "4px",
+      borderBottomRightRadius: isLast ? "16px" : "4px",
+      borderBottomLeftRadius: "16px"
+    }
     : {
-        borderTopLeftRadius: isFirst ? "16px" : "4px",
-        borderTopRightRadius: "16px",
-        borderBottomRightRadius: "16px",
-        borderBottomLeftRadius: isLast ? "16px" : "4px"
-      };
+      borderTopLeftRadius: isFirst ? "16px" : "4px",
+      borderTopRightRadius: "16px",
+      borderBottomRightRadius: "16px",
+      borderBottomLeftRadius: isLast ? "16px" : "4px"
+    };
 
   return (
     <div className="position-relative msg-bubble-wrapper">

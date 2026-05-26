@@ -1,8 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import SimpleBar from "simplebar-react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import "simplebar-react/dist/simplebar.min.css";
 import SubMenuMotion from "./SubMenuMotion";
 import logo from "@assets/img/logo.svg";
@@ -10,9 +10,11 @@ import logoSmall from "@assets/img/logo-small.svg";
 import logoWhite from "@assets/img/logo-white.svg";
 import { useViewPermission } from "@/hooks/use-permission";
 import { notificationQueries } from "@/lib/tanstack/options/notification";
+import { chatQueries } from "@/lib/tanstack/options/chat";
 import { useSocketStore } from "@/lib/stores/socket";
-import type { NotificationReceivedEvent } from "@/lib/socket/types";
+import type { NotificationReceivedEvent, UserStatusEvent } from "@/lib/socket/types";
 import { useQueryClient } from "@tanstack/react-query";
+import { useChatStore } from "@/lib/stores/chat";
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<string>("");
@@ -73,8 +75,14 @@ export default function Sidebar() {
 
   const location = useLocation();
   const queryClient = useQueryClient();
+  const setUserOnline = useChatStore((s) => s.setUserOnline);
   const unreadCountQ = useQuery(notificationQueries.unreadCount());
+  const chatListQ = useInfiniteQuery(chatQueries.listCursor());
   const unreadCount = unreadCountQ.data?.result ?? 0;
+  const unreadChatCount =
+    chatListQ.data?.pages.flatMap((page) => page.result?.data ?? []).reduce((sum, chat) => {
+      return sum + (chat.unreadCount ?? 0);
+    }, 0) ?? 0;
 
   useEffect(() => {
     const socket = useSocketStore.getState().getSocket();
@@ -91,11 +99,18 @@ export default function Sidebar() {
       }
     };
 
+    const handleUserStatus = (payload: UserStatusEvent) => {
+      console.log("[Sidebar] user_status:", payload);
+      setUserOnline(payload.userId, payload.status === "online");
+    };
+
     socket.on("notification_received", handleNotificationReceived);
+    socket.on("user_status", handleUserStatus);
     return () => {
       socket.off("notification_received", handleNotificationReceived);
+      socket.off("user_status", handleUserStatus);
     };
-  }, [queryClient]);
+  }, [queryClient, setUserOnline]);
 
   useEffect(() => {
     const currentTab = pathToTabKey[location.pathname];
@@ -243,6 +258,9 @@ export default function Sidebar() {
                         onClick={() => handleTabClick("chat")}
                       >
                         Chat
+                        {unreadChatCount > 0 && (
+                          <span className="badge bg-danger ms-2">{unreadChatCount}</span>
+                        )}
                       </Link>
                     </li>
                     <li>

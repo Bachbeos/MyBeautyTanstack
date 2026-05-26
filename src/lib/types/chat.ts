@@ -10,6 +10,8 @@ export interface ChatView {
   lastMessageType: number | null;
   lastMessageAt: string | null;
   unreadCount: number;
+  otherUserId?: number | null;
+  isOnline?: boolean | null;
   createdAt: string;
   updatedAt: string;
 }

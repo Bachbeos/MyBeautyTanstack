@@ -10,7 +10,8 @@ import {
   upsertNotification,
   markNotificationRead,
   markAllNotificationsRead,
-  getUnreadNotificationCount
+  getUnreadNotificationCount,
+  deleteNotification
 } from "@/lib/api/notification";
 
 import type {
@@ -30,6 +31,7 @@ export const notificationKeys = createKeys("notification", {
   update: () => ["update"] as const,
   markRead: () => ["markRead"] as const,
   markAllRead: () => ["markAllRead"] as const,
+  delete: () => ["delete"] as const,
   infinite: (params: Omit<NotificationListRequest, "page">) => ["infinite", params] as const
 });
 
@@ -102,6 +104,16 @@ export const notificationMutations = {
       mutationFn: (userId) => markAllNotificationsRead(userId),
       meta: {
         successMessage: "Đã đánh dấu tất cả là đã đọc",
+        invalidatesQuery: [notificationKeys.list({}), notificationKeys.infinite({})]
+      }
+    }),
+
+  delete: () =>
+    mutationOptions<ApiResponse<number>, Error, NotificationId>({
+      mutationKey: notificationKeys.delete(),
+      mutationFn: (id) => deleteNotification(id),
+      meta: {
+        successMessage: "Đã xóa thông báo",
         invalidatesQuery: [notificationKeys.list({}), notificationKeys.infinite({})]
       }
     })

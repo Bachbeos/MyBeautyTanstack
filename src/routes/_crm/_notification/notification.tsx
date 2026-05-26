@@ -32,13 +32,10 @@ function RouteComponent() {
 
   const markRead = useMutation(notificationMutations.markRead());
   const markAllRead = useMutation(notificationMutations.markAllRead());
+  const deleteNotification = useMutation(notificationMutations.delete());
 
   const handleRemoveItem = (id: number) => {
     setDismissedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-  };
-
-  const handleRemoveAll = () => {
-    setDismissedIds((response?.result?.items ?? []).map((n) => n.id));
   };
 
   const handleCollapse = () => {
@@ -63,7 +60,7 @@ function RouteComponent() {
         <div className="card mb-0">
           <div className="card-header d-flex align-items-center flex-wrap gap-2 justify-content-between">
             <h6 className="d-inline-flex align-items-center mb-0">
-              Tổng số thông báo <span className="badge bg-danger ms-2">{notifications.length}</span>
+              Tổng số thông báo <span className="badge bg-danger ms-2">{notifications.filter((n) => n.isRead === 0).length}</span>
             </h6>
             <div className="d-flex align-items-center gap-2 flex-wrap">
               <button
@@ -119,6 +116,13 @@ function RouteComponent() {
                             <i className="ti ti-check me-1"></i>Đánh dấu đã đọc
                           </button>
                         )}
+                        <button
+                          className="btn btn-outline-danger d-inline-flex align-items-center"
+                          type="button"
+                          onClick={() => deleteNotification.mutate(n.id, { onSuccess: () => handleRemoveItem(n.id) })}
+                        >
+                          <i className="ti ti-x me-1"></i>Xóa
+                        </button>
                       </div>
                     </div>
                   </div>

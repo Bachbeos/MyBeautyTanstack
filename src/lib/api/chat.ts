@@ -27,6 +27,11 @@ export const getChatViewById = (chatId: number) =>
     .get<ApiResponse<ChatView>>(ENDPOINTS.chat.view, { params: { id: chatId } })
     .then((r) => r.data);
 
+export const getChatSidebarSummary = () =>
+  axiosInstance
+    .get<ApiResponse<{ unreadTotal: number }>>(ENDPOINTS.chat.sidebarSummary)
+    .then((r) => r.data);
+
 export const getMessageListCursor = (
   p: { chatId: number; beforeMessageId?: number; limit?: number },
   signal?: AbortSignal

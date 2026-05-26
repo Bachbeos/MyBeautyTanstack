@@ -4,7 +4,7 @@ import { initSocket, disconnectSocket } from "@/lib/socket/socket";
 import { chatKeys } from "@/lib/tanstack/options/chat";
 import { useChatStore } from "@/lib/stores/chat";
 import { getChatViewById } from "@/lib/api/chat";
-import type { MessageReceivedEvent, MessageReadEvent } from "@/lib/socket/types";
+import type { MessageReceivedEvent, MessageReadEvent, UserStatusEvent } from "@/lib/socket/types";
 import type { ApiResponse } from "@/lib/types/common";
 import type { ChatView, MessageDto, CursorResult } from "@/lib/types/chat";
 
@@ -14,6 +14,7 @@ type MessageCache = InfiniteData<ApiResponse<CursorResult<MessageDto>>>;
 export function useChatSocket(userId: number, userName: string) {
   const qc = useQueryClient();
   const activeChatId = useChatStore((s) => s.activeChatId);
+  const setUserOnline = useChatStore((s) => s.setUserOnline);
   const activeChatIdRef = useRef<number | null>(activeChatId);
 
   useEffect(() => {
@@ -179,12 +180,37 @@ export function useChatSocket(userId: number, userName: string) {
       });
     };
 
+    const onUserStatus = (event: UserStatusEvent) => {
+      const online = event.status === "online";
+      console.log("[Socket] user_status:", event, { online });
+      setUserOnline(event.userId, online);
+      qc.setQueryData<ChatCache>(chatKeys.listCursor(), (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            result: page.result
+              ? {
+                ...page.result,
+                data: page.result.data.map((chat) =>
+                  chat.otherUserId === event.userId ? { ...chat, isOnline: online } : chat
+                )
+              }
+              : page.result
+          }))
+        };
+      });
+    };
+
     socket.on("message_received", onMessageReceived);
     socket.on("message_read", onMessageRead);
+    socket.on("user_status", onUserStatus);
 
     return () => {
       socket.off("message_received", onMessageReceived);
       socket.off("message_read", onMessageRead);
+      socket.off("user_status", onUserStatus);
       disconnectSocket();
     };
   }, [userId]);

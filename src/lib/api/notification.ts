@@ -68,3 +68,8 @@ export const getUnreadNotificationCount = async (signal?: AbortSignal): Promise<
   });
   return res.data;
 };
+
+export const deleteNotification = async (id: NotificationId): Promise<ApiResponse<number>> => {
+  const res = await axiosInstance.delete<ApiResponse<number>>(ENDPOINTS.notification.delete(id));
+  return res.data;
+};

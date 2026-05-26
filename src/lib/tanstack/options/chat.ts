@@ -1,4 +1,4 @@
-import { infiniteQueryOptions, mutationOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, mutationOptions, queryOptions } from "@tanstack/react-query";
 import {
   getChatListCursor,
   searchChats,
@@ -7,7 +7,8 @@ import {
   createChat,
   sendMessage,
   editMessage,
-  deleteMessage
+  deleteMessage,
+  getChatSidebarSummary
 } from "@/lib/api/chat";
 import { createKeys } from "@/lib/tanstack/query-key";
 import type { ApiResponse } from "@/lib/types/common";
@@ -25,6 +26,12 @@ export const chatKeys = createKeys("chat", {
 });
 
 export const chatQueries = {
+  sidebarSummary: () =>
+    queryOptions({
+      queryKey: ["chat", "sidebar-summary"] as const,
+      queryFn: getChatSidebarSummary,
+      staleTime: 15_000
+    }),
   listCursor: (limit = CHAT_LIMIT) =>
     infiniteQueryOptions({
       queryKey: chatKeys.listCursor(),

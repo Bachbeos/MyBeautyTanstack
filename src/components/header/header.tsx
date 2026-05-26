@@ -97,6 +97,7 @@ export default function Header() {
   const unreadCount = allNotifications.filter((n) => n.isRead === 0).length;
   const markRead = useMutation(notificationMutations.markRead());
   const markAllRead = useMutation(notificationMutations.markAllRead());
+  const deleteNotification = useMutation(notificationMutations.delete());
 
   const handleBellClick = () => {
     refetchNotifications();
@@ -210,7 +211,7 @@ export default function Header() {
             >
               <i className="ti ti-bell-check fs-16 animate-ring"></i>
               <span className="badge rounded-pill">
-                {unreadCount > 0 ? unreadCount : allNotifications.length}
+                {unreadCount > 0 ? unreadCount : 0}
               </span>
             </button>
 
@@ -285,9 +286,12 @@ export default function Header() {
                               )}
                               <button
                                 className="btn rounded-circle p-0"
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleDismissNotification(notif.id);
+                                  deleteNotification.mutate(notif.id, {
+                                    onSuccess: () => handleDismissNotification(notif.id)
+                                  });
                                 }}
                               >
                                 <i className="ti ti-x"></i>

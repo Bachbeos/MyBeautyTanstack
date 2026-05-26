@@ -170,7 +170,7 @@ export const ENDPOINTS = {
     unreadCount: "/notification/unread-count",
     markRead: "/notification/mark-read",
     markAllRead: "/notification/mark-all-read",
-    delete: (id: NotificationId) => `/notification/delete/${id}`
+    delete: (id: NotificationId) => `/notification/delete?id=${id}`
   },
   opportunity: {
     list: "/opportunity/list",
@@ -200,7 +200,8 @@ export const ENDPOINTS = {
     search: "/chat/search",
     create: "/chat/create",
     getById: "/chat/get",
-    view: "/chat/view"
+    view: "/chat/view",
+    sidebarSummary: "/chat/sidebar-summary"
   },
   message: {
     listCursor: "/message/list-cursor",
