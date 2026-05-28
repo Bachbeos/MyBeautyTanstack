@@ -344,7 +344,11 @@ export function CustomerForm({
         .filter((x): x is NonNullable<typeof x> => x !== null);
 
       const { extraValues, ...rest } = value;
-      await onSubmit({ ...rest, customerExtraInfos });
+      await onSubmit({
+        ...rest,
+        birthday: rest.birthday ? rest.birthday : null,
+        customerExtraInfos
+      });
     }
   });
 
@@ -709,7 +713,7 @@ export function CustomerForm({
                             const selectOptions = opts.map((o) => ({ value: o.id, label: o.name }));
                             const radioOptions = selectOptions;
                             const label = String(attr.name ?? "");
-                            const isRequired = !!attr.required;
+                            const isRequired = label.toLowerCase().trim() === "ngày sinh" ? false : !!attr.required;
                             const isDisabled = isReadOnly || !!attr.readonly;
 
                             return (

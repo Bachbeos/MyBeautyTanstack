@@ -295,11 +295,11 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
           </form.AppField>
         </div>
 
-        <div className="col-md-6 mb-3">
+        {/* <div className="col-md-6 mb-3">
           <form.AppField name="position">
             {(f) => <f.Input label="Thứ tự hiển thị" type="number" disabled={isReadOnly} />}
           </form.AppField>
-        </div>
+        </div> */}
 
         <div className="col-md-6 mb-3">
           <form.AppField name="parentId">
