@@ -209,12 +209,12 @@ function RouteComponent() {
       columnHelper.accessor("userName", {
         header: "Nhân viên phụ trách",
         cell: (info) => info.getValue() || <span className="text-danger">Chưa phân công</span>
-      }),
-      columnHelper.display({
-        id: "action",
-        header: "Điều phối nhanh",
-        cell: () => <span className="text-muted small">Chọn ở form bên trên</span>
       })
+      // columnHelper.display({
+      //   id: "action",
+      //   header: "Điều phối nhanh",
+      //   cell: () => <span className="text-muted small">Chọn ở form bên trên</span>
+      // })
     ],
     [pageIndex, pageSize]
   );
@@ -298,21 +298,30 @@ function RouteComponent() {
                     isMulti
                     placeholder="Tìm kiếm và chọn nhân viên"
                     onMenuScrollToBottom={() =>
-                      usersInf.hasNextPage && !usersInf.isFetchingNextPage && usersInf.fetchNextPage()
+                      usersInf.hasNextPage &&
+                      !usersInf.isFetchingNextPage &&
+                      usersInf.fetchNextPage()
                     }
                     onChange={(option) => {
                       const selected = Array.isArray(option) ? option : option ? [option] : [];
-                      setSelectedUserIds(selected.map((item) => Number(item.value)).filter(Boolean));
+                      setSelectedUserIds(
+                        selected.map((item) => Number(item.value)).filter(Boolean)
+                      );
                     }}
                   />
                 </div>
 
                 <div className="col-12 col-lg-6">
                   <label className="form-label mb-1">Danh sách cơ hội đã chọn</label>
-                  <div className="border rounded-2 bg-white p-2 d-flex flex-wrap gap-2" style={{ minHeight: 42 }}>
+                  <div
+                    className="border rounded-2 bg-white p-2 d-flex flex-wrap gap-2"
+                    style={{ minHeight: 42 }}
+                  >
                     {selectedOpportunityIds.length > 0 ? (
                       selectedOpportunityIds.map((id) => {
-                        const opportunity = opportunities.find((item) => Number(item.id) === Number(id));
+                        const opportunity = opportunities.find(
+                          (item) => Number(item.id) === Number(id)
+                        );
                         return (
                           <span key={String(id)} className="badge bg-primary-subtle text-primary">
                             {opportunity?.code || `#${String(id)}`}

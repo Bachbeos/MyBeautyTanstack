@@ -178,14 +178,14 @@ export default function Header() {
             <i className="ti ti-arrow-bar-to-right"></i>
           </button>
 
-          <div className="me-auto d-flex align-items-center header-search d-lg-flex d-none">
+          {/* <div className="me-auto d-flex align-items-center header-search d-lg-flex d-none">
             <div className="input-icon position-relative me-2">
               <input type="text" className="form-control" placeholder="Tìm kiếm" />
               <span className="input-icon-addon d-inline-flex p-0 header-search-icon">
                 <i className="ti ti-command"></i>
               </span>
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="d-flex align-items-center">
@@ -210,9 +210,7 @@ export default function Header() {
               onClick={handleBellClick}
             >
               <i className="ti ti-bell-check fs-16 animate-ring"></i>
-              <span className="badge rounded-pill">
-                {unreadCount > 0 ? unreadCount : 0}
-              </span>
+              <span className="badge rounded-pill">{unreadCount > 0 ? unreadCount : 0}</span>
             </button>
 
             <div

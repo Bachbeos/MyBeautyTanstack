@@ -636,7 +636,7 @@ function RouteComponent() {
                     <button
                       type="button"
                       className="btn btn-primary"
-                      disabled={cart.length === 0}
+                      disabled={cart.length === 0 || customerForm.state.values.customerId === ""}
                       onClick={handleOpenModal}
                     >
                       Xác nhận đơn

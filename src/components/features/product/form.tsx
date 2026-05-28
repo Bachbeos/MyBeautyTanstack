@@ -68,7 +68,7 @@ export function ProductForm({
       name: product?.name ?? "",
       categoryId: product?.categoryId,
       unitId: product?.unitId,
-      price: formatMoney(product?.price ?? 0),
+      price: formatMoney(product?.price ?? ""),
       discount: formatMoney(product?.discount ?? 0),
       discountUnit: product?.discountUnit ?? 1,
       expiredPeriod: product?.expiredPeriod ?? 0,
@@ -299,11 +299,11 @@ export function ProductForm({
               </form.AppField>
             </div>
 
-            <div className="mb-3 col-md-4">
+            {/* <div className="mb-3 col-md-4">
               <form.AppField name="position">
                 {(field) => <field.Input type="number" label="Thứ tự" disabled={isReadOnly} />}
               </form.AppField>
-            </div>
+            </div> */}
 
             <div className="mb-3 col-12">
               <form.AppField name="status">

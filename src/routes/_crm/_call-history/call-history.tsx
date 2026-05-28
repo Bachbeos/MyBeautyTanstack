@@ -40,7 +40,7 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
- 
+
   const { canAdd, canEdit, canDelete, canView } = usePermission("CALL_HISTORY");
 
   const rawNameFilter = useMemo(() => {
@@ -131,7 +131,7 @@ function RouteComponent() {
         cell: (info) => {
           const outcome = Number(info.getValue());
           let badgeClass = "badge-soft-secondary";
-          let label = "Không xác định";
+          let label = "";
 
           if (outcome === 1) {
             badgeClass = "badge-soft-success";
