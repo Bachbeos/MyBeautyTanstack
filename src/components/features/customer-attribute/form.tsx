@@ -270,7 +270,7 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
         </div>
 
         <div className="col-md-6 mb-3">
-          <form.AppField name="fieldName">
+<form.AppField name="fieldName">
             {(f) => (
               <f.Input
                 label="Mã trường thông tin"
