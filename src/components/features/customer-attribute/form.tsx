@@ -3,6 +3,7 @@ import { z } from "zod";
 import { useAppForm } from "@/components/form/hooks";
 import { type CustomerAttributeDto } from "@/lib/types/customer-attribute";
 import "./formAttribute.scss";
+import { useStore } from "@tanstack/react-form";
 
 type ParentOption = { label: string; value: number };
 
@@ -24,20 +25,39 @@ const dropdownOptionSchema = z.object({
   label: z.string().optional().default("")
 });
 
-const attributeSchema = z.object({
-  id: z.any().optional(),
-  name: z.string().min(1, "Vui lòng nhập tên trường"),
-  fieldName: z.string().min(1, "Vui lòng nhập mã trường"),
-  datatype: z.string().min(1, "Vui lòng chọn kiểu dữ liệu"),
-  position: z.coerce.number().default(0),
-  parentId: z.coerce.number().default(0),
-  required: z.coerce.number().default(0),
-  uniqued: z.coerce.number().default(0),
-  readonly: z.coerce.number().default(0),
+const attributeSchema = z
+  .object({
+    id: z.any().optional(),
+    name: z.string().min(1, "Vui lòng nhập tên trường"),
+    fieldName: z.string().optional(),
+    datatype: z.string().default("text"),
+    position: z.coerce.number().default(0),
+    parentId: z.coerce.number().default(0),
+    required: z.coerce.number().default(0),
+    uniqued: z.coerce.number().default(0),
+    readonly: z.coerce.number().default(0),
 
-  dropdownOptions: z.array(dropdownOptionSchema).optional(),
-  numberFormat: z.string().optional()
-});
+    dropdownOptions: z.array(dropdownOptionSchema).optional(),
+    numberFormat: z.string().optional()
+  })
+  .superRefine((data, ctx) => {
+    if (data.parentId && data.parentId !== 0) {
+      if (!data.fieldName || data.fieldName.trim() === "") {
+        ctx.addIssue({
+          code: "custom",
+          message: "Vui lòng nhập mã trường",
+          path: ["fieldName"]
+        });
+      }
+      if (!data.datatype || data.datatype.trim() === "") {
+        ctx.addIssue({
+          code: "custom",
+          message: "Vui lòng chọn kiểu dữ liệu",
+          path: ["datatype"]
+        });
+      }
+    }
+  });
 
 type AttributeFormValues = z.input<typeof attributeSchema>;
 
@@ -67,6 +87,10 @@ function toNumberOrFallback(value: unknown, fallback = 0): number {
 function getUniquedFromDto(attribute?: CustomerAttributeDto): number {
   const raw = (attribute as any)?.uniqued ?? (attribute as any)?.unique;
   return toNumberOrFallback(raw);
+}
+
+function generateRandomFieldName(): string {
+  return `field_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
 function normalizeAttributesPayload(raw: unknown): unknown {
@@ -150,7 +174,7 @@ function normalizeAttributesFromDto(attribute?: CustomerAttributeDto): {
 }
 
 function serializeAttributes(values: AttributeFormValues): string {
-  const dt = values.datatype;
+  const dt = values.datatype ?? "text";
 
   if (dt === "number") {
     const payload = { numberFormat: values.numberFormat ?? "" };
@@ -190,23 +214,35 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
     } as AttributeFormValues,
     validators: { onSubmit: attributeSchema },
     onSubmit: async ({ value }) => {
-      const attributes = serializeAttributes(value);
+      const isHeaderMode = !value.parentId || value.parentId === 0;
 
-      await onSubmit({
-        id: value.id,
-        name: value.name,
-        fieldName: value.fieldName,
-        datatype: value.datatype,
-        position: value.position,
+      const finalValues = isHeaderMode
+        ? {
+            id: value.id,
+            name: value.name,
+            fieldName: generateRandomFieldName(),
+            datatype: "text",
+            position: 0,
+            required: 0,
+            unique: 0,
+            readonly: 1,
+            attributes: "[]",
+            parentId: undefined
+          }
+        : {
+            id: value.id,
+            name: value.name,
+            fieldName: value.fieldName ?? "",
+            datatype: value.datatype ?? "text",
+            position: value.position,
+            required: Number(value.required) || 0,
+            unique: Number(value.uniqued) || 0,
+            readonly: Number(value.readonly) || 0,
+            attributes: serializeAttributes(value),
+            parentId: value.parentId !== 0 ? value.parentId : undefined
+          };
 
-        required: Number(value.required) || 0,
-        unique: Number(value.uniqued) || 0,
-        readonly: Number(value.readonly) || 0,
-
-        attributes,
-
-        parentId: value.parentId !== 0 ? value.parentId : undefined
-      });
+      await onSubmit(finalValues);
     }
   });
 
@@ -232,6 +268,23 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
   }, [attribute, mode]);
 
   const selectedDatatype = (form.state.values as any)?.datatype;
+  const parentId = useStore(form.store, (state) => state.values.parentId);
+  const isHeaderMode = !parentId || parentId === 0;
+
+  console.log("parentId value:", parentId, "isHeaderMode:", isHeaderMode);
+
+  useEffect(() => {
+    if (isHeaderMode) {
+      form.setFieldValue?.("fieldName" as any, "" as any);
+      form.setFieldValue?.("datatype" as any, "text" as any);
+      form.setFieldValue?.("position" as any, 0 as any);
+      form.setFieldValue?.("required" as any, 0 as any);
+      form.setFieldValue?.("uniqued" as any, 0 as any);
+      form.setFieldValue?.("readonly" as any, 1 as any);
+      form.setFieldValue?.("dropdownOptions" as any, [{ value: "", label: "" }] as any);
+      form.setFieldValue?.("numberFormat" as any, "" as any);
+    }
+  }, [isHeaderMode, form]);
 
   useEffect(() => {
     if (selectedDatatype !== "number") {
@@ -260,46 +313,14 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
           <form.AppField name="name">
             {(f) => (
               <f.Input
-                label="Tên trường thông tin"
+                label={isHeaderMode ? "Tên tiêu đề" : "Tên trường thông tin"}
                 required
                 disabled={isReadOnly}
-                placeholder="Nhập tên trường"
+                placeholder={isHeaderMode ? "Nhập tên tiêu đề" : "Nhập tên trường"}
               />
             )}
           </form.AppField>
         </div>
-
-        <div className="col-md-6 mb-3">
-          <form.AppField name="fieldName">
-            {(f) => (
-              <f.Input
-                label="Mã trường thông tin"
-                required
-                disabled={isReadOnly}
-                placeholder="Nhập mã trường"
-              />
-            )}
-          </form.AppField>
-        </div>
-
-        <div className="col-md-6 mb-3">
-          <form.AppField name="datatype">
-            {(f) => (
-              <f.Select
-                label="Kiểu dữ liệu"
-                required
-                options={datatypeOptions}
-                disabled={isReadOnly}
-              />
-            )}
-          </form.AppField>
-        </div>
-
-        {/* <div className="col-md-6 mb-3">
-          <form.AppField name="position">
-            {(f) => <f.Input label="Thứ tự hiển thị" type="number" disabled={isReadOnly} />}
-          </form.AppField>
-        </div> */}
 
         <div className="col-md-6 mb-3">
           <form.AppField name="parentId">
@@ -314,150 +335,186 @@ export function AttributeForm({ mode, attribute, onSubmit, parentOptions }: Attr
           </form.AppField>
         </div>
 
-        <div className="col-md-6 mb-3">
-          <form.AppField name="required">
-            {(f) => (
-              <f.Radio
-                label="Bắt buộc nhập?"
-                options={[
-                  { label: "Có", value: 1 },
-                  { label: "Không", value: 0 }
-                ]}
-                disabled={isReadOnly}
-              />
-            )}
+        {!isHeaderMode && (
+          <>
+            <div className="col-md-6 mb-3">
+              <form.AppField name="fieldName">
+                {(f) => (
+                  <f.Input
+                    label="Mã trường thông tin"
+                    required
+                    disabled={isReadOnly}
+                    placeholder="Nhập mã trường"
+                  />
+                )}
+              </form.AppField>
+            </div>
+
+            <div className="col-md-6 mb-3">
+              <form.AppField name="datatype">
+                {(f) => (
+                  <f.Select
+                    label="Kiểu dữ liệu"
+                    required
+                    options={datatypeOptions}
+                    disabled={isReadOnly}
+                  />
+                )}
+              </form.AppField>
+            </div>
+
+            {/* <div className="col-md-6 mb-3">
+          <form.AppField name="position">
+            {(f) => <f.Input label="Thứ tự hiển thị" type="number" disabled={isReadOnly} />}
           </form.AppField>
-        </div>
+        </div> */}
 
-        <div className="col-md-6 mb-3">
-          <form.AppField name="uniqued">
-            {(f) => (
-              <f.Radio
-                label="Trường duy nhất?"
-                options={[
-                  { label: "Có", value: 1 },
-                  { label: "Không", value: 0 }
-                ]}
-                disabled={isReadOnly}
-              />
-            )}
-          </form.AppField>
-        </div>
+            <div className="col-md-6 mb-3">
+              <form.AppField name="required">
+                {(f) => (
+                  <f.Radio
+                    label="Bắt buộc nhập?"
+                    options={[
+                      { label: "Có", value: 1 },
+                      { label: "Không", value: 0 }
+                    ]}
+                    disabled={isReadOnly}
+                  />
+                )}
+              </form.AppField>
+            </div>
 
-        <div className="col-md-6 mb-3">
-          <form.AppField name="readonly">
-            {(f) => (
-              <f.Checkbox
-                fieldLabel="Quyền truy cập"
-                label="Chỉ cho phép đọc (Read-only)"
-                disabled={isReadOnly}
-              />
-            )}
-          </form.AppField>
-        </div>
+            <div className="col-md-6 mb-3">
+              <form.AppField name="uniqued">
+                {(f) => (
+                  <f.Radio
+                    label="Trường duy nhất?"
+                    options={[
+                      { label: "Có", value: 1 },
+                      { label: "Không", value: 0 }
+                    ]}
+                    disabled={isReadOnly}
+                  />
+                )}
+              </form.AppField>
+            </div>
 
-        <form.AppField name="datatype">
-          {(dt) => {
-            const type = dt.state.value;
+            <div className="col-md-6 mb-3">
+              <form.AppField name="readonly">
+                {(f) => (
+                  <f.Checkbox
+                    fieldLabel="Quyền truy cập"
+                    label="Chỉ cho phép đọc (Read-only)"
+                    disabled={isReadOnly}
+                  />
+                )}
+              </form.AppField>
+            </div>
 
-            if (type === "number") {
-              return (
-                <div className="col-12 mb-3">
-                  <form.AppField name="numberFormat">
-                    {(f) => (
-                      <f.Radio
-                        label="Định dạng số"
-                        options={numberFormatPresets.map((p) => ({ label: p, value: p }))}
-                        disabled={isReadOnly}
-                      />
-                    )}
-                  </form.AppField>
-                </div>
-              );
-            }
+            <form.AppField name="datatype">
+              {(dt) => {
+                const type = dt.state.value;
 
-            if (isChoiceDatatype(type)) {
-              return (
-                <div className="col-12 mb-3 attribute-dropdown-options">
-                  <form.AppField name="dropdownOptions">
-                    {(opt) => {
-                      const items = opt.state.value || [{ value: "", label: "" }];
+                if (type === "number") {
+                  return (
+                    <div className="col-12 mb-3">
+                      <form.AppField name="numberFormat">
+                        {(f) => (
+                          <f.Radio
+                            label="Định dạng số"
+                            options={numberFormatPresets.map((p) => ({ label: p, value: p }))}
+                            disabled={isReadOnly}
+                          />
+                        )}
+                      </form.AppField>
+                    </div>
+                  );
+                }
 
-                      return (
-                        <>
-                          <label className="form-label">Lựa chọn</label>
-                          <div className="d-flex flex-column gap-2">
-                            {items.map((_, idx) => (
-                              <div className="row g-2" key={idx}>
-                                <div className="col-md-5 ps-0">
-                                  <form.AppField name={`dropdownOptions[${idx}].value`}>
-                                    {(f) => (
-                                      <f.Input
-                                        label=""
-                                        placeholder="Giá trị"
-                                        disabled={isReadOnly}
-                                      />
+                if (isChoiceDatatype(type as string)) {
+                  return (
+                    <div className="col-12 mb-3 attribute-dropdown-options">
+                      <form.AppField name="dropdownOptions">
+                        {(opt) => {
+                          const items = opt.state.value || [{ value: "", label: "" }];
+
+                          return (
+                            <>
+                              <label className="form-label">Lựa chọn</label>
+                              <div className="d-flex flex-column gap-2">
+                                {items.map((_, idx) => (
+                                  <div className="row g-2" key={idx}>
+                                    <div className="col-md-5 ps-0">
+                                      <form.AppField name={`dropdownOptions[${idx}].value`}>
+                                        {(f) => (
+                                          <f.Input
+                                            label=""
+                                            placeholder="Giá trị"
+                                            disabled={isReadOnly}
+                                          />
+                                        )}
+                                      </form.AppField>
+                                    </div>
+
+                                    <div className="col-md-5">
+                                      <form.AppField name={`dropdownOptions[${idx}].label`}>
+                                        {(f) => (
+                                          <f.Input
+                                            label=""
+                                            placeholder="Nhãn hiển thị"
+                                            disabled={isReadOnly}
+                                          />
+                                        )}
+                                      </form.AppField>
+                                    </div>
+
+                                    {!isReadOnly && (
+                                      <div className="col-md-2 d-flex">
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-danger w-100"
+                                          onClick={() => {
+                                            const next = [...items];
+                                            next.splice(idx, 1);
+                                            opt.handleChange(
+                                              next.length ? next : [{ value: "", label: "" }]
+                                            );
+                                          }}
+                                        >
+                                          Xóa
+                                        </button>
+                                      </div>
                                     )}
-                                  </form.AppField>
-                                </div>
-
-                                <div className="col-md-5">
-                                  <form.AppField name={`dropdownOptions[${idx}].label`}>
-                                    {(f) => (
-                                      <f.Input
-                                        label=""
-                                        placeholder="Nhãn hiển thị"
-                                        disabled={isReadOnly}
-                                      />
-                                    )}
-                                  </form.AppField>
-                                </div>
+                                  </div>
+                                ))}
 
                                 {!isReadOnly && (
-                                  <div className="col-md-2 d-flex">
+                                  <div>
                                     <button
                                       type="button"
-                                      className="btn btn-outline-danger w-100"
-                                      onClick={() => {
-                                        const next = [...items];
-                                        next.splice(idx, 1);
-                                        opt.handleChange(
-                                          next.length ? next : [{ value: "", label: "" }]
-                                        );
-                                      }}
+                                      className="btn btn-outline-primary"
+                                      onClick={() =>
+                                        opt.handleChange([...items, { value: "", label: "" }])
+                                      }
                                     >
-                                      Xóa
+                                      + Thêm lựa chọn
                                     </button>
                                   </div>
                                 )}
                               </div>
-                            ))}
+                            </>
+                          );
+                        }}
+                      </form.AppField>
+                    </div>
+                  );
+                }
 
-                            {!isReadOnly && (
-                              <div>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-primary"
-                                  onClick={() =>
-                                    opt.handleChange([...items, { value: "", label: "" }])
-                                  }
-                                >
-                                  + Thêm lựa chọn
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </>
-                      );
-                    }}
-                  </form.AppField>
-                </div>
-              );
-            }
-
-            return null;
-          }}
-        </form.AppField>
+                return null;
+              }}
+            </form.AppField>
+          </>
+        )}
       </div>
     </form>
   );

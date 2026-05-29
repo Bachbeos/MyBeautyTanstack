@@ -78,7 +78,7 @@ function RouteComponent() {
                   <div>
                     <div className="mb-3">
                       <h3 className="mb-2">Đăng ký</h3>
-                      <p className="mb-0">Tham gia hệ thống My Beauty ngay hôm nay.</p>
+                      <p className="mb-0">Tham gia hệ thống ngay hôm nay.</p>
                     </div>
 
                     <div className="mb-3">

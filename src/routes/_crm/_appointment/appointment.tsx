@@ -30,7 +30,7 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
- 
+
   const { canAdd, canEdit, canDelete, canView } = usePermission("SCHEDULE");
 
   const [modal, setModal] = useState<{
@@ -82,9 +82,16 @@ function RouteComponent() {
   );
 
   const draggableElRef = useRef<HTMLDivElement>(null);
+  const draggableInstanceRef = useRef<Draggable | null>(null);
+
   useEffect(() => {
     if (!draggableElRef.current) return;
-    const draggable = new Draggable(draggableElRef.current, {
+
+    if (draggableInstanceRef.current) {
+      draggableInstanceRef.current.destroy();
+    }
+
+    draggableInstanceRef.current = new Draggable(draggableElRef.current, {
       itemSelector: ".fc-event",
       eventData: (eventEl: HTMLElement) => ({
         title: eventEl.innerText,
@@ -94,7 +101,13 @@ function RouteComponent() {
         create: true
       })
     });
-    return () => draggable.destroy();
+
+    return () => {
+      if (draggableInstanceRef.current) {
+        draggableInstanceRef.current.destroy();
+        draggableInstanceRef.current = null;
+      }
+    };
   }, []);
 
   const toDateTimeLocal = (date: Date) => {
@@ -168,7 +181,7 @@ function RouteComponent() {
     closeModal();
     query.refetch();
   };
- 
+
   if (canView === false) {
     return (
       <div className="page-wrapper">
@@ -182,7 +195,7 @@ function RouteComponent() {
       </div>
     );
   }
- 
+
   return (
     <div className="page-wrapper">
       <div className="content">

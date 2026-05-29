@@ -1,6 +1,7 @@
 import { useAuthStore } from "@/lib/stores/auth";
 import { authQueries } from "@/lib/tanstack/options/auth";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 export type PermissionAction = "VIEW" | "ADD" | "UPDATE" | "DELETE";
 
@@ -54,31 +55,35 @@ export function usePermission(resource: string): PermissionResult {
 
   const actions = data?.[resource] ?? EMPTY_SET;
 
-  const hasAccess = (action: PermissionAction) => {
-    return resolveAccess(isOperator ? "OPERATOR" : "OTHER", actions, action);
-  };
+  return useMemo(() => {
+    const hasAccess = (action: PermissionAction) => {
+      return resolveAccess(isOperator ? "OPERATOR" : "OTHER", actions, action);
+    };
 
-  return {
-    canView: hasAccess("VIEW"),
-    canAdd: hasAccess("ADD"),
-    canEdit: hasAccess("UPDATE"),
-    canDelete: hasAccess("DELETE"),
-    hasAccess
-  };
+    return {
+      canView: hasAccess("VIEW"),
+      canAdd: hasAccess("ADD"),
+      canEdit: hasAccess("UPDATE"),
+      canDelete: hasAccess("DELETE"),
+      hasAccess
+    };
+  }, [actions, isOperator]);
 }
 
 export function useViewPermission() {
   const { data } = useQuery(authQueries.permissions());
   const { isOperator } = useAuthStore();
 
-  const canView = (resource: string) => {
-    const actions = data?.[resource] ?? EMPTY_SET;
-    return resolveAccess(isOperator ? "OPERATOR" : "OTHER", actions, "VIEW");
-  };
+  return useMemo(() => {
+    const canView = (resource: string) => {
+      const actions = data?.[resource] ?? EMPTY_SET;
+      return resolveAccess(isOperator ? "OPERATOR" : "OTHER", actions, "VIEW");
+    };
 
-  const canViewAny = (resources: string[]) => {
-    return resources.some((r) => canView(r));
-  };
+    const canViewAny = (resources: string[]) => {
+      return resources.some((r) => canView(r));
+    };
 
-  return { canView, canViewAny };
+    return { canView, canViewAny };
+  }, [data, isOperator]);
 }

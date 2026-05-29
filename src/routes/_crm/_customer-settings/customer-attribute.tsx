@@ -40,7 +40,7 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
- 
+
   const { canAdd, canEdit, canDelete, canView } = usePermission("CUSTOMER_ATTRIBUTE");
 
   const rawNameFilter = useMemo(() => {
@@ -87,12 +87,14 @@ function RouteComponent() {
 
   const modalItem = (detailQuery.data?.result as CustomerAttributeDto | undefined) ?? modal.item;
 
-  const allAttributesQuery = useQuery(customerAttributeQueries.list({ page: 1, limit: 1000 }));
+  const allAttributesQuery = useQuery(
+    customerAttributeQueries.list({ page: 1, limit: 1000, isParent: 1 })
+  );
 
   const parentOptions = useMemo(() => {
     const items = allAttributesQuery.data?.result?.items ?? [];
     return [
-      { label: "Không thuộc nhóm nào", value: 0 },
+      { label: "Hiển thị như tiêu đề nhóm", value: 0 },
       ...items.map((attr) => ({
         label: attr.name || "",
         value: attr.id || 0
@@ -113,14 +115,23 @@ function RouteComponent() {
         meta: { className: "w-1 text-center" }
       }),
       columnHelper.accessor("name", {
-        header: "Tên thuộc tính"
+        header: "Tên thuộc tính",
+        cell: (info) => {
+          const parentId = info.row.original.parentId;
+          return parentId === 0 ? (
+            <span className="fw-bold">{info.getValue()}</span>
+          ) : (
+            info.getValue()
+          );
+        }
       }),
       columnHelper.accessor("datatype", {
         header: "Kiểu dữ liệu",
-        meta: { className: "text-center" }
-        // cell: (info) => (
-        //   <span className="badge badge-soft-info text-uppercase">{info.getValue()}</span>
-        // )
+        meta: { className: "text-center" },
+        cell: (info) => {
+          const parentId = info.row.original.parentId;
+          return parentId === 0 ? "header" : info.getValue();
+        }
       }),
       columnHelper.display({
         id: "actions",

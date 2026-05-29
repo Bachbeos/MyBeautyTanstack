@@ -39,7 +39,7 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
- 
+
   const { canAdd, canEdit, canDelete, canView } = usePermission("ROLE");
 
   const rawNameFilter = useMemo(() => {
@@ -156,7 +156,7 @@ function RouteComponent() {
         )
       })
     ],
-    [pageIndex, pageSize]
+    [pageIndex, pageSize, canEdit, canView]
   );
 
   const table = useReactTable({
@@ -212,7 +212,7 @@ function RouteComponent() {
       </div>
     );
   }
- 
+
   return (
     <div className="page-wrapper">
       <div className="content pb-0">

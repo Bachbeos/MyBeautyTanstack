@@ -81,7 +81,7 @@ function LoginForm() {
                     <div className="mb-3">
                       <h3 className="mb-2">Đăng nhập</h3>
                       <p className="mb-0">
-                        Truy cập hệ thống My Beauty bằng số điện thoại và mật khẩu của bạn.
+                        Truy cập hệ thống bằng số điện thoại và mật khẩu của bạn.
                       </p>
                     </div>
 
