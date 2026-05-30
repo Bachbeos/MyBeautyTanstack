@@ -258,7 +258,6 @@ function RouteComponent() {
                   table={table}
                   filterable={true}
                   filterKey="name"
-                  filterKeyPlaceholder="Tìm nhanh tài nguyên..."
                   showPagination={false}
                 />
               )}
