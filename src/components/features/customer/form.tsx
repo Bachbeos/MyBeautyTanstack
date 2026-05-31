@@ -265,7 +265,7 @@ const customerSchema = z.object({
   age: z.coerce.number().optional(),
   height: z.coerce.number().optional(),
   weight: z.coerce.number().optional(),
-  birthday: z.string().optional(),
+  birthday: z.string().nullable().optional(),
   gender: z.number().default(1),
   sourceId: z.number().nullable().optional(),
   address: z.string().optional(),
@@ -346,7 +346,7 @@ export function CustomerForm({
       const { extraValues, ...rest } = value;
       await onSubmit({
         ...rest,
-        birthday: rest.birthday ? rest.birthday : null,
+        birthday: rest.birthday ? rest.birthday : "",
         customerExtraInfos
       });
     }
