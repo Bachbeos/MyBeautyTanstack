@@ -10,6 +10,8 @@ type BaseModalProps = {
   footer?: ReactNode;
   headerActions?: ReactNode;
   contentClassName?: string;
+  zIndex?: number;
+  backdropZIndex?: number;
 };
 
 export function BaseModal({
@@ -20,7 +22,9 @@ export function BaseModal({
   children,
   footer,
   headerActions,
-  contentClassName
+  contentClassName,
+  zIndex = 1051,
+  backdropZIndex = 1050
 }: BaseModalProps) {
   if (!shown) return null;
 
@@ -29,7 +33,7 @@ export function BaseModal({
 
   return (
     <Fragment>
-      <div className={cn("modal fade show d-block")} style={{ zIndex: 1051 }}>
+      <div className={cn("modal fade show d-block")} style={{ zIndex }}>
         <div className={`modal-dialog modal-dialog-centered ${sizeClass}`}>
           <div className={cn("modal-content", contentClassName)}>
             <div className="modal-header">
@@ -50,7 +54,7 @@ export function BaseModal({
       <div
         className={cn("modal-backdrop fade", shown && "show")}
         style={{
-          zIndex: 1050,
+          zIndex: backdropZIndex,
           display: shown ? "block" : "none"
         }}
         onClick={onClose}

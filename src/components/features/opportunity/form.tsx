@@ -118,7 +118,7 @@ export function OpportunityForm({
             {(field) => (
               <field.Input
                 label="Tên cơ hội"
-                placeholder="Ví dụ: Thuê chung cư tại Ba Đình"
+                placeholder="Nhập tên cơ hội"
                 disabled={isReadOnly}
                 required
               />

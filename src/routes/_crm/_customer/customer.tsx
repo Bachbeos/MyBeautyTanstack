@@ -4,6 +4,7 @@ import CollapseButton from "@/components/collapse/collapse-button";
 import ExportButton from "@/components/export/export";
 import ModalCustomer from "@/components/features/customer/modal";
 import ModalOpportunity from "@/components/features/opportunity/modal";
+import ModalOpportunityList from "@/components/features/opportunity/list-modal";
 import RefreshButton from "@/components/refresh/refresh";
 import ActionsTable from "@/components/table/actions-table";
 import { DataTable } from "@/components/table/data-table";
@@ -81,6 +82,13 @@ function RouteComponent() {
     item: null
   });
   const [opportunityModalShown, setOpportunityModalShown] = useState(false);
+  const [opportunityListModal, setOpportunityListModal] = useState<{
+    shown: boolean;
+    customer: CustomerDto | null;
+  }>({
+    shown: false,
+    customer: null
+  });
   const [campaignModal, setCampaignModal] = useState<{
     type: "detail" | null;
     item: CustomerDto | null;
@@ -281,16 +289,16 @@ function RouteComponent() {
           return (
             <div
               className="badge cursor-pointer badge-soft-danger custom-cursor-on-hover"
-              title="Thêm cơ hội"
+              title="Danh sách cơ hội"
               onClick={() =>
-                openOpportunityModal("add", {
-                  customerId: Number(row.id),
-                  customerName: row.name
+                setOpportunityListModal({
+                  shown: true,
+                  customer: row
                 })
               }
             >
               <span>{count} cơ hội</span>
-              <i className="ti ti-plus" />
+              <i className="ti ti-eye ms-1" />
             </div>
           );
         },
@@ -500,6 +508,23 @@ function RouteComponent() {
         onLoadMorecustomerSources={handleLoadMoreCustomerSources}
       />
 
+      <ModalOpportunityList
+        shown={opportunityListModal.shown}
+        customerId={opportunityListModal.customer ? Number(opportunityListModal.customer.id) : null}
+        customerName={opportunityListModal.customer ? opportunityListModal.customer.name : null}
+        onClose={() => setOpportunityListModal({ shown: false, customer: null })}
+        onAddOpportunity={() => {
+          if (!opportunityListModal.customer) return;
+          openOpportunityModal("add", {
+            customerId: Number(opportunityListModal.customer.id),
+            customerName: opportunityListModal.customer.name
+          });
+        }}
+        onDeleteSuccess={() => {
+          query.refetch();
+        }}
+      />
+
       <ModalOpportunity
         type={opportunityModal.type}
         shown={opportunityModalShown}
@@ -513,6 +538,8 @@ function RouteComponent() {
         hideUserField
         hideExpectedCloseDateField
         forceStatusActive
+        zIndex={1061}
+        backdropZIndex={1060}
       />
 
       <BaseModal

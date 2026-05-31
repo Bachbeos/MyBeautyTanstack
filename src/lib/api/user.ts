@@ -8,8 +8,10 @@ import type {
   UserUpdateRequest,
   UserListResponse,
   UserCreateRequest,
-  UserInfoUpdateRequest
+  UserInfoUpdateRequest,
+  UserUpdatePasswordRequest
 } from "@/lib/types/user";
+
 import type { CursorResult } from "@/lib/types/chat";
 
 export const getUsers = async (
@@ -73,3 +75,17 @@ export const getUserListCursor = (
   axiosInstance
     .get<ApiResponse<CursorResult<UserDto>>>(ENDPOINTS.user.listCursor, { params, signal })
     .then((r) => r.data);
+
+export const updatePassword = async (
+  body: UserUpdatePasswordRequest
+): Promise<ApiResponse<void>> => {
+  const res = await axiosInstance.post<ApiResponse<void>>(
+    ENDPOINTS.user.updatePassword,
+    null,
+    {
+      params: body
+    }
+  );
+  return res.data;
+};
+

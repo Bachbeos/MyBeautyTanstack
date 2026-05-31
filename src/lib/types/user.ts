@@ -58,3 +58,9 @@ export type UserInfoUpdateRequest = {
   cityName?: string;
   subdistrictName?: string;
 };
+
+export type UserUpdatePasswordRequest = {
+  oldPassword?: string;
+  newPassword?: string;
+};
+
