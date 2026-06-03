@@ -8,8 +8,11 @@ import type {
   UserUpdateRequest,
   UserListResponse,
   UserCreateRequest,
-  UserInfoUpdateRequest
+  UserInfoUpdateRequest,
+  UserUpdatePasswordRequest
 } from "@/lib/types/user";
+
+import type { CursorResult } from "@/lib/types/chat";
 
 export const getUsers = async (
   params: UserListRequest,
@@ -48,7 +51,9 @@ export const updateUserInfo = async (
 };
 
 export const deleteUser = async (id: UserId): Promise<ApiResponse<void>> => {
-  const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.user.delete(id));
+  const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.user.delete, {
+    params: { id }
+  });
   return res.data;
 };
 
@@ -63,3 +68,24 @@ export const getUserInfo = async (signal?: AbortSignal): Promise<ApiResponse<Use
   const res = await axiosInstance.get<ApiResponse<UserDto>>(ENDPOINTS.user.info, { signal });
   return res.data;
 };
+export const getUserListCursor = (
+  params: { beforeUserId?: number; keyword?: string; limit?: number },
+  signal?: AbortSignal
+): Promise<ApiResponse<CursorResult<UserDto>>> =>
+  axiosInstance
+    .get<ApiResponse<CursorResult<UserDto>>>(ENDPOINTS.user.listCursor, { params, signal })
+    .then((r) => r.data);
+
+export const updatePassword = async (
+  body: UserUpdatePasswordRequest
+): Promise<ApiResponse<void>> => {
+  const res = await axiosInstance.post<ApiResponse<void>>(
+    ENDPOINTS.user.updatePassword,
+    null,
+    {
+      params: body
+    }
+  );
+  return res.data;
+};
+

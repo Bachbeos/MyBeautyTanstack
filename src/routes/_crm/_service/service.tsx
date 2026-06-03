@@ -5,6 +5,8 @@ import RefreshButton from "@/components/refresh/refresh";
 import ActionsTable from "@/components/table/actions-table";
 import { DataTable } from "@/components/table/data-table";
 import AddButton from "@/components/ui/add-button";
+import { usePermission } from "@/hooks/use-permission";
+import { Can } from "@/components/auth/can";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
 import { exportVisibleTableToXLSX } from "@/lib/export/export-to-excel";
 import { exportVisibleTableToPDF } from "@/lib/export/export-to-pdf";
@@ -32,6 +34,8 @@ function RouteComponent() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+ 
+  const { canAdd, canEdit, canDelete, canView } = usePermission("SERVICE");
 
   const rawNameFilter = useMemo(() => {
     const filter = columnFilters.find((f) => f.id === "name");
@@ -175,6 +179,7 @@ function RouteComponent() {
             onView={(data) => openModal("detail", data)}
             onEdit={(data) => openModal("edit", data)}
             onDelete={(data) => openModal("delete", data)}
+            resource="SERVICE"
           />
         )
       })
@@ -231,8 +236,9 @@ function RouteComponent() {
     }
   };
 
-  const categorysInf = useInfiniteQuery(categoryQueries.infinite({ limit: 10 }));
-
+  const categorysInf = useInfiniteQuery(
+    categoryQueries.infinite({ limit: 10, active: 1, type: 1 })
+  );
   const categoryOptions = useMemo(() => {
     return (
       categorysInf.data?.pages
@@ -245,6 +251,20 @@ function RouteComponent() {
     (q) => () => q.hasNextPage && !q.isFetchingNextPage && q.fetchNextPage()
   );
 
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
+ 
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
@@ -287,7 +307,11 @@ function RouteComponent() {
                   filterable={true}
                   filterKey="name"
                   filterKeyPlaceholder="Tìm nhanh dịch vụ..."
-                  toolbarRight={<AddButton label="Thêm dịch vụ" onClick={() => openModal("add")} />}
+                  toolbarRight={
+                    <Can I="ADD" a="SERVICE">
+                      <AddButton label="Thêm dịch vụ" onClick={() => openModal("add")} />
+                    </Can>
+                  }
                   toolbarLeft={<div className="text-muted small d-none d-md-block"></div>}
                 />
               )}

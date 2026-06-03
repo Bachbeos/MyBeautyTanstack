@@ -2,7 +2,6 @@ import type { ResourceId } from "@/lib/types/resource";
 import type { RoleId } from "../types/role";
 import type { UnitId } from "../types/unit";
 import type { CategoryId } from "../types/category";
-import type { UserId } from "../types/user";
 import type { ProductId } from "../types/product";
 import type { CustomerSourceId } from "../types/customer-source";
 import type { callHistoryId } from "../types/call-history";
@@ -15,6 +14,8 @@ import type { AppointmentId } from "../types/appointment";
 import type { NotificationId } from "../types/notification";
 import type { OpportunityId } from "../types/opportunity";
 import type { InvoiceId } from "../types/invoice";
+import type { BoughtProductId } from "../types/bought-product";
+import type { BoughtServiceId } from "../types/bought-service";
 
 export const ENDPOINTS = {
   auth: {
@@ -22,17 +23,20 @@ export const ENDPOINTS = {
     register: "/user/create",
     refresh: "/auth/refresh",
     logout: "/auth/logout",
-    me: "/auth/me"
+    me: "/auth/me",
+    forgotPassword: "/auth/forgot-password",
+    resetPassword: "/auth/reset-password"
   },
   user: {
     info: "/user/info",
     updateInfo: "/user/info",
     list: "/user/list",
     update: "/user/update",
-    delete: (id: UserId) => `/user/delete/${id}`,
+    delete: "/user/delete",
     detail: "/user/getById",
     updatePassword: "/user/update-password",
-    updateStatus: "/user/update-status"
+    updateStatus: "/user/update-status",
+    listCursor: "/user/list-cursor"
   },
   products: {
     list: "/products",
@@ -90,16 +94,24 @@ export const ENDPOINTS = {
   },
   customer: {
     list: "/customer/list",
+    listExtraInfo: "/customer/extra/list",
     update: "/customer/update",
     delete: (id: CustomerId) => `/customer/delete/${id}`,
     detail: "/customer/get"
+  },
+  campaignSnapshot: {
+    list: "/campaign/list"
+  },
+  customerAi: {
+    generateCampaign: (id: CustomerId | number) => `/campaign/generate/${id}`
   },
   voucher: {
     list: "/voucher/list",
     update: "/voucher/update",
     delete: (id: VoucherId) => `/voucher/delete/${id}`,
     detail: "/voucher/get",
-    apply: "/voucher/applyVoucher"
+    apply: "/voucher/applyVoucher",
+    getByCode: "/voucher/getByCode"
   },
   invoice: {
     list: "/invoice/list",
@@ -107,17 +119,24 @@ export const ENDPOINTS = {
     delete: (id: InvoiceId) => `/invoice/delete/${id}`,
     detail: "/invoice/get",
     draft: "/invoice/draft",
-    recalculate: "/invoice/recalculate"
+    recalculate: "/invoice/recalculate",
+    draftCreate: "/invoice/draft/create",
+    draftUpdate: "/invoice/draft/update",
+    draftDelete: "/invoice/draft/delete",
+    draftDetail: "/invoice/getDetail",
+    create: "/invoice/create"
   },
   boughtProduct: {
     list: "/boughtProduct/list",
     update: "/boughtProduct/update",
-    delete: (id: string) => `/boughtProduct/delete/${id}`
+    delete: (id: BoughtProductId) => `/boughtProduct/delete/${id}`,
+    batch: "/boughtProduct/batch-upsert"
   },
   boughtService: {
     list: "/boughtService/list",
     update: "/boughtService/update",
-    delete: (id: string) => `/boughtService/delete/${id}`
+    delete: (id: BoughtServiceId) => `/boughtService/delete/${id}`,
+    batch: "/boughtService/batch-upsert"
   },
   branch: {
     list: "/branch/list",
@@ -148,12 +167,19 @@ export const ENDPOINTS = {
     list: "/notification/list",
     detail: "/notification/get",
     update: "/notification/update",
+    unreadCount: "/notification/unread-count",
     markRead: "/notification/mark-read",
     markAllRead: "/notification/mark-all-read",
-    delete: (id: NotificationId) => `/notification/delete/${id}`
+    delete: (id: NotificationId) => `/notification/delete?id=${id}`
   },
   opportunity: {
     list: "/opportunity/list",
+    kanban: "/opportunity/kanban",
+    stageTransitionMeta: "/opportunity/stage-transition-meta",
+    moveStage: (id: OpportunityId) => `/opportunity/move-stage/${id}`,
+    assign: (id: OpportunityId) => `/opportunity/assign/${id}`,
+    assignAuto: (id: OpportunityId) => `/opportunity/assign-auto/${id}`,
+    distribute: "/opportunity/distribute",
     update: "/opportunity/update",
     delete: (id: OpportunityId) => `/opportunity/delete/${id}`,
     detail: "/opportunity/get"
@@ -168,5 +194,44 @@ export const ENDPOINTS = {
   },
   mail: {
     send: "/mail/send"
+  },
+  chat: {
+    listCursor: "/chat/list-cursor",
+    search: "/chat/search",
+    create: "/chat/create",
+    getById: "/chat/get",
+    view: "/chat/view",
+    sidebarSummary: "/chat/sidebar-summary"
+  },
+  message: {
+    listCursor: "/message/list-cursor",
+    search: "/message/search",
+    send: "/message/send",
+    edit: "/message/edit",
+    delete: "/message/delete"
+  },
+  report: {
+    customerByMonth: "/report/customer/by-month",
+    customerBySource: "/report/customer/by-source",
+    revenueByMonth: "/report/invoice/monthly-revenue",
+    frequency: "/report/invoice/frequency",
+    callHistoryAvg: "/report/callHistory/avg-interest",
+    callHistoryInterest: "/report/callHistory/interest-bar",
+    customerSegment: "/segment/summary",
+    segmentTrend: "/segment/trend",
+    revenueByHourToday: "/invoice/getRevenueByHourToday",
+    recomputeSegment: "/segment/recompute",
+    recomputeSegmentStop: "/segment/recompute/stop",
+    recomputeSegmentResume: "/segment/recompute/resume",
+    recomputeSegmentRestart: "/segment/recompute/restart",
+    recomputeSegmentLatest: "/segment/recompute/latest",
+    recomputeSegmentProgress: (runId: string) => `/segment/recompute/progress?runId=${runId}`
+  },
+  campaign: {
+    generate: (id: number) => `/campaign/generate/${id}`,
+    list: () => `/campaign/list`
+  },
+  payment: {
+    create: "/payment/create"
   }
 } as const;

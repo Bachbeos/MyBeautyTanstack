@@ -15,6 +15,11 @@ type ModalProps = {
   onDelete?: () => Promise<void> | void;
   onLoadMoreUsers?: () => void;
   onLoadMoreCustomers?: () => void;
+  hideUserField?: boolean;
+  hideExpectedCloseDateField?: boolean;
+  forceStatusActive?: boolean;
+  zIndex?: number;
+  backdropZIndex?: number;
 };
 
 export default function ModalOpportunity({
@@ -27,7 +32,12 @@ export default function ModalOpportunity({
   onSubmit,
   onDelete,
   onLoadMoreUsers,
-  onLoadMoreCustomers
+  onLoadMoreCustomers,
+  hideUserField,
+  hideExpectedCloseDateField,
+  forceStatusActive,
+  zIndex,
+  backdropZIndex
 }: ModalProps) {
   if (!type && !shown) return null;
 
@@ -53,6 +63,8 @@ export default function ModalOpportunity({
         shown={shown}
         size="sm"
         onClose={onClose}
+        zIndex={zIndex}
+        backdropZIndex={backdropZIndex}
         footer={
           <div className="d-flex justify-content-center w-100 gap-2">
             <button className="btn btn-sm btn-light w-100" onClick={onClose}>
@@ -81,6 +93,8 @@ export default function ModalOpportunity({
       shown={shown}
       size="lg"
       onClose={onClose}
+      zIndex={zIndex}
+      backdropZIndex={backdropZIndex}
       footer={
         type !== "detail" ? (
           <>
@@ -108,6 +122,9 @@ export default function ModalOpportunity({
             onSubmit={onSubmit}
             onLoadMoreUsers={onLoadMoreUsers}
             onLoadMoreCustomers={onLoadMoreCustomers}
+            hideUserField={hideUserField}
+            hideExpectedCloseDateField={hideExpectedCloseDateField}
+            forceStatusActive={forceStatusActive}
           />
         )}
       </div>

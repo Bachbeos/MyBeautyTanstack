@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 type FormInputControlProps = FormControlProps & {
   placeholder?: string;
   type?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   className?: string;
   disabled?: boolean;
   list?: string;
@@ -15,6 +16,7 @@ type FormInputControlProps = FormControlProps & {
 export function FormInput({
   placeholder,
   type = "text",
+  inputMode,
   className,
   disabled,
   list,
@@ -31,6 +33,7 @@ export function FormInput({
         id={field.name}
         name={field.name}
         type={type}
+        inputMode={inputMode}
         value={field.state.value ?? ""}
         list={list}
         // onBlur={field.handleBlur}

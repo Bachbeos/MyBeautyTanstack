@@ -7,6 +7,7 @@ export type FormControlProps = {
   label: string;
   description?: string;
   required?: boolean;
+  disabled?: boolean;
   errorStrategy?: ErrorStrategy;
   wrapperClassName?: string;
 };
@@ -40,7 +41,11 @@ export function FormBase({
   const meta = field.state.meta;
 
   const isInvalid = shouldShowError(errorStrategy, meta);
-  const firstError = meta.errors?.find(Boolean)?.message;
+  const errorObj = meta.errors?.find(Boolean);
+  const firstError =
+    typeof errorObj === "object" && errorObj !== null && "message" in errorObj
+      ? (errorObj as any).message
+      : errorObj;
 
   return (
     <div className={wrapperClassName}>

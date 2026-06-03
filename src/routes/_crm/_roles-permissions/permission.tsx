@@ -1,4 +1,5 @@
 import { AsyncBoundary } from "@/components/async-boundary";
+import { usePermission } from "@/hooks/use-permission";
 import ExportButton from "@/components/export/export";
 import { BaseCheckbox } from "@/components/form/base-checkbox";
 import RefreshButton from "@/components/refresh/refresh";
@@ -62,6 +63,8 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
+
+  const { canAdd, canEdit, canDelete, canView } = usePermission("PERMISSION");
 
   const query = useQuery(permissionQueries.info({ roleId }));
   const listResource = query.data?.result || [];
@@ -155,7 +158,7 @@ function RouteComponent() {
               <BaseCheckbox
                 id={`${row.id}-${action}`}
                 checked={currentPermissions.includes(action)}
-                disabled={addMutation.isPending || removeMutation.isPending}
+                disabled={addMutation.isPending || removeMutation.isPending || !canEdit}
                 onChange={(checked) => handleToggle(row, action, checked)}
               />
             );
@@ -179,7 +182,7 @@ function RouteComponent() {
             <BaseCheckbox
               id={`${row.id}-all`}
               checked={isAllChecked}
-              disabled={addMutation.isPending || removeMutation.isPending}
+              disabled={addMutation.isPending || removeMutation.isPending || !canEdit}
               onChange={(checked) => handleToggleAllActions(row, checked)}
             />
           );
@@ -199,6 +202,20 @@ function RouteComponent() {
     document.body.classList.toggle("header-collapse");
     setIsHeaderCollapsed(document.body.classList.contains("header-collapse"));
   };
+
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-wrapper">
@@ -241,7 +258,7 @@ function RouteComponent() {
                   table={table}
                   filterable={true}
                   filterKey="name"
-                  filterKeyPlaceholder="Tìm nhanh tài nguyên..."
+                  showPagination={false}
                 />
               )}
             </AsyncBoundary>

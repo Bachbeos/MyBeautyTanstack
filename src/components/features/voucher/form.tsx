@@ -100,7 +100,7 @@ export function VoucherForm({
           parsedValue.discountType === 1 ? parseMoney(discountValue) : Number(discountValue),
         maxDiscount: parsedValue.discountType === 2 ? parseMoney(String(maxDiscount ?? "0")) : 0,
         minInvoiceAmount: parseMoney(minInvoiceAmount),
-        branchId: rest.branchId && rest.branchId !== 0 ? rest.branchId : undefined
+        branchId: rest.branchId
       };
 
       await onSubmit(payload);
@@ -183,9 +183,9 @@ export function VoucherForm({
                         onChange={
                           discountType === 1
                             ? (e) => {
-                                const formatted = formatMoney(e.target.value);
-                                field.handleChange(formatted);
-                              }
+                              const formatted = formatMoney(e.target.value);
+                              field.handleChange(formatted);
+                            }
                             : undefined
                         }
                       />

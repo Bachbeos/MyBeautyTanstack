@@ -16,12 +16,14 @@ export type UserDto = {
   roleId: number;
   active: number;
   regisDate: string;
+  isOperator: number;
   [key: string]: unknown;
 };
 
 export type UserListRequest = {
   keyword?: string;
   active?: number;
+  lstUserId? : UserId[];
   [key: string]: unknown;
 } & Partial<PageMeta>;
 
@@ -56,3 +58,9 @@ export type UserInfoUpdateRequest = {
   cityName?: string;
   subdistrictName?: string;
 };
+
+export type UserUpdatePasswordRequest = {
+  oldPassword?: string;
+  newPassword?: string;
+};
+

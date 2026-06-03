@@ -25,6 +25,7 @@ export type CustomerDto = {
   createdTime: string;
   updatedTime: string;
   latestContact: string;
+  segmentCode?: string;
   [key: string]: unknown;
 };
 

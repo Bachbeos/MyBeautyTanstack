@@ -21,13 +21,17 @@ import { Route as CrmSaleSaleRouteImport } from './routes/_crm/_sale/sale'
 import { Route as CrmRolesPermissionsRoleRouteImport } from './routes/_crm/_roles-permissions/role'
 import { Route as CrmRolesPermissionsPermissionRouteImport } from './routes/_crm/_roles-permissions/permission'
 import { Route as CrmResourceResourceRouteImport } from './routes/_crm/_resource/resource'
+import { Route as CrmReportReportRouteImport } from './routes/_crm/_report/report'
 import { Route as CrmProfileSettingsProfileSettingsRouteImport } from './routes/_crm/_profile-settings/profile-settings'
 import { Route as CrmProductProductRouteImport } from './routes/_crm/_product/product'
 import { Route as CrmOpportunityOpportunityRouteImport } from './routes/_crm/_opportunity/opportunity'
+import { Route as CrmOpportunityDispatchRouteImport } from './routes/_crm/_opportunity/dispatch'
 import { Route as CrmNotificationNotificationRouteImport } from './routes/_crm/_notification/notification'
 import { Route as CrmInvoiceInvoiceRouteImport } from './routes/_crm/_invoice/invoice'
 import { Route as CrmErrorError505RouteImport } from './routes/_crm/_error/error505'
-import { Route as CrmEmailEmailRouteImport } from './routes/_crm/_email/email'
+import { Route as CrmEmailTemplateRouteImport } from './routes/_crm/_email/template'
+import { Route as CrmEmailSendRouteImport } from './routes/_crm/_email/send'
+import { Route as CrmDraftInvoiceDraftInvoiceRouteImport } from './routes/_crm/_draft-invoice/draft-invoice'
 import { Route as CrmCustomerCustomerRouteImport } from './routes/_crm/_customer/customer'
 import { Route as CrmCustomerSourceCustomerSourceRouteImport } from './routes/_crm/_customer-source/customer-source'
 import { Route as CrmCustomerSettingsCustomerAttributeRouteImport } from './routes/_crm/_customer-settings/customer-attribute'
@@ -97,6 +101,11 @@ const CrmResourceResourceRoute = CrmResourceResourceRouteImport.update({
   path: '/resource',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmReportReportRoute = CrmReportReportRouteImport.update({
+  id: '/_report/report',
+  path: '/report',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmProfileSettingsProfileSettingsRoute =
   CrmProfileSettingsProfileSettingsRouteImport.update({
     id: '/_profile-settings/profile-settings',
@@ -114,6 +123,11 @@ const CrmOpportunityOpportunityRoute =
     path: '/opportunity',
     getParentRoute: () => CrmRoute,
   } as any)
+const CrmOpportunityDispatchRoute = CrmOpportunityDispatchRouteImport.update({
+  id: '/_opportunity/dispatch',
+  path: '/dispatch',
+  getParentRoute: () => CrmRoute,
+} as any)
 const CrmNotificationNotificationRoute =
   CrmNotificationNotificationRouteImport.update({
     id: '/_notification/notification',
@@ -130,11 +144,22 @@ const CrmErrorError505Route = CrmErrorError505RouteImport.update({
   path: '/error505',
   getParentRoute: () => CrmRoute,
 } as any)
-const CrmEmailEmailRoute = CrmEmailEmailRouteImport.update({
-  id: '/_email/email',
-  path: '/email',
+const CrmEmailTemplateRoute = CrmEmailTemplateRouteImport.update({
+  id: '/_email/template',
+  path: '/template',
   getParentRoute: () => CrmRoute,
 } as any)
+const CrmEmailSendRoute = CrmEmailSendRouteImport.update({
+  id: '/_email/send',
+  path: '/send',
+  getParentRoute: () => CrmRoute,
+} as any)
+const CrmDraftInvoiceDraftInvoiceRoute =
+  CrmDraftInvoiceDraftInvoiceRouteImport.update({
+    id: '/_draft-invoice/draft-invoice',
+    path: '/draft-invoice',
+    getParentRoute: () => CrmRoute,
+  } as any)
 const CrmCustomerCustomerRoute = CrmCustomerCustomerRouteImport.update({
   id: '/_customer/customer',
   path: '/customer',
@@ -193,13 +218,17 @@ export interface FileRoutesByFullPath {
   '/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/customer': typeof CrmCustomerCustomerRoute
-  '/email': typeof CrmEmailEmailRoute
+  '/draft-invoice': typeof CrmDraftInvoiceDraftInvoiceRoute
+  '/send': typeof CrmEmailSendRoute
+  '/template': typeof CrmEmailTemplateRoute
   '/error505': typeof CrmErrorError505Route
   '/invoice': typeof CrmInvoiceInvoiceRoute
   '/notification': typeof CrmNotificationNotificationRoute
+  '/dispatch': typeof CrmOpportunityDispatchRoute
   '/opportunity': typeof CrmOpportunityOpportunityRoute
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
+  '/report': typeof CrmReportReportRoute
   '/resource': typeof CrmResourceResourceRoute
   '/permission': typeof CrmRolesPermissionsPermissionRoute
   '/role': typeof CrmRolesPermissionsRoleRoute
@@ -222,13 +251,17 @@ export interface FileRoutesByTo {
   '/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/customer': typeof CrmCustomerCustomerRoute
-  '/email': typeof CrmEmailEmailRoute
+  '/draft-invoice': typeof CrmDraftInvoiceDraftInvoiceRoute
+  '/send': typeof CrmEmailSendRoute
+  '/template': typeof CrmEmailTemplateRoute
   '/error505': typeof CrmErrorError505Route
   '/invoice': typeof CrmInvoiceInvoiceRoute
   '/notification': typeof CrmNotificationNotificationRoute
+  '/dispatch': typeof CrmOpportunityDispatchRoute
   '/opportunity': typeof CrmOpportunityOpportunityRoute
   '/product': typeof CrmProductProductRoute
   '/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
+  '/report': typeof CrmReportReportRoute
   '/resource': typeof CrmResourceResourceRoute
   '/permission': typeof CrmRolesPermissionsPermissionRoute
   '/role': typeof CrmRolesPermissionsRoleRoute
@@ -252,13 +285,17 @@ export interface FileRoutesById {
   '/_crm/_customer-settings/customer-attribute': typeof CrmCustomerSettingsCustomerAttributeRoute
   '/_crm/_customer-source/customer-source': typeof CrmCustomerSourceCustomerSourceRoute
   '/_crm/_customer/customer': typeof CrmCustomerCustomerRoute
-  '/_crm/_email/email': typeof CrmEmailEmailRoute
+  '/_crm/_draft-invoice/draft-invoice': typeof CrmDraftInvoiceDraftInvoiceRoute
+  '/_crm/_email/send': typeof CrmEmailSendRoute
+  '/_crm/_email/template': typeof CrmEmailTemplateRoute
   '/_crm/_error/error505': typeof CrmErrorError505Route
   '/_crm/_invoice/invoice': typeof CrmInvoiceInvoiceRoute
   '/_crm/_notification/notification': typeof CrmNotificationNotificationRoute
+  '/_crm/_opportunity/dispatch': typeof CrmOpportunityDispatchRoute
   '/_crm/_opportunity/opportunity': typeof CrmOpportunityOpportunityRoute
   '/_crm/_product/product': typeof CrmProductProductRoute
   '/_crm/_profile-settings/profile-settings': typeof CrmProfileSettingsProfileSettingsRoute
+  '/_crm/_report/report': typeof CrmReportReportRoute
   '/_crm/_resource/resource': typeof CrmResourceResourceRoute
   '/_crm/_roles-permissions/permission': typeof CrmRolesPermissionsPermissionRoute
   '/_crm/_roles-permissions/role': typeof CrmRolesPermissionsRoleRoute
@@ -283,13 +320,17 @@ export interface FileRouteTypes {
     | '/customer-attribute'
     | '/customer-source'
     | '/customer'
-    | '/email'
+    | '/draft-invoice'
+    | '/send'
+    | '/template'
     | '/error505'
     | '/invoice'
     | '/notification'
+    | '/dispatch'
     | '/opportunity'
     | '/product'
     | '/profile-settings'
+    | '/report'
     | '/resource'
     | '/permission'
     | '/role'
@@ -312,13 +353,17 @@ export interface FileRouteTypes {
     | '/customer-attribute'
     | '/customer-source'
     | '/customer'
-    | '/email'
+    | '/draft-invoice'
+    | '/send'
+    | '/template'
     | '/error505'
     | '/invoice'
     | '/notification'
+    | '/dispatch'
     | '/opportunity'
     | '/product'
     | '/profile-settings'
+    | '/report'
     | '/resource'
     | '/permission'
     | '/role'
@@ -341,13 +386,17 @@ export interface FileRouteTypes {
     | '/_crm/_customer-settings/customer-attribute'
     | '/_crm/_customer-source/customer-source'
     | '/_crm/_customer/customer'
-    | '/_crm/_email/email'
+    | '/_crm/_draft-invoice/draft-invoice'
+    | '/_crm/_email/send'
+    | '/_crm/_email/template'
     | '/_crm/_error/error505'
     | '/_crm/_invoice/invoice'
     | '/_crm/_notification/notification'
+    | '/_crm/_opportunity/dispatch'
     | '/_crm/_opportunity/opportunity'
     | '/_crm/_product/product'
     | '/_crm/_profile-settings/profile-settings'
+    | '/_crm/_report/report'
     | '/_crm/_resource/resource'
     | '/_crm/_roles-permissions/permission'
     | '/_crm/_roles-permissions/role'
@@ -451,6 +500,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmResourceResourceRouteImport
       parentRoute: typeof CrmRoute
     }
+    '/_crm/_report/report': {
+      id: '/_crm/_report/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof CrmReportReportRouteImport
+      parentRoute: typeof CrmRoute
+    }
     '/_crm/_profile-settings/profile-settings': {
       id: '/_crm/_profile-settings/profile-settings'
       path: '/profile-settings'
@@ -470,6 +526,13 @@ declare module '@tanstack/react-router' {
       path: '/opportunity'
       fullPath: '/opportunity'
       preLoaderRoute: typeof CrmOpportunityOpportunityRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_opportunity/dispatch': {
+      id: '/_crm/_opportunity/dispatch'
+      path: '/dispatch'
+      fullPath: '/dispatch'
+      preLoaderRoute: typeof CrmOpportunityDispatchRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/_notification/notification': {
@@ -493,11 +556,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CrmErrorError505RouteImport
       parentRoute: typeof CrmRoute
     }
-    '/_crm/_email/email': {
-      id: '/_crm/_email/email'
-      path: '/email'
-      fullPath: '/email'
-      preLoaderRoute: typeof CrmEmailEmailRouteImport
+    '/_crm/_email/template': {
+      id: '/_crm/_email/template'
+      path: '/template'
+      fullPath: '/template'
+      preLoaderRoute: typeof CrmEmailTemplateRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_email/send': {
+      id: '/_crm/_email/send'
+      path: '/send'
+      fullPath: '/send'
+      preLoaderRoute: typeof CrmEmailSendRouteImport
+      parentRoute: typeof CrmRoute
+    }
+    '/_crm/_draft-invoice/draft-invoice': {
+      id: '/_crm/_draft-invoice/draft-invoice'
+      path: '/draft-invoice'
+      fullPath: '/draft-invoice'
+      preLoaderRoute: typeof CrmDraftInvoiceDraftInvoiceRouteImport
       parentRoute: typeof CrmRoute
     }
     '/_crm/_customer/customer': {
@@ -568,13 +645,17 @@ interface CrmRouteChildren {
   CrmCustomerSettingsCustomerAttributeRoute: typeof CrmCustomerSettingsCustomerAttributeRoute
   CrmCustomerSourceCustomerSourceRoute: typeof CrmCustomerSourceCustomerSourceRoute
   CrmCustomerCustomerRoute: typeof CrmCustomerCustomerRoute
-  CrmEmailEmailRoute: typeof CrmEmailEmailRoute
+  CrmDraftInvoiceDraftInvoiceRoute: typeof CrmDraftInvoiceDraftInvoiceRoute
+  CrmEmailSendRoute: typeof CrmEmailSendRoute
+  CrmEmailTemplateRoute: typeof CrmEmailTemplateRoute
   CrmErrorError505Route: typeof CrmErrorError505Route
   CrmInvoiceInvoiceRoute: typeof CrmInvoiceInvoiceRoute
   CrmNotificationNotificationRoute: typeof CrmNotificationNotificationRoute
+  CrmOpportunityDispatchRoute: typeof CrmOpportunityDispatchRoute
   CrmOpportunityOpportunityRoute: typeof CrmOpportunityOpportunityRoute
   CrmProductProductRoute: typeof CrmProductProductRoute
   CrmProfileSettingsProfileSettingsRoute: typeof CrmProfileSettingsProfileSettingsRoute
+  CrmReportReportRoute: typeof CrmReportReportRoute
   CrmResourceResourceRoute: typeof CrmResourceResourceRoute
   CrmRolesPermissionsPermissionRoute: typeof CrmRolesPermissionsPermissionRoute
   CrmRolesPermissionsRoleRoute: typeof CrmRolesPermissionsRoleRoute
@@ -595,14 +676,18 @@ const CrmRouteChildren: CrmRouteChildren = {
     CrmCustomerSettingsCustomerAttributeRoute,
   CrmCustomerSourceCustomerSourceRoute: CrmCustomerSourceCustomerSourceRoute,
   CrmCustomerCustomerRoute: CrmCustomerCustomerRoute,
-  CrmEmailEmailRoute: CrmEmailEmailRoute,
+  CrmDraftInvoiceDraftInvoiceRoute: CrmDraftInvoiceDraftInvoiceRoute,
+  CrmEmailSendRoute: CrmEmailSendRoute,
+  CrmEmailTemplateRoute: CrmEmailTemplateRoute,
   CrmErrorError505Route: CrmErrorError505Route,
   CrmInvoiceInvoiceRoute: CrmInvoiceInvoiceRoute,
   CrmNotificationNotificationRoute: CrmNotificationNotificationRoute,
+  CrmOpportunityDispatchRoute: CrmOpportunityDispatchRoute,
   CrmOpportunityOpportunityRoute: CrmOpportunityOpportunityRoute,
   CrmProductProductRoute: CrmProductProductRoute,
   CrmProfileSettingsProfileSettingsRoute:
     CrmProfileSettingsProfileSettingsRoute,
+  CrmReportReportRoute: CrmReportReportRoute,
   CrmResourceResourceRoute: CrmResourceResourceRoute,
   CrmRolesPermissionsPermissionRoute: CrmRolesPermissionsPermissionRoute,
   CrmRolesPermissionsRoleRoute: CrmRolesPermissionsRoleRoute,

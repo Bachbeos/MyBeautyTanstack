@@ -1,20 +1,23 @@
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+
+import image_error404 from "@/assets/img/authentication/error-404.png";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import ThemeSettings from "@/components/theme/theme-setting";
-import image_error404 from "@/assets/img/authentication/error-404.png";
+import { SocketNotificationListener } from "@/components/socket/socket-notification-listener";
 
-const RootLayout = () => (
-  <>
+function RootLayout() {
+  return (
     <ThemeProvider>
+      <SocketNotificationListener />
       <Outlet />
       <ThemeSettings />
       <TanStackRouterDevtools />
-      <Toaster position="top-right" expand richColors={false} />
+      <Toaster position="bottom-right" expand richColors />
     </ThemeProvider>
-  </>
-);
+  );
+}
 
 function Error404() {
   return (

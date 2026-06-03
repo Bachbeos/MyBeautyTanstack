@@ -265,7 +265,7 @@ const customerSchema = z.object({
   age: z.coerce.number().optional(),
   height: z.coerce.number().optional(),
   weight: z.coerce.number().optional(),
-  birthday: z.string().optional(),
+  birthday: z.string().nullable().optional(),
   gender: z.number().default(1),
   sourceId: z.number().nullable().optional(),
   address: z.string().optional(),
@@ -321,26 +321,34 @@ export function CustomerForm({
     } as CustomerFormValues,
     validators: { onSubmit: customerSchema as any },
     onSubmit: async ({ value }) => {
-      const numberAttrIds = new Set(
-        attributes.filter((attr) => attr.datatype === "number").map((attr) => Number(attr.id))
-      );
+      const customerExtraInfos = attributes
+        .map((attr) => {
+          const numericAttrId = Number(attr.id);
+          const key = toExtraValueKey(numericAttrId);
+          const v = value.extraValues?.[key];
 
-      const customerExtraInfos = Object.entries(value.extraValues || {}).map(
-        ([attrId, v]: [string, CustomerExtraInfo]) => {
-          const numericAttrId = parseAttributeIdFromExtraKey(attrId);
+          if (!v) return null;
+
           const rawAttributeValue = v.attributeValue || "";
+          if (!rawAttributeValue && v.id == null) return null;
 
           return {
             attributeId: numericAttrId,
-            attributeValue: numberAttrIds.has(numericAttrId)
-              ? sanitizeNumberPayload(rawAttributeValue)
-              : rawAttributeValue,
-            id: v.id || null
+            attributeValue:
+              attr.datatype === "number"
+                ? sanitizeNumberPayload(rawAttributeValue)
+                : rawAttributeValue,
+            id: v.id ?? null
           };
-        }
-      );
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null);
 
-      await onSubmit({ ...value, customerExtraInfos });
+      const { extraValues, ...rest } = value;
+      await onSubmit({
+        ...rest,
+        birthday: rest.birthday ? rest.birthday : "",
+        customerExtraInfos
+      });
     }
   });
 
@@ -358,7 +366,6 @@ export function CustomerForm({
         };
       });
 
-      // Fallback for APIs that return dynamic values as flat keys by fieldName.
       if (!Object.keys(extraMap).length) {
         for (const attr of attributes) {
           const attrId = Number(attr.id);
@@ -578,6 +585,18 @@ export function CustomerForm({
                 </form.AppField>
               </div>
               <div className="col-md-6 mb-3">
+                <form.AppField name="phone">
+                  {(f) => (
+                    <f.Input
+                      label="Số điện thoại"
+                      required
+                      disabled={isReadOnly}
+                      placeholder="Nhập số điện thoại"
+                    />
+                  )}
+                </form.AppField>
+              </div>
+              <div className="col-md-6 mb-3">
                 <form.AppField name="gender">
                   {(f) => (
                     <f.Radio
@@ -613,18 +632,6 @@ export function CustomerForm({
             ref={address.ref}
           >
             <div className="accordion-body border-top row">
-              <div className="col-md-6 mb-3">
-                <form.AppField name="phone">
-                  {(f) => (
-                    <f.Input
-                      label="Số điện thoại"
-                      required
-                      disabled={isReadOnly}
-                      placeholder="Nhập số điện thoại"
-                    />
-                  )}
-                </form.AppField>
-              </div>
               <div className="col-md-6 mb-3">
                 <form.AppField name="email">
                   {(f) => <f.Input label="Email" disabled={isReadOnly} placeholder="Nhập email" />}
@@ -697,137 +704,174 @@ export function CustomerForm({
                         <p className="fw-semibold mb-2 mt-1 text-dark">{group.parentName}</p>
                       )}
                       <div className="row">
-                        {group.items.map((attr) => {
-                          const baseName =
-                            `extraValues.${toExtraValueKey(Number(attr.id))}` as const;
-                          const opts = getOptionsForAttribute(attr);
-                          const selectOptions = opts.map((o) => ({ value: o.id, label: o.name }));
-                          const radioOptions = selectOptions;
-                          const label = String(attr.name ?? "");
-                          const isRequired = !!attr.required;
-                          const isDisabled = isReadOnly || !!attr.readonly;
+                        {group.items
+                          .filter((g) => g.parentId !== 0)
+                          .map((attr) => {
+                            const prefixedKey = toExtraValueKey(attr.id);
+                            const baseName = `extraValues.${prefixedKey}` as const;
+                            const opts = getOptionsForAttribute(attr);
+                            const selectOptions = opts.map((o) => ({ value: o.id, label: o.name }));
+                            const radioOptions = selectOptions;
+                            const label = String(attr.name ?? "");
+                            const isRequired = label.toLowerCase().trim() === "ngày sinh" ? false : !!attr.required;
+                            const isDisabled = isReadOnly || !!attr.readonly;
 
-                          return (
-                            <div className="col-md-6 mb-3" key={attr.id}>
-                              <form.AppField name={`${baseName}.id`}>{() => null}</form.AppField>
+                            return (
+                              <div className="col-md-6 mb-3" key={attr.id}>
+                                <form.AppField name={`${baseName}.id`}>{() => null}</form.AppField>
 
-                              <form.AppField name={`${baseName}.attributeValue`}>
-                                {(f) => {
-                                  if (attr.datatype === "text") {
-                                    return (
-                                      <f.Input
-                                        label={label}
-                                        required={isRequired}
-                                        disabled={isDisabled}
-                                        placeholder="Nhập..."
-                                      />
-                                    );
+                                <form.AppField
+                                  name={`${baseName}.attributeValue`}
+                                  validators={
+                                    isRequired
+                                      ? {
+                                          onChange: ({ value }) => {
+                                            if (attr.datatype === "checkbox") {
+                                              if (value !== true && value !== 1 && value !== "1" && value !== "true") {
+                                                return `${label} bắt buộc phải chọn`;
+                                              }
+                                            } else {
+                                              if (value === undefined || value === null || String(value).trim() === "") {
+                                                return `${label} không được để trống`;
+                                              }
+                                            }
+                                            return undefined;
+                                          },
+                                          onSubmit: ({ value }) => {
+                                            if (attr.datatype === "checkbox") {
+                                              if (value !== true && value !== 1 && value !== "1" && value !== "true") {
+                                                return `${label} bắt buộc phải chọn`;
+                                              }
+                                            } else {
+                                              if (value === undefined || value === null || String(value).trim() === "") {
+                                                return `${label} không được để trống`;
+                                              }
+                                            }
+                                            return undefined;
+                                          }
+                                        }
+                                      : undefined
                                   }
+                                >
+                                  {(f) => {
+                                    if (attr.datatype === "text") {
+                                      return (
+                                        <f.Input
+                                          label={label}
+                                          required={isRequired}
+                                          disabled={isDisabled}
+                                          placeholder="Nhập..."
+                                        />
+                                      );
+                                    }
 
-                                  if (attr.datatype === "textarea") {
+                                    if (attr.datatype === "textarea") {
+                                      return (
+                                        <f.Textarea
+                                          label={label}
+                                          required={isRequired}
+                                          disabled={isDisabled}
+                                          rows={3}
+                                          placeholder="Nhập..."
+                                        />
+                                      );
+                                    }
+
+                                    if (attr.datatype === "number") {
+                                      const cfg = getNumberFormatConfig(attr);
+
+                                      return (
+                                        <f.Input
+                                          label={label}
+                                          type="text"
+                                          required={isRequired}
+                                          disabled={isDisabled}
+                                          placeholder="Nhập..."
+                                          onChange={(e) => {
+                                            const formatted = formatNumberDisplay(
+                                              e.target.value,
+                                              cfg.maxFractionDigits
+                                            );
+                                            form.setFieldValue(
+                                              `${baseName}.attributeValue` as any,
+                                              formatted as any
+                                            );
+                                          }}
+                                        />
+                                      );
+                                    }
+
+                                    if (attr.datatype === "date") {
+                                      return (
+                                        <f.Input
+                                          label={label}
+                                          type="date"
+                                          required={isRequired}
+                                          disabled={isDisabled}
+                                        />
+                                      );
+                                    }
+
+                                    if (
+                                      attr.datatype === "dropdown" ||
+                                      attr.datatype === "select"
+                                    ) {
+                                      return (
+                                        <f.Select
+                                          label={label}
+                                          options={selectOptions}
+                                          required={isRequired}
+                                          disabled={isDisabled}
+                                          placeholder="Chọn"
+                                        />
+                                      );
+                                    }
+
+                                    if (attr.datatype === "radio") {
+                                      return (
+                                        <f.Radio
+                                          label={label}
+                                          options={radioOptions}
+                                          required={isRequired}
+                                          disabled={isDisabled}
+                                        />
+                                      );
+                                    }
+
+                                    if (attr.datatype === "checkbox") {
+                                      return (
+                                        <f.Checkbox
+                                          fieldLabel={label}
+                                          label={label}
+                                          required={isRequired}
+                                          disabled={isDisabled}
+                                        />
+                                      );
+                                    }
+
+                                    if (attr.datatype === "multiselect") {
+                                      return (
+                                        <f.Select
+                                          label={label}
+                                          options={selectOptions}
+                                          required={isRequired}
+                                          disabled={isDisabled}
+                                          placeholder="Chọn nhiều"
+                                          isMulti
+                                        />
+                                      );
+                                    }
+
                                     return (
-                                      <f.Textarea
-                                        label={label}
-                                        required={isRequired}
-                                        disabled={isDisabled}
-                                        rows={3}
-                                        placeholder="Nhập..."
-                                      />
+                                      <div className="text-muted small fst-italic">
+                                        Loại {String(attr.datatype)}
+                                      </div>
                                     );
-                                  }
-
-                                  if (attr.datatype === "number") {
-                                    const cfg = getNumberFormatConfig(attr);
-
-                                    return (
-                                      <f.Input
-                                        label={label}
-                                        type="text"
-                                        required={isRequired}
-                                        disabled={isDisabled}
-                                        placeholder="Nhập..."
-                                        onChange={(e) => {
-                                          const formatted = formatNumberDisplay(
-                                            e.target.value,
-                                            cfg.maxFractionDigits
-                                          );
-                                          form.setFieldValue(
-                                            `${baseName}.attributeValue` as any,
-                                            formatted as any
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  }
-
-                                  if (attr.datatype === "date") {
-                                    return (
-                                      <f.Input
-                                        label={label}
-                                        type="date"
-                                        required={isRequired}
-                                        disabled={isDisabled}
-                                      />
-                                    );
-                                  }
-
-                                  if (attr.datatype === "dropdown" || attr.datatype === "select") {
-                                    return (
-                                      <f.Select
-                                        label={label}
-                                        options={selectOptions}
-                                        required={isRequired}
-                                        disabled={isDisabled}
-                                        placeholder="Chọn"
-                                      />
-                                    );
-                                  }
-
-                                  if (attr.datatype === "radio") {
-                                    return (
-                                      <f.Radio
-                                        label={label}
-                                        options={radioOptions}
-                                        required={isRequired}
-                                        disabled={isDisabled}
-                                      />
-                                    );
-                                  }
-
-                                  if (attr.datatype === "checkbox") {
-                                    return (
-                                      <f.Checkbox
-                                        fieldLabel={label}
-                                        label={label}
-                                        required={isRequired}
-                                        disabled={isDisabled}
-                                      />
-                                    );
-                                  }
-
-                                  if (attr.datatype === "multiselect") {
-                                    return (
-                                      <f.Select
-                                        label={label}
-                                        options={selectOptions}
-                                        required={isRequired}
-                                        disabled={isDisabled}
-                                        placeholder="Chọn nhiều"
-                                        isMulti
-                                      />
-                                    );
-                                  }
-
-                                  return (
-                                    <div className="text-muted small fst-italic">
-                                      Loại {String(attr.datatype)}
-                                    </div>
-                                  );
-                                }}
-                              </form.AppField>
-                            </div>
-                          );
-                        })}
+                                  }}
+                                </form.AppField>
+                              </div>
+                            );
+                          })}
                       </div>
                     </div>
                   ));

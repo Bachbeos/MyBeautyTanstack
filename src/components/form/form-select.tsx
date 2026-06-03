@@ -20,6 +20,7 @@ type FormSelectProps = Omit<FormControlProps, "label"> & {
   className?: string;
   disabled?: boolean;
   onLoadMore?: () => void;
+  onValueChange?: (value: string | number | "") => void;
   isClearable?: boolean;
   isMulti?: boolean;
   multiValueSeparator?: string;
@@ -32,6 +33,7 @@ export function FormSelect({
   placeholder = "Chọn",
   disabled,
   onLoadMore,
+  onValueChange,
   isClearable = true,
   isMulti = false,
   multiValueSeparator = ",",
@@ -101,11 +103,15 @@ export function FormSelect({
             const selectedValues = Array.isArray(option)
               ? option.map((opt) => String(opt?.value ?? "")).filter(Boolean)
               : [];
-            field.handleChange(selectedValues.join(multiValueSeparator));
+            const nextValue = selectedValues.join(multiValueSeparator);
+            field.handleChange(nextValue);
+            onValueChange?.(nextValue);
             return;
           }
 
-          field.handleChange(option ? option.value : "");
+          const nextValue = option ? option.value : "";
+          field.handleChange(nextValue);
+          onValueChange?.(nextValue);
         }}
         options={selectOptions}
         onBlur={field.handleBlur}

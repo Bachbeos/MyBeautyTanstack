@@ -19,6 +19,7 @@ interface DataTableProps<TData> {
   filterKeyPlaceholder?: string;
   toolbarLeft?: React.ReactNode;
   toolbarRight?: React.ReactNode;
+  showPagination?: boolean;
 }
 
 export function DataTable<TData>({
@@ -27,7 +28,8 @@ export function DataTable<TData>({
   filterKey = "name",
   filterKeyPlaceholder,
   toolbarLeft,
-  toolbarRight
+  toolbarRight,
+  showPagination = true
 }: DataTableProps<TData>) {
   return (
     <div className="d-flex flex-column h-100 gap-4">
@@ -144,9 +146,11 @@ export function DataTable<TData>({
       </div>
 
       {/* Pagination */}
-      <div className="border-top pt-3">
-        <Pagination table={table} />
-      </div>
+      {showPagination ? (
+        <div className="border-top pt-3">
+          <Pagination table={table} />
+        </div>
+      ) : null}
     </div>
   );
 }

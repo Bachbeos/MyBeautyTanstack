@@ -40,6 +40,7 @@ export type InvoiceListRequest = {
 export type InvoiceListResponse = Page<InvoiceDto>;
 
 export type InvoiceCreateRequest = {
+  id?: InvoiceId;
   invoiceCode: string;
   invoiceType: string;
   amount: number;
@@ -60,6 +61,7 @@ export type InvoiceCreateRequest = {
   customerId: number;
   branchId: number;
   voucherCode: string;
+  voucherId?: number;
   customerName: string;
   userName: string;
 };

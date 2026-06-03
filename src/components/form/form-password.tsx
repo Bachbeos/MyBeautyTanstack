@@ -33,6 +33,7 @@ export function FormPassword({
           onBlur={field.handleBlur}
           onChange={(e) => field.handleChange(e.target.value)}
           placeholder={placeholder}
+          disabled={baseProps.disabled}
         />
 
         <span

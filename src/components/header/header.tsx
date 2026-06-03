@@ -14,7 +14,7 @@ import type { NotificationDto } from "@/lib/types/notification";
 
 export default function Header() {
   const navigate = useNavigate();
-  const { clear, userId } = useAuthStore();
+  const { clear, userId, name, avatar, roleName, branchName } = useAuthStore();
 
   const [theme, setTheme] = useState<"light" | "dark">(
     (localStorage.getItem("theme") as "light" | "dark") ?? "light"
@@ -25,8 +25,12 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // Tạm thời giữ giả lập user để không nát giao diện vì bạn muốn "có gì giữ nguyên"
-  const user = { name: "Admin User", roleName: "Quản trị viên", avatar: "" };
+  const user = {
+    name: name || "User",
+    roleName: roleName || "Thành viên",
+    avatar: avatar || "",
+    branchName: branchName || "N/A"
+  };
 
   const hasAvatar = !!user?.avatar?.trim();
   const avatarSrc = user?.avatar || "";
@@ -77,6 +81,12 @@ export default function Header() {
     }
   };
 
+  const handleMobileSidebarToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.querySelector(".main-wrapper")?.classList.toggle("slide-nav");
+    document.documentElement.classList.toggle("menu-opened");
+  };
+
   const { data: notifyPages, refetch: refetchNotifications } = useInfiniteQuery(
     notificationQueries.infinite({ size: 10 })
   );
@@ -87,6 +97,7 @@ export default function Header() {
   const unreadCount = allNotifications.filter((n) => n.isRead === 0).length;
   const markRead = useMutation(notificationMutations.markRead());
   const markAllRead = useMutation(notificationMutations.markAllRead());
+  const deleteNotification = useMutation(notificationMutations.delete());
 
   const handleBellClick = () => {
     refetchNotifications();
@@ -105,11 +116,25 @@ export default function Header() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+      const target = event.target;
+
+      if (notifRef.current && !notifRef.current.contains(target as Node)) {
         setNotifOpen(false);
       }
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(target as Node)) {
         setDropdownOpen(false);
+      }
+
+      if (!(target instanceof Element)) return;
+
+      const mainWrapper = document.querySelector(".main-wrapper");
+      const isMobileSidebarOpen = mainWrapper?.classList.contains("slide-nav");
+      const clickedInsideSidebar = !!target.closest(".sidebar");
+      const clickedMobileButton = !!target.closest("#mobile_btn");
+
+      if (isMobileSidebarOpen && !clickedInsideSidebar && !clickedMobileButton) {
+        mainWrapper?.classList.remove("slide-nav");
+        document.documentElement.classList.remove("menu-opened");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -136,7 +161,12 @@ export default function Header() {
             </span>
           </Link>
 
-          <a id="mobile_btn" className="mobile-btn" href="#sidebar">
+          <a
+            id="mobile_btn"
+            className="mobile-btn"
+            href="#sidebar"
+            onClick={handleMobileSidebarToggle}
+          >
             <i className="ti ti-menu-deep fs-24"></i>
           </a>
 
@@ -148,14 +178,14 @@ export default function Header() {
             <i className="ti ti-arrow-bar-to-right"></i>
           </button>
 
-          <div className="me-auto d-flex align-items-center header-search d-lg-flex d-none">
+          {/* <div className="me-auto d-flex align-items-center header-search d-lg-flex d-none">
             <div className="input-icon position-relative me-2">
               <input type="text" className="form-control" placeholder="Tìm kiếm" />
               <span className="input-icon-addon d-inline-flex p-0 header-search-icon">
                 <i className="ti ti-command"></i>
               </span>
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="d-flex align-items-center">
@@ -173,41 +203,6 @@ export default function Header() {
             </button>
           </div>
 
-          <div className="header-item d-none d-sm-flex">
-            <div className="dropdown me-2">
-              <a href="#" className="btn topbar-link topbar-teal-link" data-bs-toggle="dropdown">
-                <i className="ti ti-layout-grid-add"></i>
-              </a>
-            </div>
-          </div>
-
-          <div className="header-item d-none d-sm-flex">
-            <div className="dropdown me-2">
-              <a href="#" className="btn topbar-link topbar-indigo-link">
-                <i className="ti ti-help-hexagon"></i>
-              </a>
-            </div>
-          </div>
-
-          <div className="header-item d-none d-sm-flex">
-            <div className="dropdown me-2">
-              <a href="#" className="btn topbar-link topbar-warning-link">
-                <i className="ti ti-chart-pie"></i>
-              </a>
-            </div>
-          </div>
-
-          <div className="header-line"></div>
-
-          <div className="header-item">
-            <div className="dropdown me-2">
-              <a href="#" className="btn topbar-link">
-                <i className="ti ti-message-circle-exclamation"></i>
-                <span className="badge rounded-pill">14</span>
-              </a>
-            </div>
-          </div>
-
           <div className="header-item dropdown mr-7" ref={notifRef}>
             <button
               className={cn("topbar-link btn dropdown-toggle drop-arrow-none", notifOpen && "show")}
@@ -215,9 +210,7 @@ export default function Header() {
               onClick={handleBellClick}
             >
               <i className="ti ti-bell-check fs-16 animate-ring"></i>
-              <span className="badge rounded-pill">
-                {unreadCount > 0 ? unreadCount : allNotifications.length}
-              </span>
+              <span className="badge rounded-pill">{unreadCount > 0 ? unreadCount : 0}</span>
             </button>
 
             <div
@@ -291,9 +284,12 @@ export default function Header() {
                               )}
                               <button
                                 className="btn rounded-circle p-0"
+                                type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleDismissNotification(notif.id);
+                                  deleteNotification.mutate(notif.id, {
+                                    onSuccess: () => handleDismissNotification(notif.id)
+                                  });
                                 }}
                               >
                                 <i className="ti ti-x"></i>
@@ -357,7 +353,8 @@ export default function Header() {
               <div className="d-flex align-items-center bg-light rounded-3 p-2 mb-2">
                 <div className="ms-2">
                   <p className="fw-medium text-dark mb-0">{user?.name}</p>
-                  <span className="d-block fs-13">{user?.roleName}</span>
+                  <p className="d-block fs-13 text-muted">Chức vụ: {user?.roleName}</p>
+                  <p className="fw-small text-dark mb-0">Chi nhánh: {user?.branchName}</p>
                 </div>
               </div>
 

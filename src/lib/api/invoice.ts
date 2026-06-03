@@ -32,6 +32,17 @@ export const getInvoiceDetail = async (
   return res.data;
 };
 
+export const getDraftInvoiceDetail = async (
+  id: InvoiceId,
+  signal?: AbortSignal
+): Promise<ApiResponse<InvoiceDto>> => {
+  const res = await axiosInstance.get<ApiResponse<InvoiceDto>>(ENDPOINTS.invoice.draftDetail, {
+    params: { id: id },
+    signal
+  });
+  return res.data;
+};
+
 export const upsertInvoice = async (
   body: InvoiceUpdateRequest | InvoiceCreateRequest
 ): Promise<ApiResponse<InvoiceDto>> => {
@@ -41,5 +52,41 @@ export const upsertInvoice = async (
 
 export const deleteInvoice = async (id: InvoiceId): Promise<ApiResponse<void>> => {
   const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.invoice.delete(id));
+  return res.data;
+};
+
+export const deleteDraftInvoice = async (id: InvoiceId): Promise<ApiResponse<void>> => {
+  const res = await axiosInstance.delete<ApiResponse<void>>(ENDPOINTS.invoice.draftDelete, {
+    params: { invoiceId: id }
+  });
+  return res.data;
+};
+
+export const createDraftInvoice = async (
+  customerId: number,
+  signal?: AbortSignal
+): Promise<ApiResponse<InvoiceDto>> => {
+  const params = { customerId: customerId != 0 ? customerId : undefined };
+  const res = await axiosInstance.get<ApiResponse<InvoiceDto>>(ENDPOINTS.invoice.draftCreate, {
+    params,
+    signal
+  });
+  return res.data;
+};
+
+export const updateDraftInvoice = async (
+  body: InvoiceUpdateRequest
+): Promise<ApiResponse<InvoiceDto>> => {
+  const res = await axiosInstance.post<ApiResponse<InvoiceDto>>(
+    ENDPOINTS.invoice.draftUpdate,
+    body
+  );
+  return res.data;
+};
+
+export const createInvoice = async (
+  body: InvoiceCreateRequest & { voucherId?: number }
+): Promise<ApiResponse<InvoiceDto>> => {
+  const res = await axiosInstance.post<ApiResponse<InvoiceDto>>(ENDPOINTS.invoice.create, body);
   return res.data;
 };

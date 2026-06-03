@@ -1,4 +1,5 @@
 import axios from "axios";
+import type { ApiResponse } from "@/lib/types/common";
 import env from "@/lib/env";
 import { ENDPOINTS } from "@/lib/api/endpoints";
 import { axiosBase } from "@/lib/axios/instance";
@@ -6,7 +7,10 @@ import type {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
-  RegisterResponse
+  RegisterResponse,
+  LoginGoogleRequest,
+  ForgotPasswordRequest,
+  ResetPasswordRequest
 } from "@/lib/types/auth";
 
 type RefreshResponse = {
@@ -45,5 +49,22 @@ export const login = async (data: LoginRequest): Promise<LoginResponse> => {
   const res = await axiosBase.post<LoginResponse>(ENDPOINTS.auth.login, {
     ...data
   });
+  return res.data;
+};
+
+export const loginGoogle = async (data: LoginGoogleRequest): Promise<LoginResponse> => {
+  const res = await axiosBase.post<LoginResponse>(ENDPOINTS.auth.login, {
+    ...data
+  });
+  return res.data;
+};
+
+export const forgotPassword = async (data: ForgotPasswordRequest): Promise<ApiResponse> => {
+  const res = await axiosBase.post<ApiResponse>(ENDPOINTS.auth.forgotPassword, data);
+  return res.data;
+};
+
+export const resetPassword = async (data: ResetPasswordRequest): Promise<ApiResponse> => {
+  const res = await axiosBase.post<ApiResponse>(ENDPOINTS.auth.resetPassword, data);
   return res.data;
 };

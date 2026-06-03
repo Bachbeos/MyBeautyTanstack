@@ -1,5 +1,6 @@
-import CollapseButton from "@/components/collapse/collapse-button";
 import RefreshButton from "@/components/refresh/refresh";
+import { usePermission } from "@/hooks/use-permission";
+import { Can } from "@/components/auth/can";
 import { useCloseModal, useModalFade } from "@/hooks/use-modal-animation";
 import { appointmentMutations, appointmentQueries } from "@/lib/tanstack/options/appointment";
 import { customerQueries } from "@/lib/tanstack/options/customer";
@@ -13,6 +14,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin, { Draggable } from "@fullcalendar/interaction";
 import viLocale from "@fullcalendar/core/locales/vi";
 import ModalAppointment from "@/components/features/appointment/modal";
+import CollapseButton from "@/components/collapse/collapse-button";
 
 const externalEvents = [
   { title: "Lịch thực hiện dịch vụ", class: "bg-success", type: 1 },
@@ -28,6 +30,8 @@ function RouteComponent() {
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(() =>
     document.body.classList.contains("header-collapse")
   );
+
+  const { canAdd, canEdit, canDelete, canView } = usePermission("SCHEDULE");
 
   const [modal, setModal] = useState<{
     type: any;
@@ -78,9 +82,16 @@ function RouteComponent() {
   );
 
   const draggableElRef = useRef<HTMLDivElement>(null);
+  const draggableInstanceRef = useRef<Draggable | null>(null);
+
   useEffect(() => {
     if (!draggableElRef.current) return;
-    const draggable = new Draggable(draggableElRef.current, {
+
+    if (draggableInstanceRef.current) {
+      draggableInstanceRef.current.destroy();
+    }
+
+    draggableInstanceRef.current = new Draggable(draggableElRef.current, {
       itemSelector: ".fc-event",
       eventData: (eventEl: HTMLElement) => ({
         title: eventEl.innerText,
@@ -90,7 +101,13 @@ function RouteComponent() {
         create: true
       })
     });
-    return () => draggable.destroy();
+
+    return () => {
+      if (draggableInstanceRef.current) {
+        draggableInstanceRef.current.destroy();
+        draggableInstanceRef.current = null;
+      }
+    };
   }, []);
 
   const toDateTimeLocal = (date: Date) => {
@@ -165,6 +182,20 @@ function RouteComponent() {
     query.refetch();
   };
 
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-wrapper">
       <div className="content">
@@ -192,27 +223,31 @@ function RouteComponent() {
           <div className="col-lg-3 col-md-4">
             <div className="card border-0 shadow-sm">
               <div className="card-body">
-                <button
-                  className="btn btn-primary w-100 mb-4"
-                  onClick={() => setModal({ type: "add", item: null })}
-                >
-                  <i className="ti ti-plus me-1"></i> Tạo sự kiện mới
-                </button>
-                <h6 className="fw-medium mb-3">Kéo & Thả Sự Kiện</h6>
-                <div id="external-events" ref={draggableElRef}>
-                  {externalEvents.map((item, index) => (
-                    <div
-                      key={index}
-                      className={`fc-event external-event ${item.class} text-white mb-2 p-2 rounded cursor-pointer`}
-                      data-class={item.class}
-                      data-type={item.type}
-                      style={{ cursor: "grab" }}
-                    >
-                      <i className="ti ti-circle-filled fs-10 me-2"></i>
-                      {item.title}
-                    </div>
-                  ))}
-                </div>
+                <Can I="ADD" a="SCHEDULE">
+                  <button
+                    className="btn btn-primary w-100 mb-4"
+                    onClick={() => setModal({ type: "add", item: null })}
+                  >
+                    <i className="ti ti-plus me-1"></i> Tạo sự kiện mới
+                  </button>
+                </Can>
+                <Can I="VIEW" a="SCHEDULE">
+                  <h6 className="fw-medium mb-3">Kéo & Thả Sự Kiện</h6>
+                  <div id="external-events" ref={draggableElRef}>
+                    {externalEvents.map((item, index) => (
+                      <div
+                        key={index}
+                        className={`fc-event external-event ${item.class} text-white mb-2 p-2 rounded cursor-pointer`}
+                        data-class={item.class}
+                        data-type={item.type}
+                        style={{ cursor: "grab" }}
+                      >
+                        <i className="ti ti-circle-filled fs-10 me-2"></i>
+                        {item.title}
+                      </div>
+                    ))}
+                  </div>
+                </Can>
               </div>
             </div>
           </div>
@@ -230,9 +265,9 @@ function RouteComponent() {
                       right: "dayGridMonth,timeGridWeek,timeGridDay"
                     }}
                     initialView="dayGridMonth"
-                    editable={true}
-                    selectable={true}
-                    droppable={true}
+                    editable={canEdit}
+                    selectable={canAdd}
+                    droppable={canAdd}
                     events={events}
                     select={handleDateSelect}
                     dateClick={handleDateClick}

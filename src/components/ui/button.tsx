@@ -27,8 +27,19 @@ const buttonVariants = cva("btn", {
 });
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
-  VariantProps<typeof buttonVariants>;
+  VariantProps<typeof buttonVariants> & {
+    loading?: boolean;
+  };
 
-export function Button({ className, variant, size, block, ...props }: ButtonProps) {
-  return <button className={cn(buttonVariants({ variant, size, block }), className)} {...props} />;
+export function Button({ className, variant, size, block, loading, children, ...props }: ButtonProps) {
+  return (
+    <button
+      className={cn(buttonVariants({ variant, size, block }), className)}
+      disabled={loading || props.disabled}
+      {...props}
+    >
+      {loading && <span className="spinner-border spinner-border-sm me-2" role="status" />}
+      {children}
+    </button>
+  );
 }

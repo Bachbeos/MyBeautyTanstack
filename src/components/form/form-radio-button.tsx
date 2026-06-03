@@ -60,10 +60,6 @@ export function FormRadioButton({
             </div>
           );
         })}
-
-        {isInvalid && (
-          <div className="invalid-feedback d-block mt-1">{field.state.meta.errors?.[0]}</div>
-        )}
       </div>
     </FormBase>
   );

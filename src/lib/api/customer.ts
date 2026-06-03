@@ -21,6 +21,17 @@ export const getCustomers = async (
   return res.data;
 };
 
+export const getCustomersExtraInfo = async (
+  params: CustomerListRequest,
+  signal?: AbortSignal
+): Promise<ApiResponse<CustomerListResponse>> => {
+  const res = await axiosInstance.get<ApiResponse<CustomerListResponse>>(ENDPOINTS.customer.listExtraInfo, {
+    params,
+    signal
+  });
+  return res.data;
+};
+
 export const getCustomerDetail = async (
   id: CustomerId,
   signal?: AbortSignal

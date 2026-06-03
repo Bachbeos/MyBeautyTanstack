@@ -20,8 +20,7 @@ const registerSchema = z
     fullName: z.string().min(1, "Họ và tên là bắt buộc"),
     phone: z
       .string()
-      .min(9, "Số điện thoại không hợp lệ")
-      .regex(/^\+?\d+$/, "Chỉ được chứa số"),
+      .regex(/^0[0-9]{9}$/, "Số điện thoại phải bắt đầu bằng số 0 và có đúng 10 chữ số"),
     password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
     confirmPassword: z.string().min(6, "Vui lòng nhập lại mật khẩu"),
     agree: z.boolean().refine((v) => v === true, {
@@ -61,12 +60,12 @@ function RouteComponent() {
   return (
     <div className="main-wrapper">
       <div className="overflow-hidden p-3 acc-vh">
-        <div className="row vh-100 w-100 g-0">
-          <div className="col-lg-6 vh-100 overflow-y-auto overflow-x-hidden">
-            <div className="row">
-              <div className="col-md-10 mx-auto">
+        <div className="row vh-100 w-100 g-0 align-items-center justify-content-center">
+          <div className="col-lg-5 col-lg-4 vh-100">
+            <div className="row h-100">
+              <div className="col-md-11 mx-auto">
                 <form
-                  className="vh-100 d-flex justify-content-between flex-column p-4 pb-0"
+                  className="vh-100 d-flex justify-content-center flex-column p-4 pb-0"
                   onSubmit={(e) => {
                     e.preventDefault();
                     form.handleSubmit();
@@ -79,7 +78,7 @@ function RouteComponent() {
                   <div>
                     <div className="mb-3">
                       <h3 className="mb-2">Đăng ký</h3>
-                      <p className="mb-0">Tham gia hệ thống My Beauty ngay hôm nay.</p>
+                      <p className="mb-0">Tham gia hệ thống ngay hôm nay.</p>
                     </div>
 
                     <div className="mb-3">
@@ -142,37 +141,37 @@ function RouteComponent() {
                       </p>
                     </div>
 
-                    <div className="or-login text-center position-relative mb-3">
+                    {/* <div className="or-login text-center position-relative mb-3">
                       <h6 className="fs-14 mb-0 position-relative text-body">HOẶC</h6>
-                    </div>
+                    </div> */}
 
                     <div className="d-flex align-items-center justify-content-center flex-wrap gap-2 mb-3">
-                      <div className="text-center flex-fill">
+                      {/* <div className="text-center flex-fill">
                         <a
                           href="#"
                           className="p-2 btn btn-info d-flex align-items-center justify-content-center"
                         >
                           <img className="img-fluid m-1" src={facebookLogo} alt="Facebook" />
                         </a>
-                      </div>
+                      </div> */}
 
-                      <div className="text-center flex-fill">
+                      {/* <div className="text-center flex-fill">
                         <a
                           href="#"
                           className="p-2 btn btn-outline-light d-flex align-items-center justify-content-center"
                         >
                           <img className="img-fluid m-1" src={googleLogo} alt="Google" />
                         </a>
-                      </div>
+                      </div> */}
 
-                      <div className="text-center flex-fill">
+                      {/* <div className="text-center flex-fill">
                         <a
                           href="#"
                           className="p-2 btn btn-dark d-flex align-items-center justify-content-center"
                         >
                           <img className="img-fluid m-1" src={appleLogo} alt="Apple" />
                         </a>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
@@ -181,8 +180,6 @@ function RouteComponent() {
               </div>
             </div>
           </div>
-
-          <div className="col-lg-6 account-bg-02"></div>
         </div>
       </div>
     </div>

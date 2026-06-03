@@ -2,11 +2,19 @@
 import { useEffect, useState } from "react";
 import SimpleBar from "simplebar-react";
 import { Link, useLocation } from "@tanstack/react-router";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import "simplebar-react/dist/simplebar.min.css";
 import SubMenuMotion from "./SubMenuMotion";
 import logo from "@assets/img/logo.svg";
 import logoSmall from "@assets/img/logo-small.svg";
 import logoWhite from "@assets/img/logo-white.svg";
+import { useViewPermission } from "@/hooks/use-permission";
+import { notificationQueries } from "@/lib/tanstack/options/notification";
+import { chatQueries } from "@/lib/tanstack/options/chat";
+import { useSocketStore } from "@/lib/stores/socket";
+import type { NotificationReceivedEvent, UserStatusEvent } from "@/lib/socket/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { useChatStore } from "@/lib/stores/chat";
 
 export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<string>("");
@@ -33,7 +41,8 @@ export default function Sidebar() {
     chat: "application",
     notification: "application",
     "customer-attribute": "system_settings",
-    email: "system_settings"
+    "email-template": "system_settings",
+    "email-send": "system_settings"
   };
 
   const pathToTabKey: Record<string, string> = {
@@ -44,6 +53,7 @@ export default function Sidebar() {
     "/profile-settings": "profile-settings",
     "/customer": "customers",
     "/opportunity": "opportunitys",
+    "/dispatch": "opportunity-dispatch",
     "/customer-source": "customerSource",
     "/invoice": "invoice",
     "/voucher": "voucher",
@@ -54,13 +64,53 @@ export default function Sidebar() {
     "/call-history": "call-history",
     "/appointment": "appointment",
     "/customer-attribute": "customer-attribute",
-    "/email": "email",
+    "/email/template": "email-template",
+    "/email/send": "email-send",
     "/chat": "chat",
     "/notification": "notification",
-    "/sale": "sale"
+    "/sale": "sale",
+    "/draft-invoice": "draft-invoice",
+    "/report": "report"
   };
 
   const location = useLocation();
+  const queryClient = useQueryClient();
+  const setUserOnline = useChatStore((s) => s.setUserOnline);
+  const unreadCountQ = useQuery(notificationQueries.unreadCount());
+  const chatListQ = useInfiniteQuery(chatQueries.listCursor());
+  const unreadCount = unreadCountQ.data?.result ?? 0;
+  const unreadChatCount =
+    chatListQ.data?.pages.flatMap((page) => page.result?.data ?? []).reduce((sum, chat) => {
+      return sum + (chat.unreadCount ?? 0);
+    }, 0) ?? 0;
+
+  useEffect(() => {
+    const socket = useSocketStore.getState().getSocket();
+    if (!socket) return;
+
+    const handleNotificationReceived = (payload: NotificationReceivedEvent) => {
+      if (payload.type === "unread_count" && typeof payload.unreadCount === "number") {
+        queryClient.setQueryData(["notification", "unreadCount"], {
+          result: payload.unreadCount,
+          status: 200,
+          success: true,
+          message: "OK"
+        } as any);
+      }
+    };
+
+    const handleUserStatus = (payload: UserStatusEvent) => {
+      console.log("[Sidebar] user_status:", payload);
+      setUserOnline(payload.userId, payload.status === "online");
+    };
+
+    socket.on("notification_received", handleNotificationReceived);
+    socket.on("user_status", handleUserStatus);
+    return () => {
+      socket.off("notification_received", handleNotificationReceived);
+      socket.off("user_status", handleUserStatus);
+    };
+  }, [queryClient, setUserOnline]);
 
   useEffect(() => {
     const currentTab = pathToTabKey[location.pathname];
@@ -107,6 +157,29 @@ export default function Sidebar() {
     document.body.classList.toggle("mini-sidebar");
   };
 
+  const { canViewAny, canView } = useViewPermission();
+
+  const showApp = canViewAny(["CALL_HISTORY", "SCHEDULE"]);
+
+  const showCRM = canViewAny([
+    "CUSTOMER",
+    "OPPORTUNITY",
+    "CUSTOMER_SOURCE",
+    "BRANCH",
+    "VOUCHER",
+    "UNIT",
+    "CATEGORY_ITEM",
+    "PRODUCT",
+    "SERVICE",
+    "SALE",
+    "INVOICE",
+    "REPORT"
+  ]);
+
+  const showUserMgmt = canViewAny(["USER", "ROLE"]);
+
+  const showSettings = canViewAny(["RESOURCE", "CUSTOMER_ATTRIBUTE", "EMAIL_TEMPLATE"]) || true;
+
   return (
     <div className="sidebar" id="sidebar">
       <div className="sidebar-logo">
@@ -122,7 +195,7 @@ export default function Sidebar() {
           </Link>{" "}
           <Link to="/resource" className="dark-logo">
             {" "}
-            <img src={logoWhite} alt="Logo" />{" "}
+            <img src={logoWhite} style={{ width: "107px", height: "22px" }} alt="Logo" />{" "}
           </Link>{" "}
         </div>
         <button
@@ -137,10 +210,10 @@ export default function Sidebar() {
       <SimpleBar className="sidebar-inner">
         <div id="sidebar-menu" className="sidebar-menu">
           <ul>
-            <li className="menu-title">
+            <li className="menu-title" style={{ display: showApp ? "block" : "none" }}>
               <span>Menu chính</span>
             </li>
-            <li>
+            <li style={{ display: showApp ? "block" : "none" }}>
               <ul>
                 <li className="submenu">
                   <a
@@ -156,24 +229,28 @@ export default function Sidebar() {
                     <span className="menu-arrow"></span>
                   </a>
                   <SubMenuMotion open={openSubmenus.application}>
-                    <li>
-                      <Link
-                        to="/call-history"
-                        className={activeTab === "call-history" ? "active" : ""}
-                        onClick={() => handleTabClick("call-history")}
-                      >
-                        Lịch sử cuộc gọi
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/appointment"
-                        className={activeTab === "appointment" ? "active" : ""}
-                        onClick={() => handleTabClick("appointment")}
-                      >
-                        Lịch hẹn
-                      </Link>
-                    </li>
+                    {canView("CALL_HISTORY") && (
+                      <li>
+                        <Link
+                          to="/call-history"
+                          className={activeTab === "call-history" ? "active" : ""}
+                          onClick={() => handleTabClick("call-history")}
+                        >
+                          Lịch sử cuộc gọi
+                        </Link>
+                      </li>
+                    )}
+                    {canView("SCHEDULE") && (
+                      <li>
+                        <Link
+                          to="/appointment"
+                          className={activeTab === "appointment" ? "active" : ""}
+                          onClick={() => handleTabClick("appointment")}
+                        >
+                          Lịch hẹn
+                        </Link>
+                      </li>
+                    )}
                     <li>
                       <Link
                         to="/chat"
@@ -181,6 +258,9 @@ export default function Sidebar() {
                         onClick={() => handleTabClick("chat")}
                       >
                         Chat
+                        {unreadChatCount > 0 && (
+                          <span className="badge bg-danger ms-2">{unreadChatCount}</span>
+                        )}
                       </Link>
                     </li>
                     <li>
@@ -190,6 +270,9 @@ export default function Sidebar() {
                         onClick={() => handleTabClick("notification")}
                       >
                         Thông báo
+                        {unreadCount > 0 && (
+                          <span className="badge bg-danger ms-2">{unreadCount}</span>
+                        )}
                       </Link>
                     </li>
                   </SubMenuMotion>
@@ -197,180 +280,261 @@ export default function Sidebar() {
               </ul>
             </li>
             {/* ================= CRM ================= */}
-            <li className="menu-title">
+            <li className="menu-title" style={{ display: showCRM ? "block" : "none" }}>
               <span>CRM</span>
             </li>
-            <li>
+            <li style={{ display: showCRM ? "block" : "none" }}>
               <ul>
-                <li>
-                  <Link
-                    to="/customer"
-                    className={activeTab === "customers" ? "active" : ""}
-                    onClick={() => handleTabClick("customers")}
-                  >
-                    <i className="ti ti-user-up"></i>
-                    <span>Khách hàng</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/opportunity"
-                    className={activeTab === "opportunitys" ? "active" : ""}
-                    onClick={() => handleTabClick("opportunitys")}
-                  >
-                    <i className="ti ti-checkup-list"></i>
-                    <span>Cơ hội</span>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/customer-source"
-                    className={activeTab === "customerSource" ? "active" : ""}
-                    onClick={() => handleTabClick("customerSource")}
-                  >
-                    <i className="ti ti-chart-arcs"></i>
-                    <span>Nguồn khách hàng</span>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/branch"
-                    className={activeTab === "branch" ? "active" : ""}
-                    onClick={() => handleTabClick("branch")}
-                  >
-                    <i className="ti ti-building-community"></i>
-                    <span>Chi nhánh</span>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/voucher"
-                    className={activeTab === "voucher" ? "active" : ""}
-                    onClick={() => handleTabClick("voucher")}
-                  >
-                    <i className="ti ti-medal"></i>
-                    <span>Mã giảm giá</span>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/unit"
-                    className={activeTab === "unit" ? "active" : ""}
-                    onClick={() => handleTabClick("unit")}
-                  >
-                    <i className="ti ti-bounce-right"></i>
-                    <span>Đơn vị</span>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/category"
-                    className={activeTab === "category" ? "active" : ""}
-                    onClick={() => handleTabClick("category")}
-                  >
-                    <i className="ti ti-brand-campaignmonitor"></i>
-                    <span>Danh mục</span>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/product"
-                    className={activeTab === "product" ? "active" : ""}
-                    onClick={() => handleTabClick("product")}
-                  >
-                    <i className="ti ti-package"></i>
-                    <span>Sản phẩm</span>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/service"
-                    className={activeTab === "service" ? "active" : ""}
-                    onClick={() => handleTabClick("service")}
-                  >
-                    <i className="ti ti-briefcase"></i>
-                    <span>Dịch vụ</span>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/sale"
-                    className={activeTab === "sale" ? "active" : ""}
-                    onClick={() => handleTabClick("sale")}
-                  >
-                    <i className="ti ti-report-money"></i>
-                    <span>Bán hàng</span>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    to="/invoice"
-                    className={activeTab === "invoice" ? "active" : ""}
-                    onClick={() => handleTabClick("invoice")}
-                  >
-                    <i className="ti ti-file-invoice"></i>
-                    <span>Hóa đơn</span>
-                  </Link>
-                </li>
+                {canView("CUSTOMER") && (
+                  <li>
+                    <Link
+                      to="/customer"
+                      className={activeTab === "customers" ? "active" : ""}
+                      onClick={() => handleTabClick("customers")}
+                    >
+                      <i className="ti ti-user-up"></i>
+                      <span>Khách hàng</span>
+                    </Link>
+                  </li>
+                )}
+                {canView("OPPORTUNITY") && (
+                  <>
+                    <li>
+                      <Link
+                        to="/opportunity"
+                        className={activeTab === "opportunitys" ? "active" : ""}
+                        onClick={() => handleTabClick("opportunitys")}
+                      >
+                        <i className="ti ti-checkup-list"></i>
+                        <span>Cơ hội</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/dispatch"
+                        className={activeTab === "opportunity-dispatch" ? "active" : ""}
+                        onClick={() => handleTabClick("opportunity-dispatch")}
+                      >
+                        <i className="ti ti-medal"></i>
+                        <span>Điều phối cơ hội</span>
+                      </Link>
+                    </li>
+                  </>
+                )}
+                {canView("CUSTOMER_SOURCE") && (
+                  <li>
+                    <Link
+                      to="/customer-source"
+                      className={activeTab === "customerSource" ? "active" : ""}
+                      onClick={() => handleTabClick("customerSource")}
+                    >
+                      <i className="ti ti-chart-arcs"></i>
+                      <span>Nguồn khách hàng</span>
+                    </Link>
+                  </li>
+                )}
+                {canView("BRANCH") && (
+                  <li>
+                    <Link
+                      to="/branch"
+                      className={activeTab === "branch" ? "active" : ""}
+                      onClick={() => handleTabClick("branch")}
+                    >
+                      <i className="ti ti-building-community"></i>
+                      <span>Chi nhánh</span>
+                    </Link>
+                  </li>
+                )}
+                {canView("VOUCHER") && (
+                  <li>
+                    <Link
+                      to="/voucher"
+                      className={activeTab === "voucher" ? "active" : ""}
+                      onClick={() => handleTabClick("voucher")}
+                    >
+                      <i className="ti ti-medal"></i>
+                      <span>Mã giảm giá</span>
+                    </Link>
+                  </li>
+                )}
+                {canView("UNIT") && (
+                  <li>
+                    <Link
+                      to="/unit"
+                      className={activeTab === "unit" ? "active" : ""}
+                      onClick={() => handleTabClick("unit")}
+                    >
+                      <i className="ti ti-bounce-right"></i>
+                      <span>Đơn vị</span>
+                    </Link>
+                  </li>
+                )}
+                {canView("CATEGORY_ITEM") && (
+                  <li>
+                    <Link
+                      to="/category"
+                      className={activeTab === "category" ? "active" : ""}
+                      onClick={() => handleTabClick("category")}
+                    >
+                      <i className="ti ti-brand-campaignmonitor"></i>
+                      <span>Danh mục</span>
+                    </Link>
+                  </li>
+                )}
+                {canView("PRODUCT") && (
+                  <li>
+                    <Link
+                      to="/product"
+                      className={activeTab === "product" ? "active" : ""}
+                      onClick={() => handleTabClick("product")}
+                    >
+                      <i className="ti ti-package"></i>
+                      <span>Sản phẩm</span>
+                    </Link>
+                  </li>
+                )}
+                {canView("SERVICE") && (
+                  <li>
+                    <Link
+                      to="/service"
+                      className={activeTab === "service" ? "active" : ""}
+                      onClick={() => handleTabClick("service")}
+                    >
+                      <i className="ti ti-briefcase"></i>
+                      <span>Dịch vụ</span>
+                    </Link>
+                  </li>
+                )}
+                {canView("SALE") && (
+                  <li>
+                    <Link
+                      to="/sale"
+                      search={{ invoiceId: undefined }}
+                      className={activeTab === "sale" ? "active" : ""}
+                      onClick={() => handleTabClick("sale")}
+                    >
+                      <i className="ti ti-report-money"></i>
+                      <span>Bán hàng</span>
+                    </Link>
+                  </li>
+                )}
+                {canView("INVOICE") && (
+                  <>
+                    <li>
+                      <Link
+                        to="/invoice"
+                        className={activeTab === "invoice" ? "active" : ""}
+                        onClick={() => handleTabClick("invoice")}
+                      >
+                        <i className="ti ti-file-invoice"></i>
+                        <span>Hóa đơn</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/draft-invoice"
+                        className={activeTab === "draft-invoice" ? "active" : ""}
+                        onClick={() => handleTabClick("draft-invoice")}
+                      >
+                        <i className="ti ti-file-invoice"></i>
+                        <span>Hóa đơn nháp</span>
+                      </Link>
+                    </li>
+                  </>
+                )}
+                {canView("REPORT") && (
+                  <li>
+                    <Link
+                      to="/report"
+                      className={activeTab === "report" ? "active" : ""}
+                      onClick={() => handleTabClick("report")}
+                    >
+                      <i className="ti ti-report-analytics"></i>
+                      <span>Báo cáo & Thống kê</span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </li>
 
             {/* ================= USER MANAGEMENT ================= */}
-            <li className="menu-title">
+            <li className="menu-title" style={{ display: showUserMgmt ? "block" : "none" }}>
               <span>Quản lý người dùng</span>
             </li>
-            <li>
+            <li style={{ display: showUserMgmt ? "block" : "none" }}>
               <ul>
-                <li>
-                  <Link
-                    to="/user"
-                    className={activeTab === "manager-users" ? "active" : ""}
-                    onClick={() => handleTabClick("manager-users")}
-                  >
-                    <i className="ti ti-users"></i>
-                    <span>Tài khoản người dùng</span>
-                  </Link>
-                </li>
+                {canView("USER") && (
+                  <li>
+                    <Link
+                      to="/user"
+                      className={activeTab === "manager-users" ? "active" : ""}
+                      onClick={() => handleTabClick("manager-users")}
+                    >
+                      <i className="ti ti-users"></i>
+                      <span>Tài khoản người dùng</span>
+                    </Link>
+                  </li>
+                )}
 
-                <li>
-                  <Link
-                    to="/role"
-                    className={activeTab === "roles-permissions" ? "active" : ""}
-                    onClick={() => handleTabClick("roles-permissions")}
-                  >
-                    <i className="ti ti-user-shield"></i>
-                    <span>Chức vụ & Phân quyền</span>
-                  </Link>
-                </li>
+                {canView("ROLE") && (
+                  <li>
+                    <Link
+                      to="/role"
+                      className={activeTab === "roles-permissions" ? "active" : ""}
+                      onClick={() => handleTabClick("roles-permissions")}
+                    >
+                      <i className="ti ti-user-shield"></i>
+                      <span>Chức vụ & Phân quyền</span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </li>
 
             {/* ================= SETTINGS ================= */}
-            <li className="menu-title">
+            <li className="menu-title" style={{ display: showSettings ? "block" : "none" }}>
               <span>Cài đặt</span>
             </li>
-            <li>
+            <li style={{ display: showSettings ? "block" : "none" }}>
               <ul>
-                <li>
-                  <Link
-                    to="/resource"
-                    className={activeTab === "resources" ? "active" : ""}
-                    onClick={() => handleTabClick("resources")}
-                  >
-                    <i className="ti ti-artboard"></i>
-                    <span>Tài nguyên</span>
-                  </Link>
-                </li>
-
+                {canView("RESOURCE") && (
+                  <li>
+                    <Link
+                      to="/resource"
+                      className={activeTab === "resources" ? "active" : ""}
+                      onClick={() => handleTabClick("resources")}
+                    >
+                      <i className="ti ti-artboard"></i>
+                      <span>Tài nguyên</span>
+                    </Link>
+                  </li>
+                )}
+                {canView("EMAIL_TEMPLATE") && (
+                  <>
+                    <li>
+                      <Link
+                        to="/send"
+                        className={activeTab === "email" ? "active" : ""}
+                        onClick={() => handleTabClick("email")}
+                        style={{ background: "none" }}
+                      >
+                        <i className="ti ti-file-report"></i>
+                        <span>Gửi email</span>
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/template"
+                        className={activeTab === "template" ? "active" : ""}
+                        onClick={() => handleTabClick("template")}
+                        style={{ background: "none" }}
+                      >
+                        <i className="ti ti-steam"></i>
+                        <span>Quản lý template</span>
+                      </Link>
+                    </li>
+                  </>
+                )}
                 <li className="submenu">
                   <a
                     href="#"
@@ -397,42 +561,37 @@ export default function Sidebar() {
                     </li>
                   </SubMenuMotion>
                 </li>
-                <li className="submenu">
-                  <a
-                    href="#"
-                    className={openSubmenus.system_settings ? "active subdrop" : ""}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSubmenuToggle("system_settings");
-                    }}
-                  >
-                    <i className="ti ti-device-laptop"></i>
-                    <span>Cài đặt hệ thống</span>
-                    <span className="menu-arrow"></span>
-                  </a>
-                  <SubMenuMotion open={openSubmenus.system_settings}>
-                    <li>
-                      <Link
-                        to="/customer-attribute"
-                        className={activeTab === "customer-attribute" ? "active" : ""}
-                        onClick={() => handleTabClick("customer-attribute")}
-                        style={{ background: "none" }}
-                      >
-                        Cài đặt khách hàng
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        to="/email"
-                        className={activeTab === "email" ? "active" : ""}
-                        onClick={() => handleTabClick("email")}
-                        style={{ background: "none" }}
-                      >
-                        Cài đặt email
-                      </Link>
-                    </li>
-                  </SubMenuMotion>
-                </li>
+
+                {canView("CUSTOMER_ATTRIBUTE") && (
+                  <li className="submenu">
+                    <a
+                      href="#"
+                      className={openSubmenus.system_settings ? "active subdrop" : ""}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleSubmenuToggle("system_settings");
+                      }}
+                    >
+                      <i className="ti ti-device-laptop"></i>
+                      <span>Cài đặt hệ thống</span>
+                      <span className="menu-arrow"></span>
+                    </a>
+                    <SubMenuMotion open={openSubmenus.system_settings}>
+                      {canView("CUSTOMER_ATTRIBUTE") && (
+                        <li>
+                          <Link
+                            to="/customer-attribute"
+                            className={activeTab === "customer-attribute" ? "active" : ""}
+                            onClick={() => handleTabClick("customer-attribute")}
+                            style={{ background: "none" }}
+                          >
+                            Cài đặt khách hàng
+                          </Link>
+                        </li>
+                      )}
+                    </SubMenuMotion>
+                  </li>
+                )}
               </ul>
             </li>
           </ul>

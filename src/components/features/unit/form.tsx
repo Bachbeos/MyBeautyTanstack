@@ -62,7 +62,7 @@ export function UnitForm({ mode, unit, onSubmit }: UnitFormProps) {
       }}
     >
       <div className="row gx-3">
-        <div className="col-md-6 mb-2">
+        <div className="col-md-12 mb-2">
           <form.AppField name="name">
             {(field) => (
               <field.Input
@@ -74,7 +74,7 @@ export function UnitForm({ mode, unit, onSubmit }: UnitFormProps) {
           </form.AppField>
         </div>
 
-        <div className="col-md-6 mb-2">
+        {/* <div className="col-md-6 mb-2">
           <form.AppField name="position">
             {(field) => (
               <field.Input
@@ -85,7 +85,7 @@ export function UnitForm({ mode, unit, onSubmit }: UnitFormProps) {
               />
             )}
           </form.AppField>
-        </div>
+        </div> */}
 
         <div className="col-12 mb-2">
           <form.AppField name="status">

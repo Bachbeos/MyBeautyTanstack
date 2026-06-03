@@ -19,11 +19,11 @@ const parseMoney = (value: string | undefined): number => {
 
 const serviceSchema = z.object({
   id: z.number().optional(),
-  code: z.string().optional(),
+  code: z.string().min(1, "Vui lòng nhập mã dịch vụ"),
   name: z.string().min(1, "Vui lòng nhập tên dịch vụ"),
   categoryId: z.number().min(1, "Vui lòng chọn danh mục"),
-  price: z.coerce.string().min(0, "Giá bán không được âm"),
-  cost: z.coerce.string().min(0, "Giá vốn không được âm"),
+  price: z.string().min(1, "Vui lòng nhập giá bán"),
+  cost: z.string().min(1, "Vui lòng nhập giá vốn"),
   discount: z.coerce.number().min(0).max(100).optional(),
   totalTime: z.coerce.number().min(0).optional(),
   treatmentNum: z.coerce.number().min(1).optional(),
@@ -133,6 +133,8 @@ export function ServiceForm({
     if (service) {
       form.reset({
         ...service,
+        price: service.price ? formatMoney(service.price) : "",
+        cost: service.cost ? formatMoney(service.cost) : "",
         type: service.isCombo === 1 ? 2 : 1,
         comboItems: parseComboItems(service.priceVariation)
       } as ServiceFormValues);
@@ -282,18 +284,18 @@ export function ServiceForm({
                 )}
               </form.AppField>
             </div>
-            <div className="col-md-4 mb-3">
+            {/* <div className="col-md-4 mb-3">
               <form.AppField name="treatmentNum">
                 {(field) => <field.Input label="Số buổi" type="number" disabled={isReadOnly} />}
               </form.AppField>
-            </div>
-            <div className="col-md-4 mb-3">
+            </div> */}
+            {/* <div className="col-md-4 mb-3">
               <form.AppField name="totalTime">
                 {(field) => (
                   <field.Input label="Thời gian (phút)" type="number" disabled={isReadOnly} />
                 )}
               </form.AppField>
-            </div>
+            </div> */}
             <form.AppField name="type">
               {(typeField) => {
                 const serviceType = Number(typeField.state.value ?? 1);
@@ -311,7 +313,7 @@ export function ServiceForm({
                       />
                     </div>
 
-                    <div className="col-md-6 mb-3">
+                    {/* <div className="col-md-6 mb-3">
                       <form.AppField name="featured">
                         {(field) => (
                           <div className="">
@@ -323,7 +325,7 @@ export function ServiceForm({
                           </div>
                         )}
                       </form.AppField>
-                    </div>
+                    </div> */}
 
                     {serviceType === 2 && (
                       <div className="col-12 mb-3">

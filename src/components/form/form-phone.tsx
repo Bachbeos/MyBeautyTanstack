@@ -38,6 +38,7 @@ export function FormPhone({
             field.handleChange(normalized);
           }}
           placeholder={placeholder}
+          disabled={baseProps.disabled}
         />
 
         <span

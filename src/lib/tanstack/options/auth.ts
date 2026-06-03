@@ -1,13 +1,24 @@
-import { login, register } from "@/lib/api/auth";
+import type { PermissionAction } from "@/hooks/use-permission";
+import { forgotPassword, login, loginGoogle, register, resetPassword } from "@/lib/api/auth";
+import { getMyResources } from "@/lib/api/permission";
 import { useAuthStore } from "@/lib/stores/auth";
+import { queryClient } from "@/lib/tanstack/query-client";
 import { createKeys } from "@/lib/tanstack/query-key";
-import type { LoginRequest, RegisterRequest } from "@/lib/types/auth";
-import { mutationOptions } from "@tanstack/react-query";
+import type {
+  ForgotPasswordRequest,
+  LoginGoogleRequest,
+  LoginRequest,
+  RegisterRequest,
+  ResetPasswordRequest
+} from "@/lib/types/auth";
+import { UserId } from "@/lib/types/user";
+import { mutationOptions, queryOptions } from "@tanstack/react-query";
 
 export const authKeys = createKeys("auth", {
   login: () => ["login"] as const,
   register: () => ["register"] as const,
-  logout: () => ["logout"] as const
+  logout: () => ["logout"] as const,
+  permissions: () => ["permissions"] as const
 });
 
 export const authMutations = {
@@ -25,14 +36,99 @@ export const authMutations = {
     mutationOptions({
       mutationKey: authKeys.login(),
       mutationFn: (data: LoginRequest) => login(data),
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         if (data.result?.token) {
-          useAuthStore.getState().set({ accessToken: data.result.token });
+          useAuthStore.getState().set({
+            accessToken: data.result.token,
+            userId: UserId(data.result.userId),
+            name: data.result.name,
+            avatar: data.result.avatar,
+            roleName: data.result.roleName,
+            email: data.result.email,
+            phone: data.result.phone,
+            roleId: data.result.roleId
+          });
         }
+        await queryClient.prefetchQuery(authQueries.permissions());
       },
       meta: {
         successMessage: "Đăng nhập thành công",
-        redirectTo: "/resource"
+        redirectTo: "/report",
+        invalidatesQuery: [authKeys.permissions()]
       }
+    }),
+
+  loginGoogle: () =>
+    mutationOptions({
+      mutationKey: authKeys.login(),
+      mutationFn: (data: LoginGoogleRequest) => loginGoogle(data),
+      onSuccess: async (data) => {
+        if (data.result?.token) {
+          useAuthStore.getState().set({
+            accessToken: data.result.token
+          });
+        }
+        await queryClient.prefetchQuery(authQueries.permissions());
+      },
+      meta: {
+        successMessage: "Đăng nhập thành công",
+        redirectTo: "/report",
+        invalidatesQuery: [authKeys.permissions()]
+      }
+    }),
+
+  forgotPassword: () =>
+    mutationOptions({
+      mutationKey: authKeys.login(),
+      mutationFn: (data: ForgotPasswordRequest) => forgotPassword(data),
+      meta: {
+        successMessage: "Mã OTP đã được gửi đến email của bạn."
+      }
+    }),
+
+  resetPassword: () =>
+    mutationOptions({
+      mutationKey: authKeys.login(),
+      mutationFn: (data: ResetPasswordRequest) => resetPassword(data),
+      meta: {
+        successMessage: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.",
+        redirectTo: "/login"
+      }
+    })
+};
+
+export const authQueries = {
+  permissions: () =>
+    queryOptions({
+      queryKey: authKeys.permissions(),
+      queryFn: () => getMyResources(),
+      staleTime: Infinity,
+      select: (res) => {
+        const map: Record<string, Set<PermissionAction>> = {};
+
+        res.result?.forEach((item) => {
+          let actions = item.actions;
+
+          if (typeof actions === "string") {
+            try {
+              actions = JSON.parse(actions);
+            } catch {}
+          }
+
+          if (!Array.isArray(actions)) return;
+
+          if (!map[item.code]) {
+            map[item.code] = new Set();
+          }
+
+          actions.forEach((act: PermissionAction) => {
+            map[item.code].add(act);
+          });
+        });
+
+        return map;
+      },
+      refetchOnWindowFocus: false,
+      refetchOnMount: false
     })
 };

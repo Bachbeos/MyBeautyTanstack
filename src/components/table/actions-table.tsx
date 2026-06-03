@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { usePermission } from "@/hooks/use-permission";
 import { Tooltip } from "bootstrap";
 import { type Row } from "@tanstack/react-table";
 
@@ -9,6 +10,7 @@ interface ActionsTableProps<TData> {
   onView?: (data: TData) => void;
   onPermission?: (data: TData) => void;
   extra?: (data: TData) => React.ReactNode;
+  resource?: string; // Optional resource code for auto permission check
 }
 
 export default function ActionsTable<TData>({
@@ -17,10 +19,14 @@ export default function ActionsTable<TData>({
   onDelete,
   onView,
   onPermission,
-  extra
+  extra,
+  resource
 }: ActionsTableProps<TData>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const data = row.original;
+  
+  const { canView, canEdit, canDelete } = usePermission(resource || "");
+  const hasResource = !!resource;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -31,7 +37,7 @@ export default function ActionsTable<TData>({
 
   return (
     <div className="d-flex gap-2" ref={containerRef}>
-      {onEdit && (
+      {onEdit && (!hasResource || canEdit) && (
         <button
           className="btn btn-sm btn-light"
           onClick={() => onEdit(data)}
@@ -43,7 +49,7 @@ export default function ActionsTable<TData>({
         </button>
       )}
 
-      {onDelete && (
+      {onDelete && (!hasResource || canDelete) && (
         <button
           className="btn btn-sm btn-danger"
           onClick={() => onDelete(data)}
@@ -55,7 +61,7 @@ export default function ActionsTable<TData>({
         </button>
       )}
 
-      {onView && (
+      {onView && (!hasResource || canView) && (
         <button
           className="btn btn-sm btn-info"
           onClick={() => onView(data)}

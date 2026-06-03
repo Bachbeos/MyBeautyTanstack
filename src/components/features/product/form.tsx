@@ -20,12 +20,12 @@ const productSchema = z.object({
   id: z.number().optional(),
   code: z.string().min(1, "Mã sản phẩm không được để trống"),
   name: z.string().min(1, "Tên sản phẩm không được để trống"),
-  categoryId: z.number(),
-  unitId: z.number(),
+  categoryId: z.number("Danh mục không được để trống"),
+  unitId: z.number("Đơn vị không được để trống"),
   price: z.string().min(1, "Giá bán không được để trống"),
   discount: z.string(),
   discountUnit: z.number().default(1),
-  expiredPeriod: z.number().default(0),
+  expiredPeriod: z.coerce.number().default(0),
   position: z.number().default(1),
   status: z.number().default(1),
   content: z.string().optional(),
@@ -68,7 +68,7 @@ export function ProductForm({
       name: product?.name ?? "",
       categoryId: product?.categoryId,
       unitId: product?.unitId,
-      price: formatMoney(product?.price ?? 0),
+      price: formatMoney(product?.price ?? ""),
       discount: formatMoney(product?.discount ?? 0),
       discountUnit: product?.discountUnit ?? 1,
       expiredPeriod: product?.expiredPeriod ?? 0,
@@ -299,11 +299,11 @@ export function ProductForm({
               </form.AppField>
             </div>
 
-            <div className="mb-3 col-md-4">
+            {/* <div className="mb-3 col-md-4">
               <form.AppField name="position">
                 {(field) => <field.Input type="number" label="Thứ tự" disabled={isReadOnly} />}
               </form.AppField>
-            </div>
+            </div> */}
 
             <div className="mb-3 col-12">
               <form.AppField name="status">

@@ -1,6 +1,9 @@
 import { AsyncBoundary } from "@/components/async-boundary";
 import CollapseButton from "@/components/collapse/collapse-button";
+import { usePermission } from "@/hooks/use-permission";
+import { Can } from "@/components/auth/can";
 import ExportButton from "@/components/export/export";
+import ActionsTable from "@/components/table/actions-table";
 import RefreshButton from "@/components/refresh/refresh";
 import { DataTable } from "@/components/table/data-table";
 import { useDebounceValue } from "@/hooks/use-debounce-value";
@@ -34,8 +37,10 @@ function RouteComponent() {
     document.body.classList.contains("header-collapse")
   );
 
+  const { canAdd, canEdit, canDelete, canView } = usePermission("INVOICE");
+
   const rawNameFilter = useMemo(() => {
-    const filter = columnFilters.find((f) => f.id === "name");
+    const filter = columnFilters.find((f) => f.id === "invoice_code");
     return (filter?.value as string) || "";
   }, [columnFilters]);
 
@@ -56,7 +61,8 @@ function RouteComponent() {
     () => ({
       page: pageIndex + 1,
       limit: pageSize,
-      keyword: nameFilter || undefined
+      keyword: nameFilter || undefined,
+      status: "1, 2, 3"
     }),
     [pageIndex, pageSize, nameFilter]
   );
@@ -94,7 +100,7 @@ function RouteComponent() {
           const row = info.row.original;
           return (
             <div className="d-flex flex-column">
-              <span className="fw-medium text-dark">{row.customerName || "Khách lẻ"}</span>
+              <span className="fw-medium text-dark">{row.customerName || "Khách vãng lai"}</span>
               {row.phone ? <small className="text-muted">{String(row.phone)}</small> : null}
             </div>
           );
@@ -155,11 +161,11 @@ function RouteComponent() {
         header: "Trạng thái",
         cell: (info) => {
           const status = Number(info.getValue());
-          return status === 1 ? (
-            <span className="badge badge-soft-success">Hoàn tất</span>
-          ) : (
-            <span className="badge badge-soft-warning">Hóa đơn nháp</span>
-          );
+          if (status === 1) return <span className="badge badge-soft-success">Hoàn tất</span>;
+          if (status === 2) return <span className="badge badge-soft-danger">Hủy</span>;
+          if (status === 3)
+            return <span className="badge badge-soft-warning">Chưa thanh toán</span>;
+          return <span className="badge badge-soft-secondary">N/A</span>;
         },
         meta: { className: "text-center align-middle w-1" }
       }),
@@ -171,7 +177,7 @@ function RouteComponent() {
           const date = row.createdTime || row.receiptDate;
           return (
             <span className="fs-13 text-muted">
-              {date ? new Date(date).toLocaleDateString("vi-VN") : "-"}
+              {date ? new Date(date).toLocaleString("vi-VN") : "-"}
             </span>
           );
         },
@@ -187,6 +193,7 @@ function RouteComponent() {
       //       onView={(data) => openModal("detail", data)}
       //       onEdit={(data) => openModal("edit", data)}
       //       onDelete={(data) => openModal("delete", data)}
+      //       resource="INVOICE"
       //     />
       //   )
       // })
@@ -234,6 +241,20 @@ function RouteComponent() {
     setIsHeaderCollapsed(document.body.classList.contains("header-collapse"));
   };
 
+  if (canView === false) {
+    return (
+      <div className="page-wrapper">
+        <div className="content py-5 text-center">
+          <div className="mb-3">
+            <i className="ti ti-lock fs-48 text-danger"></i>
+          </div>
+          <h4 className="fw-bold">Bạn không có quyền truy cập trang này</h4>
+          <p className="text-muted">Vui lòng liên hệ quản trị viên để được cấp quyền.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page-wrapper">
       <div className="content pb-0">
@@ -275,8 +296,8 @@ function RouteComponent() {
                 <DataTable
                   table={table}
                   filterable={true}
-                  filterKey="name"
-                  filterKeyPlaceholder="Tìm nhanh sản phẩm..."
+                  filterKey="invoice_code"
+                  filterKeyPlaceholder="Tìm nhanh hóa đơn..."
                   // toolbarRight={
                   //   <AddButton label="Thêm sản phẩm" onClick={() => openModal("add", null)} />
                   // }
